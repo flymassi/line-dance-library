@@ -4,89 +4,40 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Western Spritz — Line Dance Library</title>
-
-  <!-- PWA / Icone -->
-  <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="apple-touch-icon" href="/assets/images/icon.png">
-  <link rel="icon" type="image/png" href="/assets/images/icon.png">
-
   <link rel="stylesheet" href="./style.css" />
-  <meta name="theme-color" content="#000000" />
 </head>
 <body>
 
-  <!-- SPLASH con musica -->
+  <!-- SPLASH -->
   <section id="splash" class="splash">
-    <img src="./assets/images/gruppo.png" alt="Western Spritz" />
+    <img src="./assets/images/gruppo.png" alt="Western Spritz" style="max-width:80%;display:block;margin:0 auto;" />
     <div class="hint">Tocca “Avvia” per entrare</div>
-    <button id="startBtn" class="btn primary" onclick="startApp()">Avvia</button>
+    <button id="startBtn" class="btn primary">Avvia</button>
   </section>
 
-  <!-- Audio principali -->
+  <!-- Audio -->
   <audio id="introMusic" src="./assets/audio/some_people.mp3" preload="auto"></audio>
-  <audio id="sfx"        src="./assets/audio/frusta.mp3"       preload="auto"></audio>
 
-  <header class="hero">
+  <!-- Qui sotto ci sarà la tua app vera, ma inizialmente nascosta -->
+  <header id="appHeader" class="hidden">
     <h1>Western Spritz — Line Dance Library</h1>
-    <div id="count" class="count">Brani trovati: 0</div>
-
-    <div class="filters">
-      <input id="fDance" class="input" placeholder="Filtra per titolo del ballo…" />
-      <input id="fSong"  class="input" placeholder="Filtra per titolo della canzone…" />
-      <button id="clearFilters" class="btn ghost">Pulisci</button>
-    </div>
-
-    <!-- Bottone Gioco -->
-    <button id="openPuzzle" class="btn primary" style="margin-top:10px" onclick="startPuzzle()">🎯 Gioco Puzzle</button>
+    <div id="count">Brani trovati: 0</div>
   </header>
-
-  <main id="cards" class="cards" aria-live="polite"></main>
-
-  <footer class="footer">
-    Western Spritz • Aggiungi l’app alla Home per un’esperienza migliore
-  </footer>
-
-  <!-- === PUZZLE QUIZ (overlay) === -->
-  <section id="puzzleOverlay" class="pz hidden" aria-hidden="true">
-    <div class="pz-wrap">
-      <!-- immagine sotto -->
-      <img id="pzImage" alt="Puzzle" class="pz-img" />
-      <!-- griglia tasselli -->
-      <div id="pzTiles" class="pz-tiles"></div>
-
-      <!-- Alessia “no” -->
-      <img id="pzNo" src="./assets/images/alessia.png" alt="No" class="pz-no hidden" />
-
-      <!-- Domanda -->
-      <div class="pz-card">
-        <div id="pzQuestion" class="pz-q">Domanda…</div>
-        <div id="pzChoices" class="pz-choices"></div>
-        <div class="pz-actions">
-          <button id="pzQuit" class="btn ghost">Chiudi</button>
-          <button id="pzNext" class="btn" disabled>Prossima domanda</button>
-        </div>
-      </div>
-
-      <!-- Fine -->
-      <div id="pzBravo" class="pz-bravo hidden">
-        <div class="pz-bravo-msg">BRAVO! 🎉</div>
-        <div class="pz-bravo-sub">Tocca per ricominciare</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Audio quiz -->
-  <audio id="audioCorrect" src="./assets/audio/correct.mp3" preload="auto"></audio>
-  <audio id="audioWrong"   src="./assets/audio/wrong.mp3"   preload="auto"></audio>
+  <main id="cards" class="hidden"></main>
 
   <script src="./app.js"></script>
-  <!-- Service Worker (ALZA il numero se modifichi) -->
+
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=26');
+        // alza qui la versione ogni volta che cambi i file
+        navigator.serviceWorker.register('./sw.js?v=28');
       });
     }
   </script>
+</body>
+</html>
+
+
 </body>
 </html>
