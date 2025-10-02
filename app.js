@@ -408,10 +408,8 @@ function startPuzzle(){
   pzOverlay.classList.remove('hidden');
   pzOverlay.setAttribute('aria-hidden', 'false');
 }
-function closePuzzle(){
-  pzOverlay.classList.add('hidden');
-  pzOverlay.setAttribute('aria-hidden', 'true');
-}
+window.startPuzzle = startPuzzle;  // espone la funzione globalmente
+
 
 document.getElementById('openPuzzle')?.addEventListener('click', startPuzzle);
 document.getElementById('pzQuit')?.addEventListener('click', closePuzzle);
