@@ -1,57 +1,59 @@
-// Service Worker – UPDATE HARD
-// v19: network-first per HTML, cache-first per statici.
-// forza aggiornamento immediato (skipWaiting + clients.claim)
+// sw.js — Service Worker per Western Spritz
+const CACHE_NAME = 'static-v33'; // <<< incrementa qui per forzare update
 
-const CACHE_STATIC = 'static-v31';
-
+// Elenco risorse da cachare (aggiungi se ne servono altre)
 const ASSETS = [
-  // Non mettiamo "/" né "/index.html" qui: HTML sarà network-first
+  '/',
+  '/index.html',
   '/style.css',
   '/app.js',
   '/manifest.webmanifest',
-  '/data/songs.json',
-
-  // Immagini e audio principali
   '/assets/images/gruppo.png',
-  '/assets/images/icon.png',
-  '/assets/images/alessia.png',
-
   '/assets/audio/some_people.mp3',
   '/assets/audio/frusta.mp3',
   '/assets/audio/correct.mp3',
-  '/assets/audio/wrong.mp3'
+  '/assets/audio/wrong.mp3',
+  '/assets/images/alessia.png'
+  // non metto i puzzle uno per uno: li caricherà runtime
 ];
 
-self.addEventListener('install', event => {
-  self.skipWaiting();
-  event.waitUntil(caches.open(CACHE_STATIC).then(c => c.addAll(ASSETS)));
-});
-
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.map(k => (k !== CACHE_STATIC ? caches.delete(k) : Promise.resolve())))
-    ).then(() => self.clients.claim())
+self.addEventListener('install', (e) => {
+  console.log('[SW] Install');
+  e.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS);
+    })
   );
+  self.skipWaiting();
 });
 
-// HTML (navigations) -> NETWORK FIRST, fallback index se offline
-self.addEventListener('fetch', event => {
-  const req = event.request;
+self.addEventListener('activate', (e) => {
+  console.log('[SW] Activate');
+  e.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            console.log('[SW] Deleting old cache:', key);
+            return caches.delete(key);
+          }
+        })
+      )
+    )
+  );
+  self.clients.claim();
+});
 
-  if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req).catch(() => caches.match('/index.html'))
-    );
-    return;
-  }
-
-  const url = new URL(req.url);
-
-  // asset del nostro dominio -> CACHE FIRST
-  if (url.origin === location.origin) {
-    event.respondWith(
-      caches.match(req).then(res => res || fetch(req))
-    );
-  }
+// Intercetta richieste e serve da cache se possibile
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    caches.match(e.request).then((res) => {
+      return (
+        res ||
+        fetch(e.request).then((response) => {
+          return response;
+        })
+      );
+    })
+  );
 });
