@@ -1,8 +1,8 @@
 // Service Worker — Western Spritz
-const CACHE_NAME = 'static-v38'; // alza numero a ogni modifica
+const CACHE_NAME = 'static-v39'; // alza numero a ogni modifica
 
 const ASSETS = [
-  '/', '/index.html', '/style.css', '/app.js', '/manifest.webmanifest',
+  '/', '/index.html', '/style.css?v=39', '/app.js?v=39', '/manifest.webmanifest',
   '/assets/images/icon.png',
   '/assets/images/gruppo.png',
   '/assets/images/alessia.png',
