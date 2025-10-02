@@ -73,7 +73,7 @@
   <audio id="fxWrong"   src="./assets/audio/wrong.mp3"   preload="auto"></audio>
 
   <!-- JS (versionato) -->
-  <script src="./app.js?v=36"></script>
+  <script src="./app.js?v=37"></script>
 
   <!-- Splash affidabile + Service Worker -->
   <script>
@@ -89,7 +89,7 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=36')
+        navigator.serviceWorker.register('./sw.js?v=37')
           .then(reg => console.log('[SW] registrato', reg.scope))
           .catch(err => console.warn('[SW] errore', err));
       });
