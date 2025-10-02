@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Line Dance Library</title>
+<meta name="theme-color" content="#000000" />
+
+
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="apple-touch-icon" href="./assets/images/icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+
+<link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+<!-- Splash / consenso audio iOS -->
+<div id="splash" class="splash">
+<img src="./assets/images/gruppo.png" alt="Gruppo" />
+<button id="startBtn" class="btn primary" onclick="window.startApp()">Avvia</button>
+<p class="hint">Tocca “Avvia” per abilitare l'audio</p>
+</div>
+
+
+<header class="hero">
+<h1>Line Dance Library</h1>
+<div id="count" class="count">Brani trovati: 0</div>
+
+
+<div class="filters">
+<input id="fDance" class="input" placeholder="Filtra per titolo del ballo…" />
+<input id="fSong" class="input" placeholder="Filtra per titolo della canzone…" />
+<button id="clearFilters" class="btn ghost">Pulisci</button>
+</div>
+</header>
+
+
+<main id="cards" class="cards"></main>
+
+
+<audio id="introMusic" src="./assets/audio/some_people.mp3" preload="auto"></audio>
+<audio id="sfx" src="./assets/audio/frusta.mp3" preload="auto"></audio>
+
+
+<footer class="footer">
+<p>Aggiungi alla Home:</p>
+<ul>
+<li><strong>iPhone:</strong> Safari → Condividi → Aggiungi alla Home.</li>
+<li><strong>Android:</strong> Chrome ⋮ → Aggiungi a schermata Home.</li>
+</ul>
+</footer>
+
+
+  <script src="./app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+  }
+</script>->
+</body>
+</html>

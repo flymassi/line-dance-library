@@ -1,0 +1,66 @@
+<!doctype html>
+
+
+<script>
+function log(msg){ document.getElementById('log').textContent += msg + "\n"; }
+function toInt(v){ try{return parseInt(parseFloat(String(v).replace(',','.')))}catch{return -1} }
+function norm(s){ return String(s||'').trim().toLowerCase().replace(/’/g,"'"); }
+
+
+function handle(wb){
+const ws = wb.Sheets[wb.SheetNames[0]]; // prima sheet
+const range = XLSX.utils.decode_range(ws['!ref']);
+// header row
+const headers = [];
+for(let C=range.s.c; C<=range.e.c; ++C){
+const addr = XLSX.utils.encode_cell({r:range.s.r,c:C});
+headers.push(ws[addr]?.v || "");
+}
+const map = {}; headers.forEach((h,i)=> map[norm(h)] = i);
+function idx(a){ for(const k of a){ const i = map[norm(k)]; if(i!=null) return i; } return -1; }
+const Ianno = idx(['Anno']);
+const Inum = idx(['#','Nr. canzone','N° canzone','Numero canzone']);
+const Idance = idx(['Titolo del Ballo']);
+const Ivideo = idx(['Video del ballo (hyperlink)','Video del ballo']);
+const Isinger = idx(['Nome del cantante','Cantante']);
+const Isongt = idx(['Nome della canzone','Titolo della canzone']);
+const Isongu = idx(['Canzone del ballo (hyperlink)','Canzone del ballo']);
+
+
+const out = [];
+for(let R=range.s.r+1; R<=range.e.r; ++R){
+function cell(c){ const addr=XLSX.utils.encode_cell({r:R,c}); const o=ws[addr]; return o?.v ?? ''; }
+function link(c){ const addr=XLSX.utils.encode_cell({r:R,c}); const o=ws[addr]; return (o?.l?.Target || o?.l?.target || '').trim(); }
+const item = {
+year: cell(Ianno),
+songNumber: cell(Inum),
+danceTitle: cell(Idance),
+danceVideoUrl: link(Ivideo) || String(cell(Ivideo)).trim(),
+singerName: cell(Isinger),
+songTitle: cell(Isongt),
+songUrl: link(Isongu) || String(cell(Isongu)).trim()
+};
+if(item.danceVideoUrl || item.songUrl) out.push(item);
+}
+out.sort((a,b)=> (toInt(b.songNumber)||0) - (toInt(a.songNumber)||0));
+const blob = new Blob([JSON.stringify(out, null, 2)], {type:'application/json'});
+const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='songs.json'; a.click();
+log('Creato songs.json con ' + out.length + ' righe');
+}
+
+
+function onFile(f){
+const r = new FileReader();
+r.onload = e => { const data = new Uint8Array(e.target.result); const wb = XLSX.read(data, {type:'array', cellStyles:true, cellHTML:true, cellNF:true}); handle(wb); };
+r.readAsArrayBuffer(f);
+}
+
+
+document.getElementById('file').addEventListener('change', e => onFile(e.target.files[0]));
+const drop = document.getElementById('drop');
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.style.background='#eef'; });
+drop.addEventListener('dragleave', e => { e.preventDefault(); drop.style.background=''; });
+drop.addEventListener('drop', e => { e.preventDefault(); drop.style.background=''; const f = e.dataTransfer.files[0]; if(f) onFile(f); });
+</script>
+</body>
+</html>
