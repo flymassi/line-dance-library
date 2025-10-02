@@ -1,110 +1,61 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Western Spritz – Line Dance Library</title>
-
-  <!-- PWA / icone -->
-  <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="apple-touch-icon" href="/assets/images/icon.png">
-  <link rel="icon" type="image/png" href="/assets/images/icon.png">
-
-  <link rel="stylesheet" href="./style.css" />
-  <meta name="theme-color" content="#000000" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Western Spritz | Line Dance Library</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.webmanifest">
 </head>
 <body>
 
-  <!-- Splash iniziale -->
-  <section id="splash" class="splash">
-    <img src="./assets/images/gruppo.png" alt="Western Spritz" />
-    <div class="hint">Tocca Avvia per entrare</div>
-    <button id="startBtn" class="btn primary" onclick="window.startApp()">Avvia</button>
-  </section>
+<header class="hero">
+  <h1>Western Spritz | Line Dance Library</h1>
+  <div id="count" class="count">Brani trovati: 0</div>
 
-  <!-- Audio principali -->
-  <audio id="introMusic" src="./assets/audio/some_people.mp3" preload="auto"></audio>
-  <audio id="sfx"        src="./assets/audio/frusta.mp3"       preload="auto"></audio>
-
-  <header class="hero">
-    <h1>Western Spritz – Line Dance Library</h1>
-    <div id="count" class="count">Brani trovati: 0</div>
-
-    <div class="filters">
-      <input id="fDance" class="input" placeholder="Filtra per titolo del ballo…" />
-      <input id="fSong"  class="input" placeholder="Filtra per titolo della canzone…" />
-      <label style="color:#fff; display:flex; align-items:center; gap:8px;">
-        <input type="checkbox" id="onlyFavs" /> Solo preferiti
-      </label>
-      <button id="clearFilters" class="btn ghost">Pulisci</button>
-    </div>
-
-    <!-- Bottone per aprire il gioco -->
-   
-    <button id="openPuzzle" class="btn primary" style="margin-top:10px">🎯 Gioco Puzzle</button>
-  </header>
-
-  <main id="cards" class="cards" aria-live="polite"></main>
-
-  <footer class="footer">
-    Western Spritz • Aggiungi alla Home per un’esperienza migliore
-  </footer>
-
-  <!-- Banner install (Android/Chrome) -->
-  <div id="installBanner" class="install hidden">
-    <span class="install-text">Installa l’app sulla Home</span>
-    <div class="install-actions">
-      <button id="installBtn" class="btn primary">Installa</button>
-      <button id="closeInstall" class="btn ghost">Chiudi</button>
-    </div>
+  <div class="filters">
+    <input id="fDance" class="input" placeholder="Filtra per titolo del ballo…" />
+    <input id="fSong" class="input" placeholder="Filtra per titolo della canzone…" />
+    <label style="color:#fff;display:flex;align-items:center;gap:8px;">
+      <input type="checkbox" id="onlyFavs"> Solo preferiti
+    </label>
+    <button id="clearFilters" class="btn ghost">Pulisci</button>
   </div>
 
-  <!-- Suggerimento iOS (Safari) -->
-  <div id="iosHint" class="install hidden">
-    <span class="install-text">
-      iPhone: apri <b>Condividi</b> → <b>Aggiungi alla Home</b>
-    </span>
-    <button id="closeIos" class="btn ghost">Ok</button>
-  </div>
+  <!-- Bottone per avviare il gioco -->
+  <button id="openPuzzle" class="btn primary" style="margin-top:10px" onclick="startPuzzle()">🎯 Gioco Puzzle</button>
+</header>
 
-  <!-- === PUZZLE QUIZ (overlay) === -->
-  <section id="puzzleOverlay" class="pz hidden" aria-hidden="true">
-    <div class="pz-wrap">
-      <!-- Immagine puzzle -->
-      <img id="pzImage" alt="Puzzle" class="pz-img" />
-      <!-- Tasselli -->
-      <div id="pzTiles" class="pz-tiles"></div>
-      <!-- Alessia "no" -->
-      <img id="pzNo" src="./assets/images/alessia.png" alt="No" class="pz-no hidden" />
-      <!-- Scheda domanda -->
-      <div class="pz-card">
-        <div id="pzQuestion" class="pz-q">Domanda…</div>
-        <div id="pzChoices" class="pz-choices"></div>
-        <div class="pz-actions">
-          <button id="pzQuit" class="btn ghost">Chiudi</button>
-          <button id="pzNext" class="btn" disabled>Prossima domanda</button>
-        </div>
-      </div>
-      <!-- Schermata finale -->
-      <div id="pzBravo" class="pz-bravo hidden">
-        <div class="pz-bravo-msg">BRAVO! 🎉</div>
-        <div class="pz-bravo-sub">Tocca per ricominciare</div>
+<main id="cards" class="cards" aria-live="polite"></main>
+
+<footer class="footer">
+  Western Spritz · Aggiungi alla Home per un’esperienza migliore
+</footer>
+
+<!-- Overlay Puzzle -->
+<section id="puzzleOverlay" class="pz hidden" aria-hidden="true">
+  <div class="pz-wrap">
+    <img id="pzImage" alt="Puzzle" class="pz-img" />
+    <div id="pzTiles" class="pz-tiles"></div>
+    <img id="pzNo" src="./assets/images/alessia.png" alt="No" class="pz-no hidden" />
+    <div class="pz-card">
+      <div id="pzQuestion" class="pz-q">Domanda…</div>
+      <div id="pzChoices" class="pz-choices"></div>
+      <div class="pz-actions">
+        <button id="pzQuit" class="btn ghost">Chiudi</button>
+        <button id="pzNext" class="btn" disabled>Prossima domanda</button>
       </div>
     </div>
-  </section>
+    <div id="pzBravo" class="pz-bravo hidden">
+      <div class="pz-bravo-msg">BRAVO! 🎉</div>
+      <div class="pz-bravo-sub">Tocca per ricominciare</div>
+    </div>
+  </div>
+</section>
 
-  <!-- Audio quiz -->
-  <audio id="audioCorrect" src="./assets/audio/correct.mp3" preload="auto"></audio>
-  <audio id="audioWrong"   src="./assets/audio/wrong.mp3"   preload="auto"></audio>
+<audio id="audioCorrect" src="./assets/audio/correct.mp3" preload="auto"></audio>
+<audio id="audioWrong"   src="./assets/audio/wrong.mp3"   preload="auto"></audio>
 
-  <script src="./app.js"></script>
-  <!-- Registra il SW con versione per forzare update -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=22');
-      });
-    }
-  </script>
+<script src="app.js"></script>
 </body>
 </html>
