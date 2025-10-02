@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Western Spritz — Line Dance Library</title>
 
-  <link rel="stylesheet" href="./style.css" />
+  <!-- CSS (versionato per forzare l’aggiornamento) -->
+  <link rel="stylesheet" href="./style.css?v=36" />
+
+  <!-- PWA -->
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="apple-touch-icon" href="./assets/images/icon.png" />
   <link rel="icon" href="./assets/images/icon.png" />
@@ -13,7 +16,7 @@
 </head>
 <body>
 
-  <!-- SPLASH -->
+  <!-- SPLASH: bottone sotto immagine -->
   <section id="splash" class="splash">
     <img class="splash-img" src="./assets/images/gruppo.png" alt="Western Spritz" />
     <p class="hint">Tocca “Avvia” per entrare</p>
@@ -32,6 +35,7 @@
       <button id="clearFilters" class="btn btn-ghost">Pulisci</button>
     </div>
 
+    <!-- (Facoltativo) Gioco Puzzle: lascia il bottone, se non ti serve rimuovilo -->
     <button id="openPuzzle" class="btn btn-primary" style="margin-top:12px" onclick="startPuzzle()">
       🎯 Gioco Puzzle
     </button>
@@ -44,7 +48,7 @@
     Western Spritz • Aggiungi l’app alla Home per un’esperienza migliore
   </footer>
 
-  <!-- OVERLAY PUZZLE -->
+  <!-- OVERLAY PUZZLE (se non ti serve, elimina questa sezione) -->
   <section id="puzzleOverlay" class="pz hidden" aria-hidden="true">
     <div class="pz-wrap">
       <div id="pzGrid" class="pz-grid"></div>
@@ -68,23 +72,24 @@
   <audio id="fxCorrect" src="./assets/audio/correct.mp3" preload="auto"></audio>
   <audio id="fxWrong"   src="./assets/audio/wrong.mp3"   preload="auto"></audio>
 
-  <script src="./app.js"></script>
+  <!-- JS (versionato) -->
+  <script src="./app.js?v=36"></script>
 
-  <!-- Splash affidabile + SW -->
+  <!-- Splash affidabile + Service Worker -->
   <script>
     (function () {
       const splash = document.getElementById('splash');
       const startBtn = document.getElementById('startBtn');
       const intro = document.getElementById('introMusic');
       startBtn?.addEventListener('click', async () => {
-        try { await intro.play(); } catch(e) { console.warn('Audio bloccato:', e); }
+        try { await intro.play(); } catch(e) {}
         setTimeout(() => splash?.remove(), 3000);
       });
     })();
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=35')  // <— alza qui se modifichi
+        navigator.serviceWorker.register('./sw.js?v=36')
           .then(reg => console.log('[SW] registrato', reg.scope))
           .catch(err => console.warn('[SW] errore', err));
       });
