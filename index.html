@@ -45,6 +45,23 @@
 <audio id="introMusic" src="./assets/audio/some_people.mp3" preload="auto"></audio>
 <audio id="sfx" src="./assets/audio/frusta.mp3" preload="auto"></audio>
 
+<!-- Banner install (Android/Chrome) -->
+<div id="installBanner" class="install hidden">
+  <span class="install-text">Installa l’app sulla Home</span>
+  <div class="install-actions">
+    <button id="installBtn" class="btn primary">Installa</button>
+    <button id="closeInstall" class="btn ghost">Chiudi</button>
+  </div>
+</div>
+
+<!-- Suggerimento iOS (Safari) -->
+<div id="iosHint" class="install hidden">
+  <span class="install-text">
+    iPhone: apri <b>Condividi</b> → <b>Aggiungi alla Home</b>
+  </span>
+  <button id="closeIos" class="btn ghost">Ok</button>
+</div>
+
 
 <footer class="footer">
 <p>Aggiungi alla Home:</p>
@@ -58,7 +75,7 @@
   <script src="./app.js"></script>
 <script>
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=16')); // <-- query per forzare update
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=20')); // <-- query per forzare update
   }
 </script>
 
