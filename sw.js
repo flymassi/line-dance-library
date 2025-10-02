@@ -1,18 +1,25 @@
 // Service Worker – UPDATE HARD
-// v12: network-first per HTML, cache-first per statici.
+// v19: network-first per HTML, cache-first per statici.
 // forza aggiornamento immediato (skipWaiting + clients.claim)
 
-const CACHE_STATIC = 'static-v12';
+const CACHE_STATIC = 'static-v20';
+
 const ASSETS = [
-  // NON mettiamo '/' o '/index.html' qui, così l'HTML è sempre network-first
+  // Non mettiamo "/" né "/index.html" qui: HTML sarà network-first
   '/style.css',
   '/app.js',
   '/manifest.webmanifest',
   '/data/songs.json',
+
+  // Immagini e audio principali
   '/assets/images/gruppo.png',
   '/assets/images/icon.png',
+  '/assets/images/alessia.png',
+
   '/assets/audio/some_people.mp3',
-  '/assets/audio/frusta.mp3'
+  '/assets/audio/frusta.mp3',
+  '/assets/audio/correct.mp3',
+  '/assets/audio/wrong.mp3'
 ];
 
 self.addEventListener('install', event => {
@@ -28,11 +35,10 @@ self.addEventListener('activate', event => {
   );
 });
 
-// HTML (navigations) -> NETWORK FIRST, fallback a index se offline
+// HTML (navigations) -> NETWORK FIRST, fallback index se offline
 self.addEventListener('fetch', event => {
   const req = event.request;
 
-  // pagine HTML / navigazioni
   if (req.mode === 'navigate') {
     event.respondWith(
       fetch(req).catch(() => caches.match('/index.html'))
