@@ -56,8 +56,9 @@
   <script src="./app.js"></script>
 <script>
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=12')); // <-- query per forzare update
   }
-</script>->
+</script>
+
 </body>
 </html>
