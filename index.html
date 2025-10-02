@@ -1,61 +1,92 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Western Spritz | Line Dance Library</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="manifest" href="manifest.webmanifest">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Western Spritz — Line Dance Library</title>
+
+  <!-- PWA / Icone -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/images/icon.png">
+  <link rel="icon" type="image/png" href="/assets/images/icon.png">
+
+  <link rel="stylesheet" href="./style.css" />
+  <meta name="theme-color" content="#000000" />
 </head>
 <body>
 
-<header class="hero">
-  <h1>Western Spritz | Line Dance Library</h1>
-  <div id="count" class="count">Brani trovati: 0</div>
+  <!-- SPLASH con musica -->
+  <section id="splash" class="splash">
+    <img src="./assets/images/gruppo.png" alt="Western Spritz" />
+    <div class="hint">Tocca “Avvia” per entrare</div>
+    <button id="startBtn" class="btn primary" onclick="startApp()">Avvia</button>
+  </section>
 
-  <div class="filters">
-    <input id="fDance" class="input" placeholder="Filtra per titolo del ballo…" />
-    <input id="fSong" class="input" placeholder="Filtra per titolo della canzone…" />
-    <label style="color:#fff;display:flex;align-items:center;gap:8px;">
-      <input type="checkbox" id="onlyFavs"> Solo preferiti
-    </label>
-    <button id="clearFilters" class="btn ghost">Pulisci</button>
-  </div>
+  <!-- Audio principali -->
+  <audio id="introMusic" src="./assets/audio/some_people.mp3" preload="auto"></audio>
+  <audio id="sfx"        src="./assets/audio/frusta.mp3"       preload="auto"></audio>
 
-  <!-- Bottone per avviare il gioco -->
-  <button id="openPuzzle" class="btn primary" style="margin-top:10px" onclick="startPuzzle()">🎯 Gioco Puzzle</button>
-</header>
+  <header class="hero">
+    <h1>Western Spritz — Line Dance Library</h1>
+    <div id="count" class="count">Brani trovati: 0</div>
 
-<main id="cards" class="cards" aria-live="polite"></main>
+    <div class="filters">
+      <input id="fDance" class="input" placeholder="Filtra per titolo del ballo…" />
+      <input id="fSong"  class="input" placeholder="Filtra per titolo della canzone…" />
+      <button id="clearFilters" class="btn ghost">Pulisci</button>
+    </div>
 
-<footer class="footer">
-  Western Spritz · Aggiungi alla Home per un’esperienza migliore
-</footer>
+    <!-- Bottone Gioco -->
+    <button id="openPuzzle" class="btn primary" style="margin-top:10px" onclick="startPuzzle()">🎯 Gioco Puzzle</button>
+  </header>
 
-<!-- Overlay Puzzle -->
-<section id="puzzleOverlay" class="pz hidden" aria-hidden="true">
-  <div class="pz-wrap">
-    <img id="pzImage" alt="Puzzle" class="pz-img" />
-    <div id="pzTiles" class="pz-tiles"></div>
-    <img id="pzNo" src="./assets/images/alessia.png" alt="No" class="pz-no hidden" />
-    <div class="pz-card">
-      <div id="pzQuestion" class="pz-q">Domanda…</div>
-      <div id="pzChoices" class="pz-choices"></div>
-      <div class="pz-actions">
-        <button id="pzQuit" class="btn ghost">Chiudi</button>
-        <button id="pzNext" class="btn" disabled>Prossima domanda</button>
+  <main id="cards" class="cards" aria-live="polite"></main>
+
+  <footer class="footer">
+    Western Spritz • Aggiungi l’app alla Home per un’esperienza migliore
+  </footer>
+
+  <!-- === PUZZLE QUIZ (overlay) === -->
+  <section id="puzzleOverlay" class="pz hidden" aria-hidden="true">
+    <div class="pz-wrap">
+      <!-- immagine sotto -->
+      <img id="pzImage" alt="Puzzle" class="pz-img" />
+      <!-- griglia tasselli -->
+      <div id="pzTiles" class="pz-tiles"></div>
+
+      <!-- Alessia “no” -->
+      <img id="pzNo" src="./assets/images/alessia.png" alt="No" class="pz-no hidden" />
+
+      <!-- Domanda -->
+      <div class="pz-card">
+        <div id="pzQuestion" class="pz-q">Domanda…</div>
+        <div id="pzChoices" class="pz-choices"></div>
+        <div class="pz-actions">
+          <button id="pzQuit" class="btn ghost">Chiudi</button>
+          <button id="pzNext" class="btn" disabled>Prossima domanda</button>
+        </div>
+      </div>
+
+      <!-- Fine -->
+      <div id="pzBravo" class="pz-bravo hidden">
+        <div class="pz-bravo-msg">BRAVO! 🎉</div>
+        <div class="pz-bravo-sub">Tocca per ricominciare</div>
       </div>
     </div>
-    <div id="pzBravo" class="pz-bravo hidden">
-      <div class="pz-bravo-msg">BRAVO! 🎉</div>
-      <div class="pz-bravo-sub">Tocca per ricominciare</div>
-    </div>
-  </div>
-</section>
+  </section>
 
-<audio id="audioCorrect" src="./assets/audio/correct.mp3" preload="auto"></audio>
-<audio id="audioWrong"   src="./assets/audio/wrong.mp3"   preload="auto"></audio>
+  <!-- Audio quiz -->
+  <audio id="audioCorrect" src="./assets/audio/correct.mp3" preload="auto"></audio>
+  <audio id="audioWrong"   src="./assets/audio/wrong.mp3"   preload="auto"></audio>
 
-<script src="app.js"></script>
+  <script src="./app.js"></script>
+  <!-- Service Worker (ALZA il numero se modifichi) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js?v=26');
+      });
+    }
+  </script>
 </body>
 </html>
