@@ -2,7 +2,7 @@
 // v19: network-first per HTML, cache-first per statici.
 // forza aggiornamento immediato (skipWaiting + clients.claim)
 
-const CACHE_STATIC = 'static-v24';
+const CACHE_STATIC = 'static-v25';
 
 const ASSETS = [
   // Non mettiamo "/" né "/index.html" qui: HTML sarà network-first
