@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Western Spritz — Line Dance Library</title>
 
-  <!-- CSS (versionato per forzare refresh) -->
-  <link rel="stylesheet" href="./style.css?v=4" />
+  <!-- CSS (versionato) -->
+  <link rel="stylesheet" href="./style.css?v=6" />
 
   <!-- PWA -->
   <link rel="manifest" href="./manifest.webmanifest" />
@@ -16,9 +16,9 @@
 </head>
 <body>
 
-<div id="bg-blur" aria-hidden="true"></div>
-<div id="bg-main" aria-hidden="true"></div>
-
+  <!-- LAYER SFONDO -->
+  <div id="bg-blur" aria-hidden="true"></div>
+  <div id="bg-main" aria-hidden="true"></div>
 
   <!-- SPLASH -->
   <section id="splash" class="splash">
@@ -38,6 +38,7 @@
       <input id="fSong"  class="input" placeholder="Filtra per titolo della canzone…" />
       <button id="clearFilters" class="btn btn-ghost">Pulisci</button>
       <button id="updateApp" class="btn btn-primary" title="Forza aggiornamento app">Aggiorna app</button>
+      <button id="openPuzzle" class="btn btn-primary" title="Avvia il Puzzle">🎯 Gioco Puzzle</button>
     </div>
   </header>
 
@@ -48,27 +49,60 @@
     Western Spritz • Aggiungi l’app alla Home per un’esperienza migliore
   </footer>
 
-  <!-- SUONI LINK -->
-  <audio id="fxCrack" src="./assets/audio/frusta.mp3" preload="auto"></audio>
+  <!-- AUDIO EFFETTI -->
+  <audio id="fxCrack"   src="./assets/audio/frusta.mp3"  preload="auto"></audio>
+  <audio id="fxCorrect" src="./assets/audio/correct.mp3" preload="auto"></audio>
+  <audio id="fxWrong"   src="./assets/audio/wrong.mp3"   preload="auto"></audio>
+
+  <!-- OVERLAY PUZZLE (4×4) -->
+  <section id="puzzleOverlay" class="pz hidden" aria-hidden="true">
+    <div class="pz-wrap">
+      <!-- X in alto -->
+      <button id="pzClose" class="pz-close" aria-label="Chiudi">×</button>
+
+      <img id="pzImg" class="pz-img" alt="Puzzle" />
+
+      <!-- Griglia puzzle -->
+      <div id="pzGrid" class="pz-grid"></div>
+
+      <!-- Immagine “NO” (mostrata solo se sbagli) -->
+      <img id="pzNo" src="./assets/images/alessia.png" alt="No" class="pz-no hidden" />
+
+      <!-- Card domande/risposte -->
+      <div class="pz-card">
+        <div id="pzQuestion" class="pz-q">Domanda…</div>
+        <div id="pzAnswers" class="pz-answers"></div>
+        <div class="pz-actions">
+          <button id="pzQuit" class="btn btn-ghost">Torna indietro</button>
+        </div>
+      </div>
+
+      <!-- Bravo finale -->
+      <div id="pzBravo" class="pz-bravo hidden">
+        <div class="pz-bravo-msg">BRAVO! 🎉</div>
+        <div class="pz-bravo-sub">Tocca per ricominciare</div>
+      </div>
+    </div>
+  </section>
 
   <!-- JS (versionato) -->
-  <script src="./app.js?v=4"></script>
+  <script src="./app.js?v=6"></script>
 
-  <!-- Splash affidabile + Service Worker -->
+  <!-- Splash + Service Worker -->
   <script>
     (function () {
       const splash = document.getElementById('splash');
       const startBtn = document.getElementById('startBtn');
       const intro = document.getElementById('introMusic');
       startBtn?.addEventListener('click', async () => {
-        try { await intro.play(); } catch(e) { console.warn('Audio bloccato:', e); }
+        try { await intro.play(); } catch(e) {}
         setTimeout(() => splash?.remove(), 3000);
       });
     })();
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=3')
+        navigator.serviceWorker.register('./sw.js?v=6')
           .then(reg => console.log('[SW] registrato', reg.scope))
           .catch(err => console.warn('[SW] errore', err));
       });

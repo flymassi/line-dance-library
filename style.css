@@ -2,10 +2,13 @@
 * { box-sizing: border-box; }
 :root{
   --bg-blur: rgba(0,0,0,.28);
-  --card-bg: rgba(255,255,255,.80);
-  --text-dim:#6b7280;
+  --card-bg: rgba(255,255,255,.86);
+  --text-dim:#1f2937;
   --brand:#ff7a00;
+/* prima: clamp(140px, 28vh, 220px) */
+--pz-card-h: clamp(110px, 22vh, 170px);
 }
+
 body{
   margin:0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -14,38 +17,25 @@ body{
   background-position: center;
 }
 
+/* utility */
+.hidden{ display:none !important; }
+
 /* ========== LAYER SFONDO ========== */
 #bg-blur, #bg-main {
-  position: fixed;
-  inset: 0;
-  background-position: center center;
-  background-repeat: no-repeat;
-  z-index: -2;
-  pointer-events: none;
+  position: fixed; inset: 0; background-position: center center; background-repeat: no-repeat;
+  z-index: -2; pointer-events: none;
 }
-#bg-blur {
-  z-index: -2;
-  background-size: cover;
-  filter: blur(22px) brightness(0.6);
-  transform: scale(1.06);
-}
-#bg-main {
-  z-index: -1;
-  background-size: contain;
-  transition: background-size 200ms ease;
-}
+#bg-blur { background-size: cover; filter: blur(22px) brightness(0.6); transform: scale(1.06); }
+#bg-main { background-size: contain; transition: background-size 200ms ease; }
 
 /* Ombreggiatura testo quando lo sfondo è chiaro */
 body.bg-light .hero h1,
 body.bg-light .hero .count,
 body.bg-light .footer { text-shadow: 0 1px 2px rgba(0,0,0,.6); }
 body.bg-light .card-title { text-shadow: 0 1px 2px rgba(0,0,0,.4); }
-body.bg-light .card-meta{
-  text-shadow: 0 1px 2px rgba(0,0,0,.45);
-}
+body.bg-light .card-meta  { text-shadow: 0 1px 2px rgba(0,0,0,.45); }
 
-
-/* ========== SPLASH (se presente in index) ========== */
+/* ========== SPLASH ========== */
 .splash{
   position:fixed; inset:0; background:#000;
   display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -75,26 +65,23 @@ body.bg-light .card-meta{
 .count{ opacity:.95; margin-bottom:6px; }
 .filters{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
 
-/* ========== LISTA / CARD COMPATTE ========== */
+/* ========== LISTA / CARD (glass + reveal) ========== */
 .cards{ max-width:860px; margin:12px auto; padding:0 10px; display:grid; gap:10px; }
+
 .card{
   /* glass style */
-  background: rgba(255,255,255,.22);           /* vetro leggero */
-  border: 1px solid rgba(255,255,255,.28);      /* bordino chiaro */
+  background: rgba(255,255,255,.22);
+  border: 1px solid rgba(255,255,255,.28);
   border-radius: 14px;
-  backdrop-filter: saturate(180%) blur(16px);   /* effetto iOS */
-  -webkit-backdrop-filter: saturate(180%) blur(16px); /* safari/iOS */
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
   box-shadow: 0 8px 26px rgba(0,0,0,.18);
   padding: 10px 12px;
 }
 
 .card-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
 .card-title{ font-size:15px; font-weight:800; margin:0 0 2px; letter-spacing:.2px; }
-..card-meta{
-  color:#1f2937;              /* prima era grigio chiaro: ora è più scuro */
-  font-size:12.5px;
-  line-height:1.25;
-}
+.card-meta{ color:var(--text-dim); font-size:12.5px; line-height:1.25; }
 
 /* Badge “Anno” su due righe */
 .year-badge{
@@ -103,13 +90,8 @@ body.bg-light .card-meta{
   padding:4px 8px; text-align:center; min-width:52px;
   display:flex; flex-direction:column; gap:2px;
 }
-.year-badge .yb-label{
-  font-size:10px; line-height:1; opacity:.85; letter-spacing:.2px;
-  text-transform:uppercase;
-}
-.year-badge .yb-num{
-  font-size:13px; line-height:1; font-weight:800;
-}
+.year-badge .yb-label{ font-size:10px; line-height:1; opacity:.85; letter-spacing:.2px; text-transform:uppercase; }
+.year-badge .yb-num{   font-size:13px; line-height:1; font-weight:800; }
 
 /* Cover con blur-up */
 .card-cover {
@@ -130,27 +112,106 @@ body.bg-light .card-meta{
 }
 .action:hover{ background:var(--brand); color:#fff; }
 
-/* FOOTER */
-.footer{ text-align:center; color:#777; padding:22px 0 30px; }
-
-/* === Animazione soft in ingresso === */
-.card.reveal{
-  opacity: 0;
-  transform: translateY(12px) scale(.985);
-  transition: opacity .5s ease, transform .5s ease;
-  will-change: opacity, transform;
-}
-.card.reveal.in{
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
-/* Rispetto preferenze utente */
+/* Reveal anim */
+.card.reveal{ opacity:0; transform: translateY(12px) scale(.985); transition: opacity .5s ease, transform .5s ease; }
+.card.reveal.in{ opacity:1; transform: translateY(0) scale(1); }
 @media (prefers-reduced-motion: reduce){
-  .card.reveal,
-  .card.reveal.in{
-    transition: none !important;
-    transform: none !important;
-    opacity: 1 !important;
-  }
+  .card.reveal,.card.reveal.in{ transition:none !important; transform:none !important; opacity:1 !important; }
 }
+
+/* FOOTER */
+.footer{ text-align:center; color:#ddd; padding:22px 0 30px; text-shadow:0 1px 2px rgba(0,0,0,.5); }
+
+/* === PUZZLE OVERLAY (fix) === */
+.pz{ position:fixed; inset:0; background:rgba(0,0,0,.88); z-index:99999; display:none; }
+.pz.hidden{ display:none; }
+.pz:not(.hidden){ display:flex; align-items:center; justify-content:center; }
+
+.pz-wrap{
+  position:relative;
+  width:min(92vw, 900px);
+  height:min(85vh, 720px);  /* un po’ più alto per far entrare bene domanda+risposte */
+}
+
+/* griglia sempre sotto la card domanda */
+/* griglia puzzle: mostra SEMPRE l’immagine intera */
+/* L'immagine occupa tutta l'area alta (sopra la scheda) senza mai essere tagliata */
+.pz-img{
+  position:absolute;
+  top:0; left:0; right:0; bottom: var(--pz-card-h);
+  width:100%; height:100%;
+  object-fit: contain;                 /* qui la magia: foto sempre intera */
+  background:#000;                     /* bande nere dove serve */
+  z-index: 0;                          /* sotto i tasselli */
+}
+
+/* La griglia dei tasselli sta SOPRA l'immagine */
+.pz-grid{
+  position:absolute;
+  top:0; left:0; right:0; bottom: var(--pz-card-h);
+  display:grid; gap:2px;
+  grid-template-columns:repeat(4,1fr);
+  grid-template-rows:repeat(4,1fr);
+  z-index: 2;                          /* sopra l'immagine */
+}
+
+
+
+.pz-tile{ background:#444; border:1px solid #222; border-radius:3px; }
+.pz-tile.revealed{ background:transparent; border-color:transparent; }
+
+/* immagine "alessia" solo quando sbagli */
+.pz-no{
+  position:absolute; top:50%; left:50%; width:160px;
+  transform:translate(-50%,-50%);
+  filter: drop-shadow(0 6px 14px rgba(0,0,0,.6));
+  animation:wobble .5s linear infinite alternate;
+  z-index:3;                 /* sopra la griglia */
+}
+@keyframes wobble{ from{transform:translate(-50%,-50%) rotate(-4deg)} to{transform:translate(-50%,-50%) rotate(4deg)} }
+
+/* card domande ben visibile e sempre dentro allo schermo */
+.pz-card{
+  position:absolute; left:50%; transform:translateX(-50%);
+  bottom:8px;
+  width:min(92vw, 900px);
+  height: var(--pz-card-h);
+  background:#fff; color:#111; border-radius:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+  padding:10px;                /* prima 12px */
+  z-index:2;
+  display:flex; flex-direction:column; gap:6px;  /* prima gap:8px */
+}
+.pz-q{
+  font-weight:800; text-align:center;
+  margin:0 4px 4px;            /* prima margin-bottom:8px */
+  font-size:14px;              /* leggermente più piccolo */
+}
+.pz-answers{
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:6px;                     /* prima 8px */
+  overflow:auto;
+}
+.pz-answers .btn{ padding:8px 10px; font-size:14px; }
+.pz-actions{ text-align:center; margin-top:auto; }
+
+
+/* bravo overlay */
+.pz-bravo{
+  position:absolute; inset:0; background:rgba(0,0,0,.6); color:#fff;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  z-index:4;                 /* sopra tutto */
+}
+.pz-bravo.hidden{ display:none; }
+.pz-bravo-msg{ font-size:2rem; font-weight:900; margin-bottom:6px; }
+.pz-bravo-sub{ opacity:.9; }
+
+/* Pulsante X in alto per chiudere il puzzle */
+.pz-close{
+  position:absolute; top:8px; right:8px; z-index:4;
+  width:36px; height:36px; border-radius:50%;
+  border:none; cursor:pointer; font-size:20px; line-height:36px;
+  background:rgba(255,255,255,.9); color:#111;
+  box-shadow:0 4px 12px rgba(0,0,0,.25);
+}
+.pz-close:hover{ background:#fff; }
