@@ -1,14 +1,12 @@
-// Service Worker — base
-const CACHE_NAME = 'static-v4';
-
+// Simple cache for static assets
+const CACHE_NAME = 'static-v9';
 const ASSETS = [
-  '/', '/index.html',
-  '/style.css?v=3', '/app.js?v=4', '/manifest.webmanifest',
-  '/assets/images/icon.png',
-  '/assets/images/gruppo.png',
-  '/assets/audio/some_people.mp3',
-  '/assets/audio/frusta.mp3'
-  // gli sfondi e songs.json li prendiamo a runtime (non li “blocchiamo” in cache)
+  './',
+  './index.html',
+  './style.css?v=9',
+  './app.js?v=9',
+  './assets/images/icon.png',
+  './assets/images/gruppo.png'
 ];
 
 self.addEventListener('install', e => {
@@ -18,13 +16,18 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.map(k => k!==CACHE_NAME && caches.delete(k))))
-  );
+    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))))
   self.clients.claim();
 });
 
 self.addEventListener('fetch', e => {
+  const { request } = e;
+  if (request.method !== 'GET') return;
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request))
+    caches.match(request).then(cached => cached || fetch(request).then(resp => {
+      const clone = resp.clone();
+      caches.open(CACHE_NAME).then(c => c.put(request, clone));
+      return resp;
+    }).catch(() => cached))
   );
 });

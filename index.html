@@ -5,18 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Western Spritz — Line Dance Library</title>
 
-  <!-- CSS (versionato) -->
-  <link rel="stylesheet" href="./style.css?v=6" />
-
-  <!-- PWA -->
+  <link rel="stylesheet" href="./style.css?v=9" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="apple-touch-icon" href="./assets/images/icon.png" />
   <link rel="icon" href="./assets/images/icon.png" />
   <meta name="theme-color" content="#000000" />
 </head>
 <body>
-
-  <!-- LAYER SFONDO -->
+  <!-- BACKGROUND LAYERS -->
   <div id="bg-blur" aria-hidden="true"></div>
   <div id="bg-main" aria-hidden="true"></div>
 
@@ -53,22 +49,36 @@
   <audio id="fxCrack"   src="./assets/audio/frusta.mp3"  preload="auto"></audio>
   <audio id="fxCorrect" src="./assets/audio/correct.mp3" preload="auto"></audio>
   <audio id="fxWrong"   src="./assets/audio/wrong.mp3"   preload="auto"></audio>
+  <audio id="fxWin"     src="./assets/audio/correct.mp3" preload="auto"></audio>
 
-  <!-- OVERLAY PUZZLE (4×4) -->
+  <!-- OVERLAY PUZZLE -->
   <section id="puzzleOverlay" class="pz hidden" aria-hidden="true">
     <div class="pz-wrap">
-      <!-- X in alto -->
       <button id="pzClose" class="pz-close" aria-label="Chiudi">×</button>
 
+      <!-- HUD -->
+      <div class="pz-hud">
+        <div class="pz-info">
+          <span id="pzTime">00:00</span> • <span id="pzProgress">0/16</span>
+        </div>
+        <div class="pz-diff">
+          <button class="diff-btn" data-grid="3">3×3</button>
+          <button class="diff-btn active" data-grid="4">4×4</button>
+          <button class="diff-btn" data-grid="5">5×5</button>
+        </div>
+      </div>
+
+      <!-- Riempimento blur + immagine -->
+      <div id="pzBlur" class="pz-blur"></div>
       <img id="pzImg" class="pz-img" alt="Puzzle" />
 
-      <!-- Griglia puzzle -->
+      <!-- Griglia tasselli -->
       <div id="pzGrid" class="pz-grid"></div>
 
-      <!-- Immagine “NO” (mostrata solo se sbagli) -->
+      <!-- “No” -->
       <img id="pzNo" src="./assets/images/alessia.png" alt="No" class="pz-no hidden" />
 
-      <!-- Card domande/risposte -->
+      <!-- Domande/risposte -->
       <div class="pz-card">
         <div id="pzQuestion" class="pz-q">Domanda…</div>
         <div id="pzAnswers" class="pz-answers"></div>
@@ -77,7 +87,7 @@
         </div>
       </div>
 
-      <!-- Bravo finale -->
+      <!-- Bravo -->
       <div id="pzBravo" class="pz-bravo hidden">
         <div class="pz-bravo-msg">BRAVO! 🎉</div>
         <div class="pz-bravo-sub">Tocca per ricominciare</div>
@@ -85,8 +95,8 @@
     </div>
   </section>
 
-  <!-- JS (versionato) -->
-  <script src="./app.js?v=6"></script>
+  <!-- JS -->
+  <script src="./app.js?v=9"></script>
 
   <!-- Splash + Service Worker -->
   <script>
@@ -102,7 +112,7 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=6')
+        navigator.serviceWorker.register('./sw.js?v=9')
           .then(reg => console.log('[SW] registrato', reg.scope))
           .catch(err => console.warn('[SW] errore', err));
       });
