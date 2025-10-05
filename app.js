@@ -1,424 +1,199 @@
-// ==== Selettori base ====
+console.log('[WS] app.js v1');
+
+// --- Cache artwork in memoria per evitare richieste duplicate ---
+const ART_CACHE = new Map();
+
+// Estrae ID video da una URL YouTube (per fallback thumbnail)
+function ytIdFromUrl(u){
+  try{
+    const url = new URL(u);
+    if (url.hostname.includes('youtube.com')) return url.searchParams.get('v');
+    if (url.hostname.includes('youtu.be')) return url.pathname.slice(1);
+  }catch{}
+  return null;
+}
+
+// Costruisce una thumbnail YouTube se disponibile
+function youtubeThumb(u){
+  const id = ytIdFromUrl(u);
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
+}
+
+// Chiede copertina ad iTunes Search API (country IT, media=music, entity=song, limit=1)
+// Docs Apple: artworkUrl100 in risposta, ampliabile a 600px+ (vedi ref) 
+async function fetchArtwork(singerName, songTitle){
+  const key = `${singerName}|||${songTitle}`.toLowerCase();
+  if (ART_CACHE.has(key)) return ART_CACHE.get(key);
+
+  // Query più robusta: artista + titolo
+  const term = encodeURIComponent(`${singerName} ${songTitle}`.trim());
+  const url  = `https://itunes.apple.com/search?term=${term}&country=IT&media=music&entity=song&limit=1`;
+
+  try{
+    const res = await fetch(url, {mode:'cors'});
+    const data = await res.json();
+    let art = data?.results?.[0]?.artworkUrl100 || null;
+    // Trucco comune: richiediamo una risoluzione più alta rimpiazzando 100x100 → 600x600
+    if (art) art = art.replace(/100x100bb\.jpg/i, '600x600bb.jpg');
+    ART_CACHE.set(key, art || null);
+    return art;
+  }catch(e){
+    console.warn('Artwork iTunes fallita:', e);
+    ART_CACHE.set(key, null);
+    return null;
+  }
+}
+
+
+
+// ---------- sfondo random 1..10 ----------
+(function setAdaptiveBg(){
+  const blur = document.getElementById('bg-blur');
+  const main = document.getElementById('bg-main');
+
+  function pickUrl(){
+    const n = Math.floor(Math.random()*10)+1;
+    return `./assets/images/background/${n}.png`;
+  }
+
+  const url = pickUrl();
+  const img = new Image();
+  img.onload = () => {
+    // salva dimensioni immagine
+    const iw = img.naturalWidth || img.width;
+    const ih = img.naturalHeight || img.height;
+
+    function apply() {
+      const sw = window.innerWidth;
+      const sh = window.innerHeight;
+
+      const rImg = iw / ih;
+      const rScr = sw / sh;
+      const diff = Math.abs(Math.log(rImg) - Math.log(rScr)); 
+      // euristica: se la differenza di rapporto è alta → contain (mostra tutta l’immagine)
+      // se è bassa → cover (riempie bene con poco crop)
+      const useContain = diff > 0.35; // ~35% di differenza di aspect ratio
+
+      if (blur) {
+        blur.style.backgroundImage = `url('${url}')`;
+        blur.style.filter = 'blur(22px) brightness(0.6)';
+        blur.style.backgroundSize = 'cover';
+      }
+      if (main) {
+        main.style.backgroundImage = `url('${url}')`;
+        main.style.backgroundSize  = useContain ? 'contain' : 'cover';
+      }
+    }
+
+    apply();
+    // ricalcola su resize/orientamento
+    window.addEventListener('resize', apply);
+    window.addEventListener('orientationchange', apply);
+  };
+  img.src = url;
+})();
+
+
+
+// ---------- riferimenti ----------
 const cards   = document.getElementById('cards');
 const fDance  = document.getElementById('fDance');
 const fSong   = document.getElementById('fSong');
-const onlyFavs= document.getElementById('onlyFavs');
-const clearBtn= document.getElementById('clearFilters');
+const clearBt = document.getElementById('clearFilters');
 const countEl = document.getElementById('count');
+const fxCrack = document.getElementById('fxCrack');
 
-const splash      = document.getElementById('splash');
-const startBtn    = document.getElementById('startBtn');
-const introMusic  = document.getElementById('introMusic');
-const sfx         = document.getElementById('sfx');
+// ---------- dati ----------
+let SONGS = [];
+let FILTERS = { dance:'', song:'' };
 
-// Install UI
-const installBanner = document.getElementById('installBanner');
-const iosHint = document.getElementById('iosHint');
-const installBtn = document.getElementById('installBtn');
-const closeInstall = document.getElementById('closeInstall');
-const closeIos = document.getElementById('closeIos');
-
-// Stato dati
-let DATA = [];
-let FILTERS = { dance: '', song: '' };
-
-// Preferiti (persistenza locale)
-const FAV_KEY = 'lds:favorites';
-let FAVORITES = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]'));
-function saveFavs(){ localStorage.setItem(FAV_KEY, JSON.stringify([...FAVORITES])); }
-
-// iOS detection
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-              (navigator.userAgent.includes('Mac') && 'ontouchend' in document);
-const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-// ==== Sfondo casuale all'avvio ====
-function setRandomBackground() {
-  const n = Math.floor(Math.random() * 10) + 1; // 1..10
-  const bases = [
-    './assets/images/background',  // percorso consigliato
-    './images/backgound',          // typo storico (fallback)
-    './images/background'          // fallback
-  ];
-  function trySrc(i=0) {
-    if (i >= bases.length) return;
-    const url = `${bases[i]}/${n}.png`;
-    const img = new Image();
-    img.onload  = () => { document.body.style.backgroundImage = `url('${url}')`; };
-    img.onerror = () => trySrc(i+1);
-    img.src = url;
-  }
-  trySrc();
-}
-document.addEventListener('DOMContentLoaded', setRandomBackground);
-
-// ==== Reset service worker & cache via ?reset-sw=1 ====
-(function(){
-  const qp = new URLSearchParams(location.search);
-  if (!qp.has('reset-sw')) return;
-  (async () => {
-    try {
-      if ('caches' in window) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map(k => caches.delete(k)));
-      }
-      if ('serviceWorker' in navigator) {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map(r => r.unregister()));
-      }
-    } finally {
-      location.replace(location.origin + location.pathname);
-    }
-  })();
-})();
-
-// ==== Carica i dati (con anti-cache) ====
-fetch('./data/songs.json?v=' + Date.now())
-  .then(r => {
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    return r.json();
-  })
-  .then(json => {
-    console.log('✅ Dati caricati:', json.length, 'righe');
-    DATA = json;
-    render();
-  })
+fetch('./data/songs.json?v='+Date.now())
+  .then(r => r.json())
+  .then(json => { SONGS = json; render(); })
   .catch(err => {
-    console.error('❌ Errore nel caricamento di data/songs.json:', err);
-    cards.innerHTML = '<p style="color:white;padding:12px">Errore nel caricamento di <code>data/songs.json</code>. Controlla il percorso e ricarica con CTRL+F5.</p>';
+    console.error('Errore caricamento songs.json', err);
+    cards.innerHTML = `<p style="color:#fff">Errore nel caricamento dei dati.</p>`;
   });
 
-// ==== Filtraggio ====
-function matches(it) {
-  const d = (FILTERS.dance || '').trim().toLowerCase();
-  const s = (FILTERS.song  || '').trim().toLowerCase();
+// ---------- lista ----------
+const esc = s => (s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-  const okDance = !d || (it.danceTitle || '').toLowerCase().includes(d);
-  const okSong  = !s || (it.songTitle  || '').toLowerCase().includes(s);
-  const okFav   = !onlyFavs?.checked || FAVORITES.has(String(it.songNumber));
-
-  return okDance && okSong && okFav;
+function matches(it){
+  const d=(FILTERS.dance||'').toLowerCase().trim();
+  const s=(FILTERS.song ||'').toLowerCase().trim();
+  return (!d||(it.danceTitle||'').toLowerCase().includes(d)) &&
+         (!s||(it.songTitle ||'').toLowerCase().includes(s));
 }
 
-// ==== Rendering ====
-function render() {
-  const items = DATA.filter(matches);
-  countEl.textContent = `Brani trovati: ${items.length}`;
-  cards.innerHTML = items.map(renderCard).join('') 
-                 || '<p style="color:white;padding:12px">Nessun risultato coi filtri attuali.</p>';
-}
+function renderCard(it){
+  const esc = s => (s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-function renderCard(it) {
-  const safe = str => (str || '').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const isFav = FAVORITES.has(String(it.songNumber));
+  // segnaposto iniziale (riempito poi in asincrono)
+  const coverId = `cov_${Math.random().toString(36).slice(2)}`;
 
-  const vBtn = it.danceVideoUrl ? 
-    `<a href="${safe(it.danceVideoUrl)}" class="action primary yt-link" data-kind="video" target="_blank" rel="noopener external">Apri Ballo</a>` 
-    : '';
-  const sBtn = it.songUrl ? 
-    `<a href="${safe(it.songUrl)}" class="action secondary yt-link" data-kind="song" target="_blank" rel="noopener external">Apri Canzone</a>` 
-    : '';
-  const shareBtn =
-    `<button class="action neutral share-btn" data-share="${safe(it.danceVideoUrl || it.songUrl || '')}" data-title="${safe(it.danceTitle)}">Condividi</button>`;
-  const favBtn =
-    `<button class="fav-btn ${isFav ? 'active' : ''}" title="Aggiungi ai preferiti" data-num="${safe(it.songNumber)}">★</button>`;
+  const videoBtn = it.danceVideoUrl
+    ? `<a class="action" href="${esc(it.danceVideoUrl)}" target="_blank" rel="noopener">Apri Ballo</a>` : '';
+  const songBtn  = it.songUrl
+    ? `<a class="action" href="${esc(it.songUrl)}" target="_blank" rel="noopener">Apri Canzone</a>` : '';
+  const year = (it.year ?? '-') + '';
+
+  // Avvio fetch artwork in background e aggiorno l’img appena arriva
+  queueMicrotask(async () => {
+    // 1) prova iTunes
+    let art = await fetchArtwork(it.singerName, it.songTitle);
+    // 2) fallback: thumb di YouTube dalla canzone (se disponibile)
+    if (!art && it.songUrl) art = youtubeThumb(it.songUrl);
+    // 3) fallback finale: dalla URL del video del ballo
+    if (!art && it.danceVideoUrl) art = youtubeThumb(it.danceVideoUrl);
+
+    const img = document.getElementById(coverId);
+    if (img && art) img.src = art;
+  });
 
   return `
     <article class="card">
-      <div class="card-head">
-        <div class="badges">
-          <span class="badge">#${safe(it.songNumber)}</span>
-          <span class="badge year">${safe(it.year)}</span>
+      <div class="card-row">
+        <img id="${coverId}" class="card-cover" alt="Copertina" src="" />
+        <div class="card-col">
+          <h3 class="card-title">${esc(it.danceTitle)}</h3>
+          <div class="card-meta">${esc(it.singerName)} — ${esc(it.songTitle)}</div>
         </div>
-        <div>
-          <h3 class="title">${safe(it.danceTitle)}</h3>
-          <div class="singer">${safe(it.singerName)}</div>
-          <div class="song">${safe(it.songTitle)}</div>
-        </div>
-        <div>${favBtn}</div>
+        <div class="year-badge" aria-label="Anno">${esc(year)}</div>
       </div>
-      <div class="actions">
-        ${vBtn}
-        ${sBtn}
-        ${shareBtn}
-      </div>
-    </article>
-  `;
+      <div class="actions">${videoBtn}${songBtn}</div>
+    </article>`;
 }
 
-// ==== Eventi filtri ====
-[fDance, fSong].forEach(inp => inp?.addEventListener('input', () => {
-  FILTERS.dance = fDance.value;
-  FILTERS.song  = fSong.value;
-  render();
-}));
-onlyFavs?.addEventListener('change', render);
 
-clearBtn?.addEventListener('click', () => {
-  if (fDance) fDance.value = '';
-  if (fSong)  fSong.value  = '';
-  if (onlyFavs) onlyFavs.checked = false;
-  FILTERS = { dance:'', song:'' };
-  render();
-});
-
-// ==== Suono + apertura link (compatibile iPhone) ====
-// riproduci "frusta" immediata al gesto (iOS ok)
-function playCrack() {
-  try {
-    const clone = sfx.cloneNode(true);
-    clone.play().catch(()=>{});
-  } catch {}
+function render(){
+  const list = SONGS.filter(matches);
+  countEl.textContent = `Brani trovati: ${list.length}`;
+  cards.innerHTML = list.map(renderCard).join('') || '<p style="color:#fff">Nessun risultato coi filtri.</p>';
 }
 
-// iOS: su pointerdown riproduci suono e NON bloccare i link (si aprono da soli)
-document.addEventListener('pointerdown', (ev) => {
-  const a = ev.target.closest('a.yt-link');
-  if (!a) return;
-  playCrack();
-}, { passive: true });
+// filtri
+fDance?.addEventListener('input', () => { FILTERS.dance = fDance.value; render(); });
+fSong ?.addEventListener('input', () => { FILTERS.song  = fSong.value ; render(); });
+clearBt?.addEventListener('click', () => { fDance.value=''; fSong.value=''; FILTERS={dance:'',song:''}; render(); });
 
-// Desktop/Android: apri in nuova scheda, con fallback
-document.addEventListener('click', (ev) => {
-  const a = ev.target.closest('a.yt-link');
-  if (!a) return;
+// suono sui link YouTube
+document.addEventListener('pointerdown', ev => {
+  if (ev.target.closest('a.action')) {
+    try { fxCrack.cloneNode(true).play().catch(()=>{}); } catch {}
+  }
+}, {passive:true});
 
-  if (isIOS) return; // su iOS non fermiamo l'azione del link
-
-  ev.preventDefault();
-  const href = a.getAttribute('href');
-  playCrack();
-  setTimeout(() => {
-    const w = window.open(href, '_blank', 'noopener');
-    if (!w) location.href = href;
-  }, 0);
-});
-
-// ==== Avvio con splash ====
-window.startApp = async function () {
-  try { await introMusic.play(); } catch (e) { console.warn('Audio non partito (ok):', e); }
-  setTimeout(() => splash && splash.classList.add('hidden'), 3000);
-};
-if (startBtn) startBtn.addEventListener('click', window.startApp);
-
-// ==== Condividi ====
-document.addEventListener('click', async (ev) => {
-  const btn = ev.target.closest('.share-btn');
-  if (!btn) return;
-
-  const url = btn.getAttribute('data-share') || location.href;
-  const title = btn.getAttribute('data-title') || 'Line Dance';
-  const text = `${title} — ${url}`;
-
+// ---------- pulsante "Aggiorna app" (reset cache + SW) ----------
+document.getElementById('updateApp')?.addEventListener('click', async () => {
   try {
-    if (navigator.share) {
-      await navigator.share({ title, text, url });
-    } else if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(url);
-      btn.textContent = 'Copiato!';
-      setTimeout(()=>btn.textContent='Condividi', 1200);
-    } else {
-      window.prompt('Copia questo link:', url);
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
     }
-  } catch { /* annullato dall'utente: ok */ }
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+  } catch(e) { console.warn('Reset cache errore:', e); }
+  location.href = location.pathname + '?fresh=' + Date.now();
 });
-
-// ==== Preferiti ====
-document.addEventListener('click', (ev) => {
-  const btn = ev.target.closest('.fav-btn');
-  if (!btn) return;
-  const num = btn.getAttribute('data-num');
-  if (FAVORITES.has(num)) FAVORITES.delete(num); else FAVORITES.add(num);
-  saveFavs();
-  render();
-});
-
-// ==== Install banner / A2HS ====
-let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  if (!isIOS && !isStandalone) {
-    installBanner?.classList.remove('hidden');
-  }
-});
-installBtn?.addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  installBanner?.classList.add('hidden');
-});
-closeInstall?.addEventListener('click', () => installBanner?.classList.add('hidden'));
-if (isIOS && !isStandalone) iosHint?.classList.remove('hidden');
-closeIos?.addEventListener('click', () => iosHint?.classList.add('hidden'));
-if (new URLSearchParams(location.search).has('install')) {
-  if (deferredPrompt && !isIOS && !isStandalone) installBanner?.classList.remove('hidden');
-  if (isIOS && !isStandalone) iosHint?.classList.remove('hidden');
-}
-
-/* =========================================================================
-   PUZZLE QUIZ
-   ====================================================================== */
-// Selettori gioco
-const openPuzzle = document.getElementById('openPuzzle');
-const pzOverlay = document.getElementById('puzzleOverlay');
-const pzImage   = document.getElementById('pzImage');
-const pzTiles   = document.getElementById('pzTiles');
-const pzQuestion= document.getElementById('pzQuestion');
-const pzChoices = document.getElementById('pzChoices');
-const pzBravo   = document.getElementById('pzBravo');
-const pzQuit    = document.getElementById('pzQuit');
-const pzNext    = document.getElementById('pzNext');
-const pzNo      = document.getElementById('pzNo');
-
-const audioCorrect = document.getElementById('audioCorrect');
-const audioWrong   = document.getElementById('audioWrong');
-
-const GRID_N = 5; // 5x5 = 25 tasselli
-let pzState = {
-  imgIndex: 1,
-  hiddenOrder: [],
-  revealed: new Set(),
-  currentQuestion: null
-};
-
-function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
-function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]];} return arr; }
-
-// scegli una delle 27 immagini
-function pickPuzzleImage(){
-  pzState.imgIndex = randInt(1,27);
-  pzImage.src = `./assets/images/puzzles/${pzState.imgIndex}.png`;
-}
-
-// costruisci i tasselli
-function buildTiles(){
-  pzTiles.innerHTML = '';
-  pzState.revealed.clear();
-  const total = GRID_N * GRID_N;
-  const ids = [...Array(total).keys()]; // 0..24
-  pzState.hiddenOrder = shuffle(ids.slice());
-  for (let i=0;i<total;i++){
-    const d = document.createElement('div');
-    d.className = 'pz-tile';
-    d.dataset.id = String(i);
-    pzTiles.appendChild(d);
-  }
-}
-
-// scopri un tassello
-function revealOne(){
-  const nextId = pzState.hiddenOrder.find(id => !pzState.revealed.has(id));
-  if (nextId == null) return;
-  pzState.revealed.add(nextId);
-  const el = pzTiles.querySelector(`.pz-tile[data-id="${nextId}"]`);
-  if (el) el.classList.add('revealed');
-
-  const total = GRID_N * GRID_N;
-  if (pzState.revealed.size >= total){
-    setTimeout(()=> pzBravo.classList.remove('hidden'), 300);
-  }
-}
-
-// mostra alessia "no" che oscilla per la durata dell'audio
-function showNoWobble(){
-  pzNo.classList.remove('hidden');
-  pzNo.classList.add('wobble');
-  const dur = (audioWrong?.duration && isFinite(audioWrong.duration)) ? audioWrong.duration : 1.0;
-  setTimeout(()=>{
-    pzNo.classList.add('hidden');
-    pzNo.classList.remove('wobble');
-  }, Math.round(dur*1000));
-}
-
-// domanda dal DB (due tipi)
-function buildQuestionFromData() {
-  if (!Array.isArray(DATA) || DATA.length < 4) {
-    return { text:'Dati insufficienti', choices:[], correctIndex:0 };
-  }
-  const pool = DATA.slice();
-  const correct = pool[randInt(0, pool.length-1)];
-  const type = Math.random() < 0.5 ? 'singer' : 'dance';
-
-  let text, correctText, key;
-  if (type === 'singer'){
-    text = `Chi è il cantante di “${correct.songTitle}”?`;
-    correctText = correct.singerName;
-    key = 'singerName';
-  } else {
-    text = `Qual è il titolo del ballo per “${correct.songTitle}”?`;
-    correctText = correct.danceTitle;
-    key = 'danceTitle';
-  }
-
-  const distractors = [];
-  const used = new Set([ (correctText||'').toLowerCase() ]);
-  shuffle(pool);
-  for (const it of pool) {
-    const val = (it[key]||'').toString().trim();
-    if (!val) continue;
-    const low = val.toLowerCase();
-    if (used.has(low)) continue;
-    used.add(low);
-    distractors.push(val);
-    if (distractors.length >= 3) break;
-  }
-  while (distractors.length < 3) distractors.push('—');
-
-  const choices = shuffle([correctText, ...distractors]).slice(0,4);
-  const correctIndex = choices.findIndex(x => x === correctText);
-
-  return { text, choices, correctIndex };
-}
-
-function renderQuestion(){
-  pzState.currentQuestion = buildQuestionFromData();
-  pzQuestion.textContent = pzState.currentQuestion.text;
-  pzChoices.innerHTML = '';
-  pzNext.disabled = true;
-
-  pzState.currentQuestion.choices.forEach((label, idx) => {
-    const btn = document.createElement('button');
-    btn.className = 'pz-choice';
-    btn.textContent = label || '—';
-    btn.addEventListener('click', async () => {
-      [...pzChoices.children].forEach(b => b.disabled = true);
-
-      if (idx === pzState.currentQuestion.correctIndex){
-        btn.classList.add('correct');
-        try { await audioCorrect.play(); } catch {}
-        revealOne();
-      } else {
-        btn.classList.add('wrong');
-        try { await audioWrong.play(); } catch {}
-        showNoWobble();
-      }
-      pzNext.disabled = false;
-    });
-    pzChoices.appendChild(btn);
-  });
-}
-
-function startPuzzle(){
-  pickPuzzleImage();
-  buildTiles();
-  pzBravo.classList.add('hidden');
-  renderQuestion();
-  pzOverlay.classList.remove('hidden');
-  pzOverlay.setAttribute('aria-hidden', 'false');
-}
-window.startPuzzle = startPuzzle;  // espone la funzione globalmente
-
-
-document.getElementById('openPuzzle')?.addEventListener('click', startPuzzle);
-document.getElementById('pzQuit')?.addEventListener('click', closePuzzle);
-document.getElementById('pzNext')?.addEventListener('click', renderQuestion);
-document.getElementById('pzBravo')?.addEventListener('click', startPuzzle);
-
-// Apri il puzzle automaticamente se l'URL ha ?puzzle=1
-if (new URLSearchParams(location.search).get('puzzle') === '1') {
-  document.addEventListener('DOMContentLoaded', () => {
-    if (typeof startPuzzle === 'function') startPuzzle();
-  });
-}

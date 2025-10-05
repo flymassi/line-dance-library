@@ -1,16 +1,14 @@
-// Service Worker — Western Spritz
-const CACHE_NAME = 'static-v39'; // alza numero a ogni modifica
+// Service Worker — base
+const CACHE_NAME = 'static-v2';
 
 const ASSETS = [
-  '/', '/index.html', '/style.css?v=39', '/app.js?v=39', '/manifest.webmanifest',
+  '/', '/index.html',
+  '/style.css?v=1', '/app.js?v=2', '/manifest.webmanifest',
   '/assets/images/icon.png',
   '/assets/images/gruppo.png',
-  '/assets/images/alessia.png',
   '/assets/audio/some_people.mp3',
-  '/assets/audio/frusta.mp3',
-  '/assets/audio/correct.mp3',
-  '/assets/audio/wrong.mp3'
-  // i puzzle e gli sfondi vengono caricati a runtime
+  '/assets/audio/frusta.mp3'
+  // gli sfondi e songs.json li prendiamo a runtime (non li “blocchiamo” in cache)
 ];
 
 self.addEventListener('install', e => {
