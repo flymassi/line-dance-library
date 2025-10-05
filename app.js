@@ -1,52 +1,8 @@
-console.log('[WS] app.js v1');
+console.log('[WS] app.js vClean');
 
-// --- Cache artwork in memoria per evitare richieste duplicate ---
-const ART_CACHE = new Map();
-
-// Estrae ID video da una URL YouTube (per fallback thumbnail)
-function ytIdFromUrl(u){
-  try{
-    const url = new URL(u);
-    if (url.hostname.includes('youtube.com')) return url.searchParams.get('v');
-    if (url.hostname.includes('youtu.be')) return url.pathname.slice(1);
-  }catch{}
-  return null;
-}
-
-// Costruisce una thumbnail YouTube se disponibile
-function youtubeThumb(u){
-  const id = ytIdFromUrl(u);
-  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
-}
-
-// Chiede copertina ad iTunes Search API (country IT, media=music, entity=song, limit=1)
-// Docs Apple: artworkUrl100 in risposta, ampliabile a 600px+ (vedi ref) 
-async function fetchArtwork(singerName, songTitle){
-  const key = `${singerName}|||${songTitle}`.toLowerCase();
-  if (ART_CACHE.has(key)) return ART_CACHE.get(key);
-
-  // Query più robusta: artista + titolo
-  const term = encodeURIComponent(`${singerName} ${songTitle}`.trim());
-  const url  = `https://itunes.apple.com/search?term=${term}&country=IT&media=music&entity=song&limit=1`;
-
-  try{
-    const res = await fetch(url, {mode:'cors'});
-    const data = await res.json();
-    let art = data?.results?.[0]?.artworkUrl100 || null;
-    // Trucco comune: richiediamo una risoluzione più alta rimpiazzando 100x100 → 600x600
-    if (art) art = art.replace(/100x100bb\.jpg/i, '600x600bb.jpg');
-    ART_CACHE.set(key, art || null);
-    return art;
-  }catch(e){
-    console.warn('Artwork iTunes fallita:', e);
-    ART_CACHE.set(key, null);
-    return null;
-  }
-}
-
-
-
-// ---------- sfondo random 1..10 ----------
+/* =========================
+   SFONDO ADATTIVO + OMBRA TESTO
+   ========================= */
 (function setAdaptiveBg(){
   const blur = document.getElementById('bg-blur');
   const main = document.getElementById('bg-main');
@@ -56,23 +12,39 @@ async function fetchArtwork(singerName, songTitle){
     return `./assets/images/background/${n}.png`;
   }
 
+  // luminanza media su canvas piccola per capire se è “chiaro”
+  function isLightImage(imgEl){
+    try{
+      const w = 24, h = 24;
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(imgEl, 0, 0, w, h);
+      const data = ctx.getImageData(0,0,w,h).data;
+      let acc = 0, pixels = w*h;
+      for (let i=0;i<data.length;i+=4){
+        const r=data[i], g=data[i+1], b=data[i+2];
+        const Y = 0.2126*r + 0.7152*g + 0.0722*b;
+        acc += Y;
+      }
+      const avg = acc / pixels;        // 0..255
+      return avg > 160;                // soglia luce
+    }catch(e){
+      return false;
+    }
+  }
+
   const url = pickUrl();
   const img = new Image();
   img.onload = () => {
-    // salva dimensioni immagine
     const iw = img.naturalWidth || img.width;
     const ih = img.naturalHeight || img.height;
 
     function apply() {
-      const sw = window.innerWidth;
-      const sh = window.innerHeight;
-
-      const rImg = iw / ih;
-      const rScr = sw / sh;
-      const diff = Math.abs(Math.log(rImg) - Math.log(rScr)); 
-      // euristica: se la differenza di rapporto è alta → contain (mostra tutta l’immagine)
-      // se è bassa → cover (riempie bene con poco crop)
-      const useContain = diff > 0.35; // ~35% di differenza di aspect ratio
+      const sw = window.innerWidth, sh = window.innerHeight;
+      const rImg = iw/ih, rScr = sw/sh;
+      const diff = Math.abs(Math.log(rImg) - Math.log(rScr));
+      const useContain = diff > 0.35;
 
       if (blur) {
         blur.style.backgroundImage = `url('${url}')`;
@@ -83,19 +55,68 @@ async function fetchArtwork(singerName, songTitle){
         main.style.backgroundImage = `url('${url}')`;
         main.style.backgroundSize  = useContain ? 'contain' : 'cover';
       }
+
+      const light = isLightImage(img);
+      document.body.classList.toggle('bg-light', light);
     }
 
     apply();
-    // ricalcola su resize/orientamento
     window.addEventListener('resize', apply);
     window.addEventListener('orientationchange', apply);
   };
   img.src = url;
 })();
 
+/* =========================
+   ARTWORK (iTunes + YouTube) con BLUR-UP
+   ========================= */
+const ART_CACHE = new Map();
 
+function ytIdFromUrl(u){
+  try{
+    const url = new URL(u);
+    if (url.hostname.includes('youtube.com')) return url.searchParams.get('v');
+    if (url.hostname.includes('youtu.be')) return url.pathname.slice(1);
+  }catch{}
+  return null;
+}
+function youtubeThumbPair(u){
+  const id = ytIdFromUrl(u);
+  if (!id) return null;
+  return {
+    small: `https://img.youtube.com/vi/${id}/mqdefault.jpg`,
+    large: `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+  };
+}
+async function fetchArtworkPair(singerName, songTitle){
+  const key = `${singerName}|||${songTitle}`.toLowerCase();
+  if (ART_CACHE.has(key)) return ART_CACHE.get(key);
 
-// ---------- riferimenti ----------
+  const term = encodeURIComponent(`${singerName} ${songTitle}`.trim());
+  const url  = `https://itunes.apple.com/search?term=${term}&country=IT&media=music&entity=song&limit=1`;
+
+  try{
+    const res = await fetch(url, {mode:'cors'});
+    const data = await res.json();
+    const a100 = data?.results?.[0]?.artworkUrl100 || null;
+    if (a100){
+      const pair = {
+        small: a100,
+        large: a100.replace(/100x100bb\.jpg/i,'600x600bb.jpg')
+      };
+      ART_CACHE.set(key, pair);
+      return pair;
+    }
+  }catch(e){
+    console.warn('Artwork iTunes fallita:', e);
+  }
+  ART_CACHE.set(key, null);
+  return null;
+}
+
+/* =========================
+   DATI + RENDER
+   ========================= */
 const cards   = document.getElementById('cards');
 const fDance  = document.getElementById('fDance');
 const fSong   = document.getElementById('fSong');
@@ -103,10 +124,10 @@ const clearBt = document.getElementById('clearFilters');
 const countEl = document.getElementById('count');
 const fxCrack = document.getElementById('fxCrack');
 
-// ---------- dati ----------
 let SONGS = [];
 let FILTERS = { dance:'', song:'' };
 
+// Carica dati
 fetch('./data/songs.json?v='+Date.now())
   .then(r => r.json())
   .then(json => { SONGS = json; render(); })
@@ -115,9 +136,20 @@ fetch('./data/songs.json?v='+Date.now())
     cards.innerHTML = `<p style="color:#fff">Errore nel caricamento dei dati.</p>`;
   });
 
-// ---------- lista ----------
-const esc = s => (s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// Filtri
+fDance?.addEventListener('input', () => { FILTERS.dance = fDance.value; render(); });
+fSong ?.addEventListener('input', () => { FILTERS.song  = fSong.value ; render(); });
+clearBt?.addEventListener('click', () => { fDance.value=''; fSong.value=''; FILTERS={dance:'',song:''}; render(); });
 
+// Suono sui link
+document.addEventListener('pointerdown', ev => {
+  if (ev.target.closest('a.action')) {
+    try { fxCrack.cloneNode(true).play().catch(()=>{}); } catch {}
+  }
+}, {passive:true});
+
+// Utility
+const esc = s => (s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
 function matches(it){
   const d=(FILTERS.dance||'').toLowerCase().trim();
   const s=(FILTERS.song ||'').toLowerCase().trim();
@@ -125,29 +157,33 @@ function matches(it){
          (!s||(it.songTitle ||'').toLowerCase().includes(s));
 }
 
+// Render singola card con blur-up
 function renderCard(it){
-  const esc = s => (s||'').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-  // segnaposto iniziale (riempito poi in asincrono)
   const coverId = `cov_${Math.random().toString(36).slice(2)}`;
-
   const videoBtn = it.danceVideoUrl
     ? `<a class="action" href="${esc(it.danceVideoUrl)}" target="_blank" rel="noopener">Apri Ballo</a>` : '';
   const songBtn  = it.songUrl
     ? `<a class="action" href="${esc(it.songUrl)}" target="_blank" rel="noopener">Apri Canzone</a>` : '';
   const year = (it.year ?? '-') + '';
 
-  // Avvio fetch artwork in background e aggiorno l’img appena arriva
+  // blur-up asincrono
   queueMicrotask(async () => {
-    // 1) prova iTunes
-    let art = await fetchArtwork(it.singerName, it.songTitle);
-    // 2) fallback: thumb di YouTube dalla canzone (se disponibile)
-    if (!art && it.songUrl) art = youtubeThumb(it.songUrl);
-    // 3) fallback finale: dalla URL del video del ballo
-    if (!art && it.danceVideoUrl) art = youtubeThumb(it.danceVideoUrl);
+    let pair = await fetchArtworkPair(it.singerName, it.songTitle);
+    if (!pair) pair = youtubeThumbPair(it.songUrl) || youtubeThumbPair(it.danceVideoUrl);
 
-    const img = document.getElementById(coverId);
-    if (img && art) img.src = art;
+    const imgEl = document.getElementById(coverId);
+    if (!imgEl) return;
+
+    if (pair?.small){
+      imgEl.src = pair.small;
+    }
+    if (pair?.large){
+      const hi = new Image();
+      hi.onload = () => { imgEl.src = pair.large; imgEl.classList.add('is-ready'); };
+      hi.src = pair.large;
+    } else {
+      imgEl.classList.add('is-ready');
+    }
   });
 
   return `
@@ -158,12 +194,14 @@ function renderCard(it){
           <h3 class="card-title">${esc(it.danceTitle)}</h3>
           <div class="card-meta">${esc(it.singerName)} — ${esc(it.songTitle)}</div>
         </div>
-        <div class="year-badge" aria-label="Anno">${esc(year)}</div>
+        <div class="year-badge" aria-label="Anno">
+          <div class="yb-label">Anno</div>
+          <div class="yb-num">${esc(year)}</div>
+        </div>
       </div>
       <div class="actions">${videoBtn}${songBtn}</div>
     </article>`;
 }
-
 
 function render(){
   const list = SONGS.filter(matches);
@@ -171,19 +209,9 @@ function render(){
   cards.innerHTML = list.map(renderCard).join('') || '<p style="color:#fff">Nessun risultato coi filtri.</p>';
 }
 
-// filtri
-fDance?.addEventListener('input', () => { FILTERS.dance = fDance.value; render(); });
-fSong ?.addEventListener('input', () => { FILTERS.song  = fSong.value ; render(); });
-clearBt?.addEventListener('click', () => { fDance.value=''; fSong.value=''; FILTERS={dance:'',song:''}; render(); });
-
-// suono sui link YouTube
-document.addEventListener('pointerdown', ev => {
-  if (ev.target.closest('a.action')) {
-    try { fxCrack.cloneNode(true).play().catch(()=>{}); } catch {}
-  }
-}, {passive:true});
-
-// ---------- pulsante "Aggiorna app" (reset cache + SW) ----------
+/* =========================
+   PULSANTE “AGGIORNA APP” (se presente)
+   ========================= */
 document.getElementById('updateApp')?.addEventListener('click', async () => {
   try {
     if ('serviceWorker' in navigator) {

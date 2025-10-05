@@ -6,7 +6,7 @@
   <title>Western Spritz — Line Dance Library</title>
 
   <!-- CSS (versionato per forzare refresh) -->
-  <link rel="stylesheet" href="./style.css?v=2" />
+  <link rel="stylesheet" href="./style.css?v=4" />
 
   <!-- PWA -->
   <link rel="manifest" href="./manifest.webmanifest" />
@@ -52,7 +52,7 @@
   <audio id="fxCrack" src="./assets/audio/frusta.mp3" preload="auto"></audio>
 
   <!-- JS (versionato) -->
-  <script src="./app.js?v=2"></script>
+  <script src="./app.js?v=4"></script>
 
   <!-- Splash affidabile + Service Worker -->
   <script>
@@ -68,7 +68,7 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1')
+        navigator.serviceWorker.register('./sw.js?v=3')
           .then(reg => console.log('[SW] registrato', reg.scope))
           .catch(err => console.warn('[SW] errore', err));
       });

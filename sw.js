@@ -1,9 +1,9 @@
 // Service Worker — base
-const CACHE_NAME = 'static-v2';
+const CACHE_NAME = 'static-v4';
 
 const ASSETS = [
   '/', '/index.html',
-  '/style.css?v=1', '/app.js?v=2', '/manifest.webmanifest',
+  '/style.css?v=3', '/app.js?v=4', '/manifest.webmanifest',
   '/assets/images/icon.png',
   '/assets/images/gruppo.png',
   '/assets/audio/some_people.mp3',
