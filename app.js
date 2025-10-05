@@ -141,6 +141,20 @@ const pzNo      =document.getElementById('pzNo');
 const pzBravo   =document.getElementById('pzBravo');
 const pzQuit    =document.getElementById('pzQuit');
 const pzCloseTop=document.getElementById('pzClose');
+
+// Tap su "BRAVO!" per ricominciare
+pzBravo?.addEventListener('click', restartPuzzle);
+
+// Tasto Invio o Spazio quando BRAVO è visibile => ricomincia
+document.addEventListener('keydown', (e) => {
+  if ((e.key === 'Enter' || e.key === ' ') &&
+      !pzOverlay.classList.contains('hidden') &&
+      !pzBravo.classList.contains('hidden')) {
+    restartPuzzle();
+  }
+});
+
+
 const pzTime    =document.getElementById('pzTime');
 const pzProgress=document.getElementById('pzProgress');
 const diffBtns  =Array.from(document.querySelectorAll('.diff-btn'));
@@ -217,13 +231,23 @@ function renderQuestion(){
 }
 function showNo(){ pzNo.classList.remove('hidden'); try{fxWrong.play().catch(()=>{});}catch{} setTimeout(()=>pzNo.classList.add('hidden'),900); }
 function onWin(){ stopTimer(); try{fxWin.play().catch(()=>{});}catch{} pzImg?.classList.add('pz-complete'); setTimeout(()=>pzImg?.classList.remove('pz-complete'),1000); pzBravo.classList.remove('hidden'); }
+
+function restartPuzzle(){
+  pzBravo.classList.add('hidden');
+  startGame();
+}
+
 function startGame(){
+  pzNo.classList.add('hidden');
+  pzImg.classList.remove('pz-complete');
+
   pzBravo.classList.add('hidden'); pickImage();
   pzGrid.style.gridTemplateColumns=`repeat(${GRID},1fr)`; pzGrid.style.gridTemplateRows=`repeat(${GRID},1fr)`;
   buildTiles(); renderQuestion(); updateProgress(); startTimer();
 }
 function openPuzzle(){ const active=document.querySelector('.diff-btn.active'); GRID=Number(active?.dataset.grid||'4'); startGame(); pzOverlay.classList.remove('hidden'); pzOverlay.setAttribute('aria-hidden','false'); }
 function closePuzzle(){ stopTimer(); pzOverlay.classList.add('hidden'); pzOverlay.setAttribute('aria-hidden','true'); }
+pzBravo.classList.add('hidden');
 
 diffBtns.forEach(btn=>{
   btn.addEventListener('click',()=>{
