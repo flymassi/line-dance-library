@@ -203,11 +203,45 @@ function renderCard(it){
     </article>`;
 }
 
+// --- reveal anim: aggiunge .reveal e attiva .in quando entra a viewport ---
+function setupRevealAnimations(){
+  const cardsEls = document.querySelectorAll('#cards .card');
+  // se l'utente preferisce meno movimento, mostra subito
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (reduce || !('IntersectionObserver' in window)){
+    cardsEls.forEach(el => el.classList.remove('reveal'));
+    return;
+  }
+
+  const io = new IntersectionObserver((entries, obs) => {
+    entries.forEach(ent => {
+      if (ent.isIntersecting){
+        ent.target.classList.add('in');
+        obs.unobserve(ent.target);
+      }
+    });
+  }, { rootMargin: '0px 0px -10% 0px', threshold: 0.05 });
+
+  cardsEls.forEach((el, i) => {
+    // aggiungo la classe reveal e una leggera “stagger” con delay inline
+    el.classList.add('reveal');
+    el.style.transitionDelay = `${Math.min(i*40, 240)}ms`;
+    io.observe(el);
+  });
+}
+
+
+
 function render(){
   const list = SONGS.filter(matches);
   countEl.textContent = `Brani trovati: ${list.length}`;
   cards.innerHTML = list.map(renderCard).join('') || '<p style="color:#fff">Nessun risultato coi filtri.</p>';
+
+  // attivo animazione reveal per le nuove card
+  setupRevealAnimations();
 }
+
 
 /* =========================
    PULSANTE “AGGIORNA APP” (se presente)
