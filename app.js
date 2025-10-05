@@ -1,6 +1,6 @@
-console.log('[WS] app.js v9');
+console.log('[WS] app.js v11');
 
-/* ===== SFONDO ADATTIVO ===== */
+/* ========== SFONDO ADATTIVO ========== */
 (function setAdaptiveBg(){
   const blur = document.getElementById('bg-blur');
   const main = document.getElementById('bg-main');
@@ -31,7 +31,7 @@ console.log('[WS] app.js v9');
   img.src=url;
 })();
 
-/* ===== COPERTINE ===== */
+/* ========== COPERTINE (iTunes/YouTube) ========== */
 const ART_CACHE = new Map();
 const ytIdFromUrl=u=>{try{const x=new URL(u);if(x.hostname.includes('youtube.com'))return x.searchParams.get('v');if(x.hostname.includes('youtu.be'))return x.pathname.slice(1);}catch{}return null}
 const youtubeThumbPair=u=>{const id=ytIdFromUrl(u);return id?{small:`https://img.youtube.com/vi/${id}/mqdefault.jpg`,large:`https://img.youtube.com/vi/${id}/hqdefault.jpg`}:null}
@@ -45,16 +45,25 @@ async function fetchArtworkPair(singer,song){
   ART_CACHE.set(key,null); return null;
 }
 
-/* ===== LISTA BRANI ===== */
+/* ========== LISTA BRANI ========== */
 const cards=document.getElementById('cards'), fDance=document.getElementById('fDance'),
       fSong=document.getElementById('fSong'), clearBt=document.getElementById('clearFilters'),
       countEl=document.getElementById('count'), fxCrack=document.getElementById('fxCrack');
 
 let SONGS=[], FILTERS={dance:'',song:''};
 
-fetch('./data/songs.json?v='+Date.now())
-  .then(r=>r.json()).then(j=>{SONGS=j; render();})
-  .catch(e=>{console.error('Errore JSON',e); cards.innerHTML='<p style="color:#fff">Errore nel caricamento dei dati.</p>';});
+// carico JSON (robusto)
+(async () => {
+  try {
+    const res = await fetch('./data/songs.json?v=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    SONGS = await res.json();
+    render();
+  } catch (err) {
+    console.error('Errore caricamento songs.json:', err);
+    cards.innerHTML = `<p style="color:#fff">Errore nel caricamento dei dati. ${err?.message || ''}</p>`;
+  }
+})();
 
 fDance?.addEventListener('input',()=>{FILTERS.dance=fDance.value; render();});
 fSong ?.addEventListener('input',()=>{FILTERS.song =fSong.value ; render();});
@@ -115,7 +124,7 @@ function render(){
   setupRevealAnimations();
 }
 
-/* ===== AGGIORNA APP ===== */
+/* ========== AGGIORNA APP ========== */
 document.getElementById('updateApp')?.addEventListener('click', async ()=>{
   try{
     if('serviceWorker'in navigator){
@@ -130,7 +139,7 @@ document.getElementById('updateApp')?.addEventListener('click', async ()=>{
   location.href=location.pathname+'?fresh='+Date.now();
 });
 
-/* ===== PUZZLE ===== */
+/* ========== PUZZLE ========== */
 const pzOverlay=document.getElementById('puzzleOverlay');
 const pzGrid   =document.getElementById('pzGrid');
 const pzImg    =document.getElementById('pzImg');
@@ -141,20 +150,6 @@ const pzNo      =document.getElementById('pzNo');
 const pzBravo   =document.getElementById('pzBravo');
 const pzQuit    =document.getElementById('pzQuit');
 const pzCloseTop=document.getElementById('pzClose');
-
-// Tap su "BRAVO!" per ricominciare
-pzBravo?.addEventListener('click', restartPuzzle);
-
-// Tasto Invio o Spazio quando BRAVO è visibile => ricomincia
-document.addEventListener('keydown', (e) => {
-  if ((e.key === 'Enter' || e.key === ' ') &&
-      !pzOverlay.classList.contains('hidden') &&
-      !pzBravo.classList.contains('hidden')) {
-    restartPuzzle();
-  }
-});
-
-
 const pzTime    =document.getElementById('pzTime');
 const pzProgress=document.getElementById('pzProgress');
 const diffBtns  =Array.from(document.querySelectorAll('.diff-btn'));
@@ -167,6 +162,7 @@ addEventListener('keydown',e=>{ if(e.key==='Escape'&&!pzOverlay.classList.contai
 const fxCorrect=document.getElementById('fxCorrect');
 const fxWrong  =document.getElementById('fxWrong');
 const fxWin    =document.getElementById('fxWin');
+const fxGun    =document.getElementById('fxGun');
 
 let GRID=4;
 let PZ={order:[],revealed:new Set()};
@@ -187,11 +183,26 @@ function buildTiles(){
   updateProgress();
 }
 function revealOne(){
-  const next=PZ.order.find(id=>!PZ.revealed.has(id)); if(next==null) return;
-  PZ.revealed.add(next); revealedCount++;
-  pzGrid.querySelector(`.pz-tile[data-id="${next}"]`)?.classList.add('revealed');
-  updateProgress();
-  if(revealedCount>=GRID*GRID) onWin();
+  const next=PZ.order.find(id=>!PZ.revealed.has(id));
+  if(next==null) return;
+
+  const tile=pzGrid.querySelector(`.pz-tile[data-id="${next}"]`);
+  if(!tile) return;
+
+  try{ fxGun?.play().catch(()=>{}); }catch{}
+
+  tile.classList.add('hit');
+  tile.addEventListener('animationend', function handler(){
+    tile.removeEventListener('animationend', handler);
+    tile.classList.remove('hit');
+
+    PZ.revealed.add(next);
+    tile.classList.add('revealed');
+
+    revealedCount++;
+    updateProgress();
+    if(revealedCount>=GRID*GRID) onWin();
+  }, { once:true });
 }
 function updateProgress(){ if(pzProgress) pzProgress.textContent = `${revealedCount}/${GRID*GRID}`; }
 function startTimer(){
@@ -224,34 +235,37 @@ function renderQuestion(){
   q.choices.forEach((label,idx)=>{
     const b=document.createElement('button'); b.className='btn'; b.style.background='var(--brand)'; b.style.color='#fff';
     b.textContent=label||'—';
-    b.addEventListener('click',()=>{ if(idx===q.ok){ try{fxCorrect.play().catch(()=>{});}catch{} revealOne(); } else { showNo(); }
+    b.addEventListener('click',()=>{ if(idx===q.ok){ revealOne(); } else { showNo(); }
       setTimeout(renderQuestion,550); });
     pzAnswers.appendChild(b);
   });
 }
 function showNo(){ pzNo.classList.remove('hidden'); try{fxWrong.play().catch(()=>{});}catch{} setTimeout(()=>pzNo.classList.add('hidden'),900); }
 function onWin(){ stopTimer(); try{fxWin.play().catch(()=>{});}catch{} pzImg?.classList.add('pz-complete'); setTimeout(()=>pzImg?.classList.remove('pz-complete'),1000); pzBravo.classList.remove('hidden'); }
-
-function restartPuzzle(){
-  pzBravo.classList.add('hidden');
-  startGame();
-}
-
 function startGame(){
-  pzNo.classList.add('hidden');
-  pzImg.classList.remove('pz-complete');
-
-  pzBravo.classList.add('hidden'); pickImage();
+  pzBravo.classList.add('hidden'); pzNo.classList.add('hidden'); pzImg.classList.remove('pz-complete');
+  const active=document.querySelector('.diff-btn.active'); GRID=Number(active?.dataset.grid||'4');
   pzGrid.style.gridTemplateColumns=`repeat(${GRID},1fr)`; pzGrid.style.gridTemplateRows=`repeat(${GRID},1fr)`;
-  buildTiles(); renderQuestion(); updateProgress(); startTimer();
+  pickImage(); buildTiles(); renderQuestion(); updateProgress(); startTimer();
 }
-function openPuzzle(){ const active=document.querySelector('.diff-btn.active'); GRID=Number(active?.dataset.grid||'4'); startGame(); pzOverlay.classList.remove('hidden'); pzOverlay.setAttribute('aria-hidden','false'); }
-function closePuzzle(){ stopTimer(); pzOverlay.classList.add('hidden'); pzOverlay.setAttribute('aria-hidden','true'); }
-pzBravo.classList.add('hidden');
+function openPuzzle(){ startGame(); pzOverlay.classList.remove('hidden'); pzOverlay.setAttribute('aria-hidden','false'); }
+function closePuzzle(){ stopTimer(); pzBravo.classList.add('hidden'); pzOverlay.classList.add('hidden'); pzOverlay.setAttribute('aria-hidden','true'); }
 
+// Bravo: tap per ricominciare + tastiera
+pzBravo?.addEventListener('click', restartPuzzle);
+addEventListener('keydown', (e) => {
+  if ((e.key === 'Enter' || e.key === ' ') &&
+      !pzOverlay.classList.contains('hidden') &&
+      !pzBravo.classList.contains('hidden')) {
+    restartPuzzle();
+  }
+});
+function restartPuzzle(){ pzBravo.classList.add('hidden'); startGame(); }
+
+// Cambia difficoltà
 diffBtns.forEach(btn=>{
   btn.addEventListener('click',()=>{
     diffBtns.forEach(b=>b.classList.remove('active')); btn.classList.add('active');
-    if(!pzOverlay.classList.contains('hidden')){ GRID=Number(btn.dataset.grid||'4'); startGame(); }
+    if(!pzOverlay.classList.contains('hidden')) startGame();
   });
 });

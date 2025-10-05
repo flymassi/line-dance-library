@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Western Spritz — Line Dance Library</title>
 
-  <link rel="stylesheet" href="./style.css?v=9" />
+  <link rel="stylesheet" href="./style.css?v=11" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="apple-touch-icon" href="./assets/images/icon.png" />
   <link rel="icon" href="./assets/images/icon.png" />
   <meta name="theme-color" content="#000000" />
 </head>
 <body>
-  <!-- BACKGROUND LAYERS -->
+  <!-- BACKGROUND -->
   <div id="bg-blur" aria-hidden="true"></div>
   <div id="bg-main" aria-hidden="true"></div>
 
@@ -46,10 +46,11 @@
   </footer>
 
   <!-- AUDIO EFFETTI -->
-  <audio id="fxCrack"   src="./assets/audio/frusta.mp3"  preload="auto"></audio>
-  <audio id="fxCorrect" src="./assets/audio/correct.mp3" preload="auto"></audio>
-  <audio id="fxWrong"   src="./assets/audio/wrong.mp3"   preload="auto"></audio>
-  <audio id="fxWin"     src="./assets/audio/correct.mp3" preload="auto"></audio>
+  <audio id="fxCrack"   src="./assets/audio/frusta.mp3"    preload="auto"></audio>
+  <audio id="fxCorrect" src="./assets/audio/correct.mp3"   preload="auto"></audio>
+  <audio id="fxWrong"   src="./assets/audio/wrong.mp3"     preload="auto"></audio>
+  <audio id="fxWin"     src="./assets/audio/correct.mp3"   preload="auto"></audio>
+  <audio id="fxGun"     src="./assets/audio/gun_shot.mp3"  preload="auto"></audio>
 
   <!-- OVERLAY PUZZLE -->
   <section id="puzzleOverlay" class="pz hidden" aria-hidden="true">
@@ -68,11 +69,11 @@
         </div>
       </div>
 
-      <!-- Riempimento blur + immagine -->
+      <!-- riempimento blur + immagine -->
       <div id="pzBlur" class="pz-blur"></div>
       <img id="pzImg" class="pz-img" alt="Puzzle" />
 
-      <!-- Griglia tasselli -->
+      <!-- griglia tasselli -->
       <div id="pzGrid" class="pz-grid"></div>
 
       <!-- “No” -->
@@ -96,7 +97,7 @@
   </section>
 
   <!-- JS -->
-  <script src="./app.js?v=9"></script>
+  <script src="./app.js?v=11"></script>
 
   <!-- Splash + Service Worker -->
   <script>
@@ -112,7 +113,7 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=9')
+        navigator.serviceWorker.register('./sw.js?v=11')
           .then(reg => console.log('[SW] registrato', reg.scope))
           .catch(err => console.warn('[SW] errore', err));
       });

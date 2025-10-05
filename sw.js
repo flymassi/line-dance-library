@@ -1,10 +1,9 @@
-// Simple cache for static assets
-const CACHE_NAME = 'static-v9';
+const CACHE_NAME = 'static-v11';
 const ASSETS = [
   './',
   './index.html',
-  './style.css?v=9',
-  './app.js?v=9',
+  './style.css?v=11',
+  './app.js?v=11',
   './assets/images/icon.png',
   './assets/images/gruppo.png'
 ];
@@ -16,7 +15,8 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))))
+    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
+  );
   self.clients.claim();
 });
 
