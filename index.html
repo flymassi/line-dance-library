@@ -2,29 +2,34 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Western Spritz — Line Dance Library</title>
 
-  <link rel="stylesheet" href="./style.css?v=11" />
-  <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="./assets/images/icon.png" />
+  <!-- Icone / PWA -->
   <link rel="icon" href="./assets/images/icon.png" />
-  <meta name="theme-color" content="#000000" />
+  <link rel="apple-touch-icon" href="./assets/images/icon.png" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+
+  <!-- Stili -->
+  <link rel="stylesheet" href="./style.css?v=30" />
 </head>
 <body>
-  <!-- BACKGROUND -->
-  <div id="bg-blur" aria-hidden="true"></div>
-  <div id="bg-main" aria-hidden="true"></div>
+
+  <!-- Background -->
+  <div id="bg-blur" class="bg blur"></div>
+  <div id="bg-main" class="bg main"></div>
 
   <!-- SPLASH -->
-  <section id="splash" class="splash">
-    <img class="splash-img" src="./assets/images/gruppo.png" alt="Western Spritz" />
-    <p class="hint">Tocca “Avvia” per entrare</p>
-    <button id="startBtn" class="btn btn-primary">Avvia</button>
-  </section>
-  <audio id="introMusic" src="./assets/audio/some_people.mp3" preload="auto"></audio>
+  <div id="splash" class="splash">
+    <img src="./assets/images/gruppo.png" class="splash-img" alt="Western Spritz" />
+    <p class="splash-tip">Tocca “Avvia” per entrare</p>
+    <button id="startApp" class="btn btn-primary splash-start">Avvia</button>
+    <audio id="introMusic" preload="auto">
+      <source src="./assets/audio/some_people.mp3" type="audio/mpeg" />
+    </audio>
+  </div>
 
-  <!-- HEADER -->
+  <!-- Header -->
   <header class="hero">
     <h1>Western Spritz — Line Dance Library</h1>
     <div id="count" class="count">Brani trovati: 0</div>
@@ -32,90 +37,84 @@
     <div class="filters">
       <input id="fDance" class="input" placeholder="Filtra per titolo del ballo…" />
       <input id="fSong"  class="input" placeholder="Filtra per titolo della canzone…" />
-      <button id="clearFilters" class="btn btn-ghost">Pulisci</button>
-      <button id="updateApp" class="btn btn-primary" title="Forza aggiornamento app">Aggiorna app</button>
-      <button id="openPuzzle" class="btn btn-primary" title="Avvia il Puzzle">🎯 Gioco Puzzle</button>
+      <button id="clearFilters" class="btn ghost">Pulisci</button>
+    </div>
+
+    <div class="actions-top">
+      <button id="btnUpdate" class="btn btn-primary">Aggiorna app</button>
+      <button id="btnPuzzle" class="btn btn-puzzle">🎯 Gioco Puzzle</button>
+      <button id="btnPlaylist" class="btn btn-primary">▶︎ Playlist</button>
     </div>
   </header>
 
-  <!-- LISTA -->
+  <!-- Cards -->
   <main id="cards" class="cards" aria-live="polite"></main>
 
   <footer class="footer">
     Western Spritz • Aggiungi l’app alla Home per un’esperienza migliore
   </footer>
 
-  <!-- AUDIO EFFETTI -->
-  <audio id="fxCrack"   src="./assets/audio/frusta.mp3"    preload="auto"></audio>
-  <audio id="fxCorrect" src="./assets/audio/correct.mp3"   preload="auto"></audio>
-  <audio id="fxWrong"   src="./assets/audio/wrong.mp3"     preload="auto"></audio>
-  <audio id="fxWin"     src="./assets/audio/correct.mp3"   preload="auto"></audio>
-  <audio id="fxGun"     src="./assets/audio/gun_shot.mp3"  preload="auto"></audio>
-
-  <!-- OVERLAY PUZZLE -->
-  <section id="puzzleOverlay" class="pz hidden" aria-hidden="true">
-    <div class="pz-wrap">
-      <button id="pzClose" class="pz-close" aria-label="Chiudi">×</button>
-
-      <!-- HUD -->
-      <div class="pz-hud">
-        <div class="pz-info">
-          <span id="pzTime">00:00</span> • <span id="pzProgress">0/16</span>
-        </div>
-        <div class="pz-diff">
-          <button class="diff-btn" data-grid="3">3×3</button>
-          <button class="diff-btn active" data-grid="4">4×4</button>
-          <button class="diff-btn" data-grid="5">5×5</button>
+  <!-- Overlay: PLAYLIST -->
+  <div id="plModal" class="overlay hidden" aria-hidden="true">
+    <div class="pl-card">
+      <div class="pl-top">
+        <h3>Le mie playlist</h3>
+        <div class="gap8">
+          <button id="plClear" class="btn ghost">Svuota</button>
+          <button id="plClose" class="btn ghost">Chiudi</button>
         </div>
       </div>
-
-      <!-- riempimento blur + immagine -->
-      <div id="pzBlur" class="pz-blur"></div>
-      <img id="pzImg" class="pz-img" alt="Puzzle" />
-
-      <!-- griglia tasselli -->
-      <div id="pzGrid" class="pz-grid"></div>
-
-      <!-- “No” -->
-      <img id="pzNo" src="./assets/images/alessia.png" alt="No" class="pz-no hidden" />
-
-      <!-- Domande/risposte -->
-      <div class="pz-card">
-        <div id="pzQuestion" class="pz-q">Domanda…</div>
-        <div id="pzAnswers" class="pz-answers"></div>
-        <div class="pz-actions">
-          <button id="pzQuit" class="btn btn-ghost">Torna indietro</button>
-        </div>
-      </div>
-
-      <!-- Bravo -->
-      <div id="pzBravo" class="pz-bravo hidden">
-        <div class="pz-bravo-msg">BRAVO! 🎉</div>
-        <div class="pz-bravo-sub">Tocca per ricominciare</div>
+      <div id="plList"></div>
+      <div class="actions" style="justify-content:flex-end; gap:8px">
+          <button id="plPrev" class="btn ghost">◀︎ Precedente</button>
+          <button id="plNext" class="btn ghost">Successivo ▶︎</button>
+          <button id="plPlay" class="btn btn-primary">Apri su YouTube</button>
       </div>
     </div>
-  </section>
+  </div>
 
-  <!-- JS -->
-  <script src="./app.js?v=11"></script>
+  <!-- Overlay: PUZZLE -->
+  <div id="pzOverlay" class="overlay hidden" aria-hidden="true">
+    <div class="pz-topbar">
+      <button id="pzBack" class="chip">◀︎ Indietro</button>
+      <div class="chip"><span>⏱️</span><span id="pzTime">00:00</span></div>
+      <div class="chip"><span>⭐</span><span id="pzScore">0</span></div>
+      <div class="chip">Difficoltà:
+        <button class="chip-btn" data-diff="3">3×3</button>
+        <button class="chip-btn active" data-diff="4">4×4</button>
+        <button class="chip-btn" data-diff="5">5×5</button>
+      </div>
+      <button id="pzNext" class="chip">📷 Nuova foto</button>
+      <button id="pzClose" class="chip">✕</button>
+    </div>
 
-  <!-- Splash + Service Worker -->
+    <div class="pz-stage">
+      <div class="pz-img-wrap">
+        <img id="pzImg" src="" alt="puzzle" />
+        <div id="pzGrid"></div>
+        <img id="noImg" class="no-img hidden" src="./assets/images/alessia.png" alt="No" />
+      </div>
+    </div>
+
+    <div id="pzCard" class="qa-card">
+      <div id="pzQuestion" class="qa-title">Domanda…</div>
+      <div id="pzAnswers" class="qa-answers"></div>
+    </div>
+
+    <!-- suoni -->
+    <audio id="fxOk" preload="auto"><source src="./assets/audio/correct.mp3" type="audio/mpeg" /></audio>
+    <audio id="fxWrong" preload="auto"><source src="./assets/audio/wrong.mp3" type="audio/mpeg" /></audio>
+    <audio id="fxGun" preload="auto"><source src="./assets/audio/gun_shot.mp3" type="audio/mpeg" /></audio>
+    <audio id="fxWhip" preload="auto"><source src="./assets/audio/frusta.mp3" type="audio/mpeg" /></audio>
+    <audio id="fxVictory" preload="auto"><source src="./assets/audio/vittoria.mp3" type="audio/mpeg" /></audio>
+  </div>
+
+  <!-- Script -->
+  <script src="./app.js?v=30"></script>
   <script>
-    (function () {
-      const splash = document.getElementById('splash');
-      const startBtn = document.getElementById('startBtn');
-      const intro = document.getElementById('introMusic');
-      startBtn?.addEventListener('click', async () => {
-        try { await intro.play(); } catch(e) {}
-        setTimeout(() => splash?.remove(), 3000);
-      });
-    })();
-
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=11')
-          .then(reg => console.log('[SW] registrato', reg.scope))
-          .catch(err => console.warn('[SW] errore', err));
+    if ('serviceWorker' in navigator){
+      addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js?v=30').catch(()=>{});
       });
     }
   </script>
