@@ -289,39 +289,81 @@ function nextQuestion(){
 function onAnswer(a){
   if (!CURRENT_Q) return;
 
- if (a === CURRENT_Q.correct){
-  try { document.getElementById('fxOk')?.play(); } catch {}
-  try { const gun = document.getElementById('fxGun'); if (gun){ gun.currentTime = 0; gun.play().catch(()=>{}); } } catch {}
+  // ===== risposta corretta =====
+  if (a === CURRENT_Q.correct){
+    try { document.getElementById('fxOk')?.play(); } catch {}
+    try { const gun = document.getElementById('fxGun'); if (gun){ gun.currentTime = 0; gun.play().catch(()=>{}); } } catch {}
 
-  // prendo tasselli ancora presenti e non già in animazione o già svelati
-  const tiles = Array.from(PZ.grid.querySelectorAll('.pz-tile'));
-  const live  = tiles.filter(t => !t.classList.contains('hit') && !t.classList.contains('cleared'));
+    // prendo SOLO tasselli ancora presenti, non animati e non già svelati
+    const tiles = Array.from(PZ.grid.querySelectorAll('.pz-tile'));
+    const live  = tiles.filter(t => !t.classList.contains('hit') && !t.classList.contains('cleared'));
 
-  if (live.length){
-    // scelgo IL tassello
-    const t = live[Math.floor(Math.random() * live.length)];
+    if (live.length){
+      // scelgo IL tassello che verrà animato e "scoperto"
+      const t = live[Math.floor(Math.random() * live.length)];
 
-    // reset animazione (trucco reflow)
-    t.classList.remove('hit');
-    t.style.animation = 'none'; t.offsetHeight; t.style.animation = '';
-
-    // avvio animazione SOLO su questo tassello
-    t.classList.add('hit');
-
-    // quando FINISCE 'tileFlip', NON rimuovo il nodo: lo segno "cleared"
-    const onEnd = (ev)=>{
-      if (ev.target !== t) return;
-      if (ev.animationName !== 'tileFlip') return;
-      t.removeEventListener('animationend', onEnd);
-
-      // ► non rimuovere: lascia il box in griglia così il buco resta fermo
+      // reset animazione (trucco reflow) per essere sicuri
       t.classList.remove('hit');
-      t.classList.add('cleared'); // diventa invisibile ma mantiene lo spazio
+      t.style.animation = 'none'; t.offsetHeight; t.style.animation = '';
 
-      // prosegui
-      const remaining = PZ.grid.querySelectorAll('.pz-tile:not(.cleared)').length;
-      if (remaining === 0) {
-        try { document.getElementById('fxVictory')?.play(); } catch {}
+      // avvio l’animazione SOLO su questo tassello
+      t.classList.add('hit');
+
+      // quando finisce L'ANIMAZIONE PRINCIPALE (tileFlip), "scopri" proprio quel tassello
+      const onEnd = (ev)=>{
+        if (ev.target !== t) return;
+        if (ev.animationName !== 'tileFlip') return; // ascolto solo tileFlip
+        t.removeEventListener('animationend', onEnd);
+
+        // NON lo rimuovo dalla grid (evita ricompattamento): lo rendo invisibile mantenendo lo spazio
+        t.classList.remove('hit');
+        t.classList.add('cleared');        // .cleared = invisibile ma occupa spazio
+
+        // Effetto "puff" al centro del tassello
+        try {
+          const wrap = PZ.grid.parentElement;              // .pz-img-wrap
+          const tr = t.getBoundingClientRect();
+          const wr = wrap.getBoundingClientRect();
+          const puff = document.createElement('div');
+          puff.className = 'puff';
+          puff.style.left = (tr.left + tr.width/2 - wr.left) + 'px';
+          puff.style.top  = (tr.top  + tr.height/2 - wr.top)  + 'px';
+          wrap.appendChild(puff);
+          puff.addEventListener('animationend', ()=>puff.remove(), { once:true });
+        } catch {}
+
+        // controlla se è finito
+        const remaining = PZ.grid.querySelectorAll('.pz-tile:not(.cleared)').length;
+        if (remaining === 0) {
+          try { document.getElementById('fxVictory')?.play(); } catch {}
+
+          // ► attesa di 3 secondi PRIMA di mostrare "Bravo"
+          setTimeout(()=>{
+            const bravo = document.createElement('div');
+            bravo.className = 'bravo';
+            bravo.textContent = 'Bravo! Tocca per ricominciare';
+            const restart = ()=>{
+              bravo.remove();
+              loadNewPuzzleImage();   // nuova foto sempre diversa
+              buildGrid(PZ.size);     // ricostruisci la griglia
+              nextQuestion();         // nuova domanda
+              startTimer();
+            };
+            bravo.addEventListener('click', restart, { once:true });
+            document.body.appendChild(bravo);
+          }, 3000);
+
+        } else {
+          // nuova domanda
+          nextQuestion();
+        }
+      };
+      t.addEventListener('animationend', onEnd);
+
+    } else {
+      // edge-case: niente tasselli vivi
+      try { document.getElementById('fxVictory')?.play(); } catch {}
+      setTimeout(()=>{
         const bravo = document.createElement('div');
         bravo.className = 'bravo';
         bravo.textContent = 'Bravo! Tocca per ricominciare';
@@ -334,32 +376,12 @@ function onAnswer(a){
         };
         bravo.addEventListener('click', restart, { once:true });
         document.body.appendChild(bravo);
-      } else {
-        nextQuestion();
-      }
-    };
-    t.addEventListener('animationend', onEnd);
-  } else {
-    // edge case: già tutti svelati
-    try { document.getElementById('fxVictory')?.play(); } catch {}
-    const bravo = document.createElement('div');
-    bravo.className = 'bravo';
-    bravo.textContent = 'Bravo! Tocca per ricominciare';
-    const restart = ()=>{
-      bravo.remove();
-      loadNewPuzzleImage();
-      buildGrid(PZ.size);
-      nextQuestion();
-      startTimer();
-    };
-    bravo.addEventListener('click', restart, { once:true });
-    document.body.appendChild(bravo);
+      }, 3000);
+    }
+    return;
   }
 
-  return;
-}
-
-  // risposta sbagliata
+  // ===== risposta sbagliata =====
   try { document.getElementById('fxWrong')?.play(); } catch {}
   const no = PZ.no; // <img id="noImg" class="no-img">
   if (no){
