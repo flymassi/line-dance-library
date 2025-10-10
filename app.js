@@ -1,5 +1,5 @@
-/* Western Spritz — app.js v31 */
-console.log('[WS] app v31');
+/* Western Spritz — app.js v32 */
+console.log('[WS] app v32');
 
 /* ====== BACKGROUND RANDOM ====== */
 (function(){
@@ -16,25 +16,24 @@ console.log('[WS] app v31');
   const start  = document.getElementById('startApp');
   const music  = document.getElementById('introMusic');
 
-  // alza il bottone (regola qui: valori più negativi = più in alto)
+  // alza il bottone (valori più negativi = più in alto)
   start.style.transform = 'translateY(-90px)';
 
-  // 1) tenta di partire SUBITO (muted) quando la pagina si apre
+  // tenta di partire SUBITO (muted) quando la pagina si apre
   try {
-    music.muted = true;         // parte silenzioso (richiesto dai browser)
-    music.volume = 1;           // volume target (verrà usato dopo l’unmute)
-    music.play().catch(()=>{}); // se è bloccato, ignoriamo
+    music.muted = true;         // parte silenzioso
+    music.volume = 1;
+    music.play().catch(()=>{});
   } catch {}
 
-  // helper: sblocca audio al primo gesto utente (tap/click/keypress)
+  // sblocca audio al primo gesto utente
   function unlockAudioOnce(){
     try {
-      music.muted = false;      // togli mute
-      music.currentTime = 0;    // riparti dall’inizio
+      music.muted = false;
+      music.currentTime = 0;
       const p = music.play();
       if (p?.catch) p.catch(()=>{});
     } catch {}
-    // rimuovi i listener: lo facciamo una sola volta
     window.removeEventListener('touchstart', unlockAudioOnce, {passive:true});
     window.removeEventListener('mousedown', unlockAudioOnce);
     window.removeEventListener('keydown',   unlockAudioOnce);
@@ -43,13 +42,12 @@ console.log('[WS] app v31');
   window.addEventListener('mousedown',   unlockAudioOnce, {once:true});
   window.addEventListener('keydown',     unlockAudioOnce, {once:true});
 
-  // 2) al tap su "Avvia" nascondi lo splash e (ri)garantisci l’audio
+  // al tap su "Avvia" chiudi splash e garantisci l’audio
   start.addEventListener('click', ()=>{
-    unlockAudioOnce();               // forza lo sblocco su iOS
-    splash.classList.add('hidden');  // chiudi splash
+    unlockAudioOnce();
+    splash.classList.add('hidden');
   }, { once:true });
 })();
-
 
 /* ====== UTIL ====== */
 const $  = sel => document.querySelector(sel);
@@ -212,8 +210,48 @@ const PZ = {
   size:  4,
   tiles: [],
   timer: null,
-  t0: 0
+  t0: 0,
+  lives: 3,             // ❤️ vite
 };
+
+/* --- BG MUSIC helpers --- */
+function playBg(){
+  const bg = document.getElementById('fxBg');
+  if (!bg) return;
+  try {
+    bg.volume = 0.6;
+    bg.currentTime = 0;
+    bg.play().catch(()=>{});
+  } catch {}
+}
+function stopBg(){
+  const bg = document.getElementById('fxBg');
+  if (!bg) return;
+  try { bg.pause(); } catch {}
+}
+
+/* --- vite (❤️) --- */
+function setLives(n){
+  PZ.lives = n;
+  const el = document.getElementById('pzLives');
+  if (el) el.textContent = String(Math.max(0, n));
+}
+function gameOver(){
+  const over = document.createElement('div');
+  over.className = 'bravo';
+  over.textContent = 'Peccato! Tocca per riprovare';
+  const restart = ()=>{
+    over.remove();
+    loadNewPuzzleImage();
+    buildGrid(PZ.size);
+    setLives(3);
+    nextQuestion();
+    startTimer();
+    playBg();
+  };
+  over.addEventListener('click', restart, { once:true });
+  document.body.appendChild(over);
+}
 
 /* --- foto casuale evitando ripetizione --- */
 let pzLastIndex = -1;
@@ -294,7 +332,7 @@ function onAnswer(a){
     try { document.getElementById('fxOk')?.play(); } catch {}
     try { const gun = document.getElementById('fxGun'); if (gun){ gun.currentTime = 0; gun.play().catch(()=>{}); } } catch {}
 
-    // prendo SOLO tasselli ancora presenti, non animati e non già svelati
+    // prendo tasselli non animati e non già svelati
     const tiles = Array.from(PZ.grid.querySelectorAll('.pz-tile'));
     const live  = tiles.filter(t => !t.classList.contains('hit') && !t.classList.contains('cleared'));
 
@@ -302,26 +340,25 @@ function onAnswer(a){
       // scelgo IL tassello che verrà animato e "scoperto"
       const t = live[Math.floor(Math.random() * live.length)];
 
-      // reset animazione (trucco reflow) per essere sicuri
+      // reset animazione (trucco reflow)
       t.classList.remove('hit');
       t.style.animation = 'none'; t.offsetHeight; t.style.animation = '';
 
       // avvio l’animazione SOLO su questo tassello
       t.classList.add('hit');
 
-      // quando finisce L'ANIMAZIONE PRINCIPALE (tileFlip), "scopri" proprio quel tassello
+      // quando finisce 'tileFlip', marchio come cleared (non rimuovo il nodo)
       const onEnd = (ev)=>{
         if (ev.target !== t) return;
-        if (ev.animationName !== 'tileFlip') return; // ascolto solo tileFlip
+        if (ev.animationName !== 'tileFlip') return;
         t.removeEventListener('animationend', onEnd);
 
-        // NON lo rimuovo dalla grid (evita ricompattamento): lo rendo invisibile mantenendo lo spazio
         t.classList.remove('hit');
-        t.classList.add('cleared');        // .cleared = invisibile ma occupa spazio
+        t.classList.add('cleared'); // invisibile, mantiene spazio
 
-        // Effetto "puff" al centro del tassello
+        // puff grafico
         try {
-          const wrap = PZ.grid.parentElement;              // .pz-img-wrap
+          const wrap = PZ.grid.parentElement; // .pz-img-wrap
           const tr = t.getBoundingClientRect();
           const wr = wrap.getBoundingClientRect();
           const puff = document.createElement('div');
@@ -336,33 +373,36 @@ function onAnswer(a){
         const remaining = PZ.grid.querySelectorAll('.pz-tile:not(.cleared)').length;
         if (remaining === 0) {
           try { document.getElementById('fxVictory')?.play(); } catch {}
+          stopBg(); // ferma musica alla vittoria
 
-          // ► attesa di 3 secondi PRIMA di mostrare "Bravo"
+          // attesa 3s, poi "Bravo!"
           setTimeout(()=>{
             const bravo = document.createElement('div');
             bravo.className = 'bravo';
             bravo.textContent = 'Bravo! Tocca per ricominciare';
             const restart = ()=>{
               bravo.remove();
-              loadNewPuzzleImage();   // nuova foto sempre diversa
-              buildGrid(PZ.size);     // ricostruisci la griglia
-              nextQuestion();         // nuova domanda
+              loadNewPuzzleImage();
+              buildGrid(PZ.size);
+              setLives(3);
+              nextQuestion();
               startTimer();
+              playBg();
             };
             bravo.addEventListener('click', restart, { once:true });
             document.body.appendChild(bravo);
           }, 3000);
 
         } else {
-          // nuova domanda
           nextQuestion();
         }
       };
       t.addEventListener('animationend', onEnd);
 
     } else {
-      // edge-case: niente tasselli vivi
+      // edge-case: nessun tassello vivo
       try { document.getElementById('fxVictory')?.play(); } catch {}
+      stopBg();
       setTimeout(()=>{
         const bravo = document.createElement('div');
         bravo.className = 'bravo';
@@ -371,8 +411,10 @@ function onAnswer(a){
           bravo.remove();
           loadNewPuzzleImage();
           buildGrid(PZ.size);
+          setLives(3);
           nextQuestion();
           startTimer();
+          playBg();
         };
         bravo.addEventListener('click', restart, { once:true });
         document.body.appendChild(bravo);
@@ -387,33 +429,21 @@ function onAnswer(a){
   if (no){
     no.classList.remove('hidden');
     no.classList.add('shake');
-    setTimeout(()=>{
+  }
+  // dopo il tremolio: nascondi Alessia, scala vita, check game over o nuova domanda
+  setTimeout(()=>{
+    if (no){
       no.classList.add('hidden');
       no.classList.remove('shake');
-    }, 700);
-  }
-}
-
-
-function checkWin(){
-  const remaining = PZ.grid.querySelectorAll('.pz-tile').length;
-  if (remaining===0){
-    $('#fxVictory')?.play().catch(()=>{});
-    const bravo = document.createElement('div');
-    bravo.className = 'bravo';
-    bravo.textContent = 'Bravo! Tocca per ricominciare';
-    const restart = ()=>{
-      bravo.remove();
-      loadNewPuzzleImage();  // ► cambia SEMPRE foto
-      buildGrid(PZ.size);    // ► nuova griglia
-      nextQuestion();        // ► nuova domanda
-      startTimer();
-    };
-    bravo.addEventListener('click', restart, { once:true });
-    document.body.appendChild(bravo);
-  } else {
-    nextQuestion();
-  }
+    }
+    setLives(PZ.lives - 1);
+    if (PZ.lives <= 0){
+      stopBg();
+      gameOver();
+    } else {
+      nextQuestion();
+    }
+  }, 700);
 }
 
 function startTimer(){
@@ -428,17 +458,19 @@ function startTimer(){
 }
 
 function startPuzzle(){
-  loadNewPuzzleImage();  // ► prima scegli la foto…
-  buildGrid(PZ.size);    // ► …poi copri con la griglia
+  loadNewPuzzleImage();
+  buildGrid(PZ.size);
+  setLives(3);              // reset vite
   PZ.root.classList.remove('hidden');
   nextQuestion();
   startTimer();
+  playBg();                 // musica di sottofondo ON
 }
 
 /* --- UI puzzle --- */
 $('#btnPuzzle').addEventListener('click', startPuzzle);
-$('#pzClose').addEventListener('click', ()=> PZ.root.classList.add('hidden'));
-$('#pzBack' ).addEventListener('click', ()=> PZ.root.classList.add('hidden'));
+$('#pzClose').addEventListener('click', ()=>{ PZ.root.classList.add('hidden'); stopBg(); });
+$('#pzBack' ).addEventListener('click', ()=>{ PZ.root.classList.add('hidden'); stopBg(); });
 $('#pzNext' ).addEventListener('click', startPuzzle);
 $$('.chip-btn').forEach(b=>{
   b.addEventListener('click', ()=>{

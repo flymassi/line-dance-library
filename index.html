@@ -27,7 +27,6 @@
     <audio id="introMusic" autoplay playsinline muted preload="auto">
       <source src="./assets/audio/some_people.mp3" type="audio/mpeg" />
     </audio>
-
   </div>
 
   <!-- Header -->
@@ -67,9 +66,9 @@
       </div>
       <div id="plList"></div>
       <div class="actions" style="justify-content:flex-end; gap:8px">
-          <button id="plPrev" class="btn ghost">◀︎ Precedente</button>
-          <button id="plNext" class="btn ghost">Successivo ▶︎</button>
-          <button id="plPlay" class="btn btn-primary">Apri su YouTube</button>
+        <button id="plPrev" class="btn ghost">◀︎ Precedente</button>
+        <button id="plNext" class="btn ghost">Successivo ▶︎</button>
+        <button id="plPlay" class="btn btn-primary">Apri su YouTube</button>
       </div>
     </div>
   </div>
@@ -80,6 +79,8 @@
       <button id="pzBack" class="chip">◀︎ Indietro</button>
       <div class="chip"><span>⏱️</span><span id="pzTime">00:00</span></div>
       <div class="chip"><span>⭐</span><span id="pzScore">0</span></div>
+      <!-- ▼ NUOVO: contatore vite -->
+      <div class="chip"><span>❤️</span><span id="pzLives">3</span></div>
       <div class="chip">Difficoltà:
         <button class="chip-btn" data-diff="3">3×3</button>
         <button class="chip-btn active" data-diff="4">4×4</button>
@@ -108,6 +109,10 @@
     <audio id="fxGun" preload="auto"><source src="./assets/audio/gun_shot.mp3" type="audio/mpeg" /></audio>
     <audio id="fxWhip" preload="auto"><source src="./assets/audio/frusta.mp3" type="audio/mpeg" /></audio>
     <audio id="fxVictory" preload="auto"><source src="./assets/audio/vittoria.mp3" type="audio/mpeg" /></audio>
+    <!-- ▼ NUOVO: musica di sottofondo del puzzle -->
+    <audio id="fxBg" loop preload="auto">
+      <source src="./assets/audio/lo_chiamavano_trinita.mp3" type="audio/mpeg" />
+    </audio>
   </div>
 
   <!-- Script -->
