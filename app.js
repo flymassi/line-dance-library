@@ -1,5 +1,5 @@
-/* Western Spritz — app.js v30 */
-console.log('[WS] app v30');
+/* Western Spritz — app.js v31 */
+console.log('[WS] app v31');
 
 /* ====== BACKGROUND RANDOM ====== */
 (function(){
@@ -16,17 +16,43 @@ console.log('[WS] app v30');
   const start  = document.getElementById('startApp');
   const music  = document.getElementById('introMusic');
 
-  // alziamo un po’ il bottone
-  start.style.marginTop = '-4px';
+  // alza il bottone (regola qui: valori più negativi = più in alto)
+  start.style.transform = 'translateY(-90px)';
 
-  start.addEventListener('click', async ()=>{
-    try { await music.play(); } catch(e){}
-    splash.classList.add('hidden');
+  // 1) tenta di partire SUBITO (muted) quando la pagina si apre
+  try {
+    music.muted = true;         // parte silenzioso (richiesto dai browser)
+    music.volume = 1;           // volume target (verrà usato dopo l’unmute)
+    music.play().catch(()=>{}); // se è bloccato, ignoriamo
+  } catch {}
+
+  // helper: sblocca audio al primo gesto utente (tap/click/keypress)
+  function unlockAudioOnce(){
+    try {
+      music.muted = false;      // togli mute
+      music.currentTime = 0;    // riparti dall’inizio
+      const p = music.play();
+      if (p?.catch) p.catch(()=>{});
+    } catch {}
+    // rimuovi i listener: lo facciamo una sola volta
+    window.removeEventListener('touchstart', unlockAudioOnce, {passive:true});
+    window.removeEventListener('mousedown', unlockAudioOnce);
+    window.removeEventListener('keydown',   unlockAudioOnce);
+  }
+  window.addEventListener('touchstart', unlockAudioOnce, {passive:true, once:true});
+  window.addEventListener('mousedown',   unlockAudioOnce, {once:true});
+  window.addEventListener('keydown',     unlockAudioOnce, {once:true});
+
+  // 2) al tap su "Avvia" nascondi lo splash e (ri)garantisci l’audio
+  start.addEventListener('click', ()=>{
+    unlockAudioOnce();               // forza lo sblocco su iOS
+    splash.classList.add('hidden');  // chiudi splash
   }, { once:true });
 })();
 
+
 /* ====== UTIL ====== */
-const $ = sel => document.querySelector(sel);
+const $  = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
 const getYouTubeId = url => {
   if (!url) return null;
@@ -46,9 +72,8 @@ function openAt(index){
   if (!item) return;
   const url = item.songUrl || item.danceVideoUrl;
   if (!url) return;
-  window.open(url, plWindowName); // riusa sempre la stessa scheda
+  window.open(url, plWindowName);
 }
-
 
 const elCards = $('#cards');
 const elCount = $('#count');
@@ -131,7 +156,7 @@ document.addEventListener('click', e=>{
 $('#btnPlaylist').addEventListener('click', ()=>{
   const modal = $('#plModal');
   const list  = $('#plList');
-  plIndex = 0; // reset
+  plIndex = 0;
   list.innerHTML = PLAYLIST.length
     ? PLAYLIST.map((s,i)=>`<div class="card" style="margin-top:8px">
         ${i+1}. ${s.danceTitle||''} — <i>${s.singerName||''}</i>
@@ -147,7 +172,6 @@ $('#plClear').addEventListener('click', ()=>{
   $('#plModal').classList.add('hidden');
   render();
 });
-
 $('#plPlay').addEventListener('click', ()=>{
   if (!PLAYLIST.length) return;
   const ids = PLAYLIST
@@ -155,7 +179,7 @@ $('#plPlay').addEventListener('click', ()=>{
     .filter(Boolean);
   if (!ids.length) return;
   const url = `https://www.youtube.com/watch_videos?video_ids=${ids.join(',')}`;
-  window.open(url, '_blank'); // YouTube farà auto-next
+  window.open(url, '_blank');
 });
 $('#plPrev').addEventListener('click', ()=>{
   if (!PLAYLIST.length) return;
@@ -168,7 +192,6 @@ $('#plNext').addEventListener('click', ()=>{
   openAt(plIndex);
 });
 
-
 /* ====== FILTRI ====== */
 $('#fDance').addEventListener('input', e=>{ FILTER.dance = e.target.value; render(); });
 $('#fSong' ).addEventListener('input', e=>{ FILTER.song  = e.target.value; render(); });
@@ -178,21 +201,34 @@ $('#clearFilters').addEventListener('click', ()=>{
 
 /* ====== PUZZLE ====== */
 const PZ = {
-  root: $('#pzOverlay'),
-  grid: $('#pzGrid'),
-  img:  $('#pzImg'),
-  q:    $('#pzQuestion'),
-  ans:  $('#pzAnswers'),
-  score:$('#pzScore'),
-  time: $('#pzTime'),
-  no:   $('#noImg'),
-  size: 4,
+  root:  $('#pzOverlay'),
+  grid:  $('#pzGrid'),
+  img:   $('#pzImg'),
+  q:     $('#pzQuestion'),
+  ans:   $('#pzAnswers'),
+  score: $('#pzScore'),
+  time:  $('#pzTime'),
+  no:    $('#noImg'),
+  size:  4,
   tiles: [],
   timer: null,
   t0: 0
 };
 
-// crea griglia n×n
+/* --- foto casuale evitando ripetizione --- */
+let pzLastIndex = -1;
+function pickRandomPuzzleSrc(){
+  const MAX = 27;
+  let i;
+  do { i = Math.floor(Math.random()*MAX)+1; } while (MAX>1 && i===pzLastIndex);
+  pzLastIndex = i;
+  return `./assets/images/puzzles/${i}.png`;
+}
+function loadNewPuzzleImage(){
+  if (PZ.img) PZ.img.src = pickRandomPuzzleSrc();
+}
+
+/* --- griglia n×n --- */
 function buildGrid(n){
   PZ.size = n;
   PZ.grid.innerHTML = '';
@@ -208,10 +244,10 @@ function buildGrid(n){
   }
 }
 
-// domande
+/* --- domande --- */
 function randomQuestion(){
   const s = SONGS[Math.floor(Math.random()*SONGS.length)];
-  const qType = Math.floor(Math.random()*2); // 0 = cantante, 1 = ballo
+  const qType = Math.floor(Math.random()*2); // 0 cantante, 1 ballo
   let q, correct, options = [];
   if (qType===0){
     q = `Chi è il cantante di “${s.songTitle}”?`;
@@ -249,37 +285,90 @@ function nextQuestion(){
   });
 }
 
+/* --- risposta --- */
 function onAnswer(a){
   if (!CURRENT_Q) return;
 
-  if (a === CURRENT_Q.correct){
-    $('#fxOk').play().catch(()=>{});
-    $('#fxGun').play().catch(()=>{});
+ if (a === CURRENT_Q.correct){
+  try { document.getElementById('fxOk')?.play(); } catch {}
+  try { const gun = document.getElementById('fxGun'); if (gun){ gun.currentTime = 0; gun.play().catch(()=>{}); } } catch {}
 
-    // solo tasselli vivi e non in animazione
-    const liveTiles = PZ.tiles.filter(t =>
-      document.body.contains(t) && !t.classList.contains('hit')
-    );
+  // prendo tasselli ancora presenti e non già in animazione o già svelati
+  const tiles = Array.from(PZ.grid.querySelectorAll('.pz-tile'));
+  const live  = tiles.filter(t => !t.classList.contains('hit') && !t.classList.contains('cleared'));
 
-    if (liveTiles.length){
-      const t = liveTiles[Math.floor(Math.random()*liveTiles.length)];
-      t.style.willChange = 'transform,opacity';
-      t.classList.add('hit');          // parte l’animazione CSS (spinOut)
-      t.addEventListener('animationend', ()=>{
-        if (t.isConnected) t.remove();  // RIMUOVO ESATTAMENTE QUEL TASSELL0
-        checkWin();
-      }, { once:true });
-    } else {
-      checkWin();
-    }
+  if (live.length){
+    // scelgo IL tassello
+    const t = live[Math.floor(Math.random() * live.length)];
+
+    // reset animazione (trucco reflow)
+    t.classList.remove('hit');
+    t.style.animation = 'none'; t.offsetHeight; t.style.animation = '';
+
+    // avvio animazione SOLO su questo tassello
+    t.classList.add('hit');
+
+    // quando FINISCE 'tileFlip', NON rimuovo il nodo: lo segno "cleared"
+    const onEnd = (ev)=>{
+      if (ev.target !== t) return;
+      if (ev.animationName !== 'tileFlip') return;
+      t.removeEventListener('animationend', onEnd);
+
+      // ► non rimuovere: lascia il box in griglia così il buco resta fermo
+      t.classList.remove('hit');
+      t.classList.add('cleared'); // diventa invisibile ma mantiene lo spazio
+
+      // prosegui
+      const remaining = PZ.grid.querySelectorAll('.pz-tile:not(.cleared)').length;
+      if (remaining === 0) {
+        try { document.getElementById('fxVictory')?.play(); } catch {}
+        const bravo = document.createElement('div');
+        bravo.className = 'bravo';
+        bravo.textContent = 'Bravo! Tocca per ricominciare';
+        const restart = ()=>{
+          bravo.remove();
+          loadNewPuzzleImage();
+          buildGrid(PZ.size);
+          nextQuestion();
+          startTimer();
+        };
+        bravo.addEventListener('click', restart, { once:true });
+        document.body.appendChild(bravo);
+      } else {
+        nextQuestion();
+      }
+    };
+    t.addEventListener('animationend', onEnd);
   } else {
-    $('#fxWrong').play().catch(()=>{});
-    PZ.no.classList.remove('hidden');
-    PZ.no.classList.add('shake');
+    // edge case: già tutti svelati
+    try { document.getElementById('fxVictory')?.play(); } catch {}
+    const bravo = document.createElement('div');
+    bravo.className = 'bravo';
+    bravo.textContent = 'Bravo! Tocca per ricominciare';
+    const restart = ()=>{
+      bravo.remove();
+      loadNewPuzzleImage();
+      buildGrid(PZ.size);
+      nextQuestion();
+      startTimer();
+    };
+    bravo.addEventListener('click', restart, { once:true });
+    document.body.appendChild(bravo);
+  }
+
+  return;
+}
+
+  // risposta sbagliata
+  try { document.getElementById('fxWrong')?.play(); } catch {}
+  const no = PZ.no; // <img id="noImg" class="no-img">
+  if (no){
+    no.classList.remove('hidden');
+    no.classList.add('shake');
     setTimeout(()=>{
-      PZ.no.classList.add('hidden');
-      PZ.no.classList.remove('shake');
-    },700);
+      no.classList.add('hidden');
+      no.classList.remove('shake');
+    }, 700);
   }
 }
 
@@ -287,17 +376,21 @@ function onAnswer(a){
 function checkWin(){
   const remaining = PZ.grid.querySelectorAll('.pz-tile').length;
   if (remaining===0){
-    $('#fxVictory').play().catch(()=>{});
+    $('#fxVictory')?.play().catch(()=>{});
     const bravo = document.createElement('div');
     bravo.className = 'bravo';
     bravo.textContent = 'Bravo! Tocca per ricominciare';
-    bravo.addEventListener('click', ()=>{
+    const restart = ()=>{
       bravo.remove();
-      startPuzzle(); // nuova foto + nuova griglia
-    }, { once:true });
+      loadNewPuzzleImage();  // ► cambia SEMPRE foto
+      buildGrid(PZ.size);    // ► nuova griglia
+      nextQuestion();        // ► nuova domanda
+      startTimer();
+    };
+    bravo.addEventListener('click', restart, { once:true });
     document.body.appendChild(bravo);
   } else {
-    nextQuestion(); // nuova domanda
+    nextQuestion();
   }
 }
 
@@ -313,22 +406,18 @@ function startTimer(){
 }
 
 function startPuzzle(){
-  // immagine casuale
-  const pool = Array.from({length:27},(_,i)=>`./assets/images/puzzles/${i+1}.png`);
-  PZ.img.src = pool[Math.floor(Math.random()*pool.length)];
-
-  // griglia
-  buildGrid(PZ.size);
+  loadNewPuzzleImage();  // ► prima scegli la foto…
+  buildGrid(PZ.size);    // ► …poi copri con la griglia
   PZ.root.classList.remove('hidden');
   nextQuestion();
   startTimer();
 }
 
-// UI puzzle
+/* --- UI puzzle --- */
 $('#btnPuzzle').addEventListener('click', startPuzzle);
 $('#pzClose').addEventListener('click', ()=> PZ.root.classList.add('hidden'));
-$('#pzBack').addEventListener('click', ()=> PZ.root.classList.add('hidden'));
-$('#pzNext').addEventListener('click', startPuzzle);
+$('#pzBack' ).addEventListener('click', ()=> PZ.root.classList.add('hidden'));
+$('#pzNext' ).addEventListener('click', startPuzzle);
 $$('.chip-btn').forEach(b=>{
   b.addEventListener('click', ()=>{
     $$('.chip-btn').forEach(x=>x.classList.remove('active'));
@@ -343,7 +432,6 @@ async function load(){
   try{
     const res = await fetch('./data/songs.json', { cache:'no-store' });
     SONGS = await res.json();
-    // Ordine inverso (# più alto -> più in alto)
     SONGS.sort((a,b)=> (b.songNumber||0) - (a.songNumber||0));
     render();
   }catch(e){
