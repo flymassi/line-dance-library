@@ -1,5 +1,5 @@
-/* Western Spritz — app.js v32 */
-console.log('[WS] app v32');
+/* Western Spritz — app.js v40 */
+console.log('[WS] app v40');
 
 /* ====== BACKGROUND RANDOM ====== */
 (function(){
@@ -15,18 +15,16 @@ console.log('[WS] app v32');
   const splash = document.getElementById('splash');
   const start  = document.getElementById('startApp');
   const music  = document.getElementById('introMusic');
+  if (!splash || !start || !music) return;
 
-  // alza il bottone (valori più negativi = più in alto)
-  start.style.transform = 'translateY(-90px)';
+  try { start.style.transform = 'translateY(-90px)'; } catch {}
 
-  // tenta di partire SUBITO (muted) quando la pagina si apre
   try {
-    music.muted = true;         // parte silenzioso
+    music.muted = true;
     music.volume = 1;
     music.play().catch(()=>{});
   } catch {}
 
-  // sblocca audio al primo gesto utente
   function unlockAudioOnce(){
     try {
       music.muted = false;
@@ -34,7 +32,7 @@ console.log('[WS] app v32');
       const p = music.play();
       if (p?.catch) p.catch(()=>{});
     } catch {}
-    window.removeEventListener('touchstart', unlockAudioOnce, {passive:true});
+    window.removeEventListener('touchstart', unlockAudioOnce);
     window.removeEventListener('mousedown', unlockAudioOnce);
     window.removeEventListener('keydown',   unlockAudioOnce);
   }
@@ -42,7 +40,6 @@ console.log('[WS] app v32');
   window.addEventListener('mousedown',   unlockAudioOnce, {once:true});
   window.addEventListener('keydown',     unlockAudioOnce, {once:true});
 
-  // al tap su "Avvia" chiudi splash e garantisci l’audio
   start.addEventListener('click', ()=>{
     unlockAudioOnce();
     splash.classList.add('hidden');
@@ -57,6 +54,7 @@ const getYouTubeId = url => {
   const m = url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{6,})/i);
   return m ? m[1] : null;
 };
+function hasSongs(){ return Array.isArray(SONGS) && SONGS.length > 0; }
 
 /* ====== DATA ====== */
 let SONGS = [];
@@ -78,6 +76,8 @@ const elCount = $('#count');
 
 /* ====== RENDER CARDS ====== */
 function render(){
+  if (!elCards || !elCount) return;
+
   const qd = FILTER.dance.toLowerCase();
   const qs = FILTER.song.toLowerCase();
 
@@ -118,19 +118,17 @@ function render(){
   }).join('');
 }
 
-/* ====== OPEN LINKS (con frusta) ====== */
-(function(){
-  document.addEventListener('click', e=>{
-    const a = e.target.closest('[data-open]');
-    if (!a) return;
-    const y = +a.dataset.y, n = +a.dataset.n;
-    const s = SONGS.find(x=>x.year==y && x.songNumber==n);
-    const url = a.dataset.open==='dance' ? s?.danceVideoUrl : s?.songUrl;
-    if (!url) return;
-    $('#fxWhip')?.play().catch(()=>{});
-    setTimeout(()=> window.open(url, '_blank'), 120);
-  });
-})();
+/* ====== OPEN LINKS (frusta) ====== */
+document.addEventListener('click', e=>{
+  const a = e.target.closest('[data-open]');
+  if (!a) return;
+  const y = +a.dataset.y, n = +a.dataset.n;
+  const s = SONGS.find(x=>x.year==y && x.songNumber==n);
+  const url = a.dataset.open==='dance' ? s?.danceVideoUrl : s?.songUrl;
+  if (!url) return;
+  $('#fxWhip')?.play?.();
+  setTimeout(()=> window.open(url, '_blank'), 120);
+});
 
 /* ====== PLAYLIST ====== */
 function updatePlaylistButton(btn, inPlaylist){
@@ -151,10 +149,11 @@ document.addEventListener('click', e=>{
   updatePlaylistButton(b, idx<0);
 });
 
-$('#btnPlaylist').addEventListener('click', ()=>{
+$('#btnPlaylist')?.addEventListener('click', ()=>{
   const modal = $('#plModal');
   const list  = $('#plList');
   plIndex = 0;
+  if (!modal || !list) return;
   list.innerHTML = PLAYLIST.length
     ? PLAYLIST.map((s,i)=>`<div class="card" style="margin-top:8px">
         ${i+1}. ${s.danceTitle||''} — <i>${s.singerName||''}</i>
@@ -162,15 +161,14 @@ $('#btnPlaylist').addEventListener('click', ()=>{
     : `<div class="card">Nessun brano nella playlist.</div>`;
   modal.classList.remove('hidden');
 });
-
-$('#plClose').addEventListener('click', ()=> $('#plModal').classList.add('hidden'));
-$('#plClear').addEventListener('click', ()=>{
+$('#plClose')?.addEventListener('click', ()=> $('#plModal')?.classList.add('hidden'));
+$('#plClear')?.addEventListener('click', ()=>{
   PLAYLIST = [];
   localStorage.setItem('ws_playlist','[]');
-  $('#plModal').classList.add('hidden');
+  $('#plModal')?.classList.add('hidden');
   render();
 });
-$('#plPlay').addEventListener('click', ()=>{
+$('#plPlay')?.addEventListener('click', ()=>{
   if (!PLAYLIST.length) return;
   const ids = PLAYLIST
     .map(s => getYouTubeId(s.songUrl || s.danceVideoUrl))
@@ -179,22 +177,22 @@ $('#plPlay').addEventListener('click', ()=>{
   const url = `https://www.youtube.com/watch_videos?video_ids=${ids.join(',')}`;
   window.open(url, '_blank');
 });
-$('#plPrev').addEventListener('click', ()=>{
+$('#plPrev')?.addEventListener('click', ()=>{
   if (!PLAYLIST.length) return;
   plIndex = (plIndex - 1 + PLAYLIST.length) % PLAYLIST.length;
   openAt(plIndex);
 });
-$('#plNext').addEventListener('click', ()=>{
+$('#plNext')?.addEventListener('click', ()=>{
   if (!PLAYLIST.length) return;
   plIndex = (plIndex + 1) % PLAYLIST.length;
   openAt(plIndex);
 });
 
 /* ====== FILTRI ====== */
-$('#fDance').addEventListener('input', e=>{ FILTER.dance = e.target.value; render(); });
-$('#fSong' ).addEventListener('input', e=>{ FILTER.song  = e.target.value; render(); });
-$('#clearFilters').addEventListener('click', ()=>{
-  FILTER={dance:'',song:''}; $('#fDance').value=''; $('#fSong').value=''; render();
+$('#fDance')?.addEventListener('input', e=>{ FILTER.dance = e.target.value; render(); });
+$('#fSong' )?.addEventListener('input', e=>{ FILTER.song  = e.target.value; render(); });
+$('#clearFilters')?.addEventListener('click', ()=>{
+  FILTER={dance:'',song:''}; const d=$('#fDance'), s=$('#fSong'); if(d) d.value=''; if(s) s.value=''; render();
 });
 
 /* ====== PUZZLE ====== */
@@ -211,18 +209,29 @@ const PZ = {
   tiles: [],
   timer: null,
   t0: 0,
-  lives: 3,             // ❤️ vite
+  lives: 3,
 };
 
-/* --- BG MUSIC helpers --- */
+/* show/hide overlay */
+function showPuzzleOverlay(){
+  if (!PZ.root) return;
+  PZ.root.classList.remove('hidden');
+  PZ.root.setAttribute('aria-hidden','false');
+  fitTopbar();
+}
+function hidePuzzleOverlay(){
+  if (!PZ.root) return;
+  PZ.root.classList.add('hidden');
+  PZ.root.setAttribute('aria-hidden','true');
+  stopBg();
+}
+document.addEventListener('DOMContentLoaded', hidePuzzleOverlay);
+
+/* BG MUSIC */
 function playBg(){
   const bg = document.getElementById('fxBg');
   if (!bg) return;
-  try {
-    bg.volume = 0.6;
-    bg.currentTime = 0;
-    bg.play().catch(()=>{});
-  } catch {}
+  try { bg.volume = 0.6; bg.currentTime = 0; bg.play().catch(()=>{}); } catch {}
 }
 function stopBg(){
   const bg = document.getElementById('fxBg');
@@ -230,7 +239,7 @@ function stopBg(){
   try { bg.pause(); } catch {}
 }
 
-/* --- vite (❤️) --- */
+/* vite */
 function setLives(n){
   PZ.lives = n;
   const el = document.getElementById('pzLives');
@@ -248,12 +257,13 @@ function gameOver(){
     nextQuestion();
     startTimer();
     playBg();
+    fitTopbar();
   };
   over.addEventListener('click', restart, { once:true });
   document.body.appendChild(over);
 }
 
-/* --- foto casuale evitando ripetizione --- */
+/* foto */
 let pzLastIndex = -1;
 function pickRandomPuzzleSrc(){
   const MAX = 27;
@@ -262,12 +272,11 @@ function pickRandomPuzzleSrc(){
   pzLastIndex = i;
   return `./assets/images/puzzles/${i}.png`;
 }
-function loadNewPuzzleImage(){
-  if (PZ.img) PZ.img.src = pickRandomPuzzleSrc();
-}
+function loadNewPuzzleImage(){ if (PZ.img) PZ.img.src = pickRandomPuzzleSrc(); }
 
-/* --- griglia n×n --- */
+/* griglia */
 function buildGrid(n){
+  if (!PZ.grid) return;
   PZ.size = n;
   PZ.grid.innerHTML = '';
   PZ.grid.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
@@ -282,11 +291,14 @@ function buildGrid(n){
   }
 }
 
-/* --- domande --- */
+/* domande */
 function randomQuestion(){
+  if (!hasSongs()) return { q: 'Caricamento canzoni…', correct: null, answers: [] };
+
   const s = SONGS[Math.floor(Math.random()*SONGS.length)];
-  const qType = Math.floor(Math.random()*2); // 0 cantante, 1 ballo
+  const qType = Math.floor(Math.random()*2);
   let q, correct, options = [];
+
   if (qType===0){
     q = `Chi è il cantante di “${s.songTitle}”?`;
     correct = s.singerName;
@@ -304,61 +316,60 @@ function randomQuestion(){
       if (o && !options.includes(o)) options.push(o);
     }
   }
+  options = options.filter(Boolean);
   options.sort(()=>Math.random()-.5);
   return { s, q, correct, answers:options };
 }
-
 let CURRENT_Q = null;
 
 function nextQuestion(){
+  if (!PZ.q || !PZ.ans) return;
   CURRENT_Q = randomQuestion();
-  PZ.q.textContent = CURRENT_Q.q;
+  PZ.q.textContent = CURRENT_Q.q || 'Domanda…';
   PZ.ans.innerHTML = '';
+
+  if (!CURRENT_Q.answers || CURRENT_Q.answers.length === 0){
+    const info = document.createElement('div');
+    info.className = 'card';
+    info.style.margin = '8px';
+    info.textContent = 'Attendi caricamento dei brani…';
+    PZ.ans.appendChild(info);
+    return;
+  }
+
   CURRENT_Q.answers.forEach(a=>{
     const btn = document.createElement('button');
     btn.className = 'btn';
-    btn.textContent = a.toUpperCase();
+    btn.textContent = String(a).toUpperCase();
     btn.addEventListener('click', ()=> onAnswer(a));
     PZ.ans.appendChild(btn);
   });
 }
 
-/* --- risposta --- */
+/* risposta */
 function onAnswer(a){
   if (!CURRENT_Q) return;
 
-  // ===== risposta corretta =====
   if (a === CURRENT_Q.correct){
-    try { document.getElementById('fxOk')?.play(); } catch {}
+    try { document.getElementById('fxOk')?.play?.(); } catch {}
     try { const gun = document.getElementById('fxGun'); if (gun){ gun.currentTime = 0; gun.play().catch(()=>{}); } } catch {}
 
-    // prendo tasselli non animati e non già svelati
     const tiles = Array.from(PZ.grid.querySelectorAll('.pz-tile'));
     const live  = tiles.filter(t => !t.classList.contains('hit') && !t.classList.contains('cleared'));
 
     if (live.length){
-      // scelgo IL tassello che verrà animato e "scoperto"
       const t = live[Math.floor(Math.random() * live.length)];
-
-      // reset animazione (trucco reflow)
-      t.classList.remove('hit');
-      t.style.animation = 'none'; t.offsetHeight; t.style.animation = '';
-
-      // avvio l’animazione SOLO su questo tassello
+      t.classList.remove('hit'); t.style.animation='none'; t.offsetHeight; t.style.animation='';
       t.classList.add('hit');
 
-      // quando finisce 'tileFlip', marchio come cleared (non rimuovo il nodo)
       const onEnd = (ev)=>{
-        if (ev.target !== t) return;
-        if (ev.animationName !== 'tileFlip') return;
+        if (ev.target !== t || ev.animationName !== 'tileFlip') return;
         t.removeEventListener('animationend', onEnd);
-
         t.classList.remove('hit');
-        t.classList.add('cleared'); // invisibile, mantiene spazio
+        t.classList.add('cleared');
 
-        // puff grafico
         try {
-          const wrap = PZ.grid.parentElement; // .pz-img-wrap
+          const wrap = PZ.grid.parentElement;
           const tr = t.getBoundingClientRect();
           const wr = wrap.getBoundingClientRect();
           const puff = document.createElement('div');
@@ -369,13 +380,10 @@ function onAnswer(a){
           puff.addEventListener('animationend', ()=>puff.remove(), { once:true });
         } catch {}
 
-        // controlla se è finito
         const remaining = PZ.grid.querySelectorAll('.pz-tile:not(.cleared)').length;
         if (remaining === 0) {
-          try { document.getElementById('fxVictory')?.play(); } catch {}
-          stopBg(); // ferma musica alla vittoria
-
-          // attesa 3s, poi "Bravo!"
+          try { document.getElementById('fxVictory')?.play?.(); } catch {}
+          stopBg();
           setTimeout(()=>{
             const bravo = document.createElement('div');
             bravo.className = 'bravo';
@@ -388,20 +396,18 @@ function onAnswer(a){
               nextQuestion();
               startTimer();
               playBg();
+              fitTopbar();
             };
             bravo.addEventListener('click', restart, { once:true });
             document.body.appendChild(bravo);
           }, 3000);
-
         } else {
           nextQuestion();
         }
       };
       t.addEventListener('animationend', onEnd);
-
     } else {
-      // edge-case: nessun tassello vivo
-      try { document.getElementById('fxVictory')?.play(); } catch {}
+      try { document.getElementById('fxVictory')?.play?.(); } catch {}
       stopBg();
       setTimeout(()=>{
         const bravo = document.createElement('div');
@@ -415,6 +421,7 @@ function onAnswer(a){
           nextQuestion();
           startTimer();
           playBg();
+          fitTopbar();
         };
         bravo.addEventListener('click', restart, { once:true });
         document.body.appendChild(bravo);
@@ -423,26 +430,14 @@ function onAnswer(a){
     return;
   }
 
-  // ===== risposta sbagliata =====
-  try { document.getElementById('fxWrong')?.play(); } catch {}
-  const no = PZ.no; // <img id="noImg" class="no-img">
-  if (no){
-    no.classList.remove('hidden');
-    no.classList.add('shake');
-  }
-  // dopo il tremolio: nascondi Alessia, scala vita, check game over o nuova domanda
+  // wrong
+  try { document.getElementById('fxWrong')?.play?.(); } catch {}
+  const no = PZ.no;
+  if (no){ no.classList.remove('hidden'); no.classList.add('shake'); }
   setTimeout(()=>{
-    if (no){
-      no.classList.add('hidden');
-      no.classList.remove('shake');
-    }
+    if (no){ no.classList.add('hidden'); no.classList.remove('shake'); }
     setLives(PZ.lives - 1);
-    if (PZ.lives <= 0){
-      stopBg();
-      gameOver();
-    } else {
-      nextQuestion();
-    }
+    if (PZ.lives <= 0){ stopBg(); gameOver(); } else { nextQuestion(); }
   }, 700);
 }
 
@@ -453,50 +448,89 @@ function startTimer(){
     const s = Math.floor((Date.now()-PZ.t0)/1000);
     const m = `${Math.floor(s/60)}`.padStart(2,'0');
     const ss= `${s%60}`.padStart(2,'0');
-    PZ.time.textContent = `${m}:${ss}`;
+    if (PZ.time) PZ.time.textContent = `${m}:${ss}`;
   }, 500);
 }
 
+/* ====== FIT TOPBAR (centra/scala) ====== */
+function fitTopbar() {
+  const tb = document.querySelector('.pz-topbar');
+  if (!tb) return;
+  tb.style.setProperty('--pz-scale', 1);
+  const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+  const available = vw - 12;
+  const needed = tb.scrollWidth + 4;
+  const scale = Math.min(1, available / needed);
+  tb.style.setProperty('--pz-scale', scale);
+}
+window.addEventListener('resize', fitTopbar, { passive: true });
+window.addEventListener('orientationchange', fitTopbar);
+
+/* ====== AVVIO PUZZLE ====== */
 function startPuzzle(){
+  if (!hasSongs()){
+    load().then(()=>{
+      if (!hasSongs()){
+        alert('Sto caricando i brani… riprova tra un attimo o usa “Aggiorna app”.');
+        return;
+      }
+      startPuzzle();
+    });
+    return;
+  }
   loadNewPuzzleImage();
   buildGrid(PZ.size);
-  setLives(3);              // reset vite
-  PZ.root.classList.remove('hidden');
+  setLives(3);
+  showPuzzleOverlay();
   nextQuestion();
   startTimer();
-  playBg();                 // musica di sottofondo ON
+  playBg();
 }
 
-/* --- UI puzzle --- */
-$('#btnPuzzle').addEventListener('click', startPuzzle);
-$('#pzClose').addEventListener('click', ()=>{ PZ.root.classList.add('hidden'); stopBg(); });
-$('#pzBack' ).addEventListener('click', ()=>{ PZ.root.classList.add('hidden'); stopBg(); });
-$('#pzNext' ).addEventListener('click', startPuzzle);
+/* UI puzzle */
+$('#btnPuzzle')?.addEventListener('click', startPuzzle);
+$('#pzClose')?.addEventListener('click', hidePuzzleOverlay);
+$('#pzNext' )?.addEventListener('click', ()=>{ startPuzzle(); fitTopbar(); });
 $$('.chip-btn').forEach(b=>{
   b.addEventListener('click', ()=>{
     $$('.chip-btn').forEach(x=>x.classList.remove('active'));
     b.classList.add('active');
     PZ.size = +b.dataset.diff;
     buildGrid(PZ.size);
+    fitTopbar();
   });
 });
 
 /* ====== DATA LOAD ====== */
 async function load(){
   try{
-    const res = await fetch('./data/songs.json', { cache:'no-store' });
+    const url = `./data/songs.json?v=${Date.now()}`;
+    const res = await fetch(url, { cache:'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     SONGS = await res.json();
     SONGS.sort((a,b)=> (b.songNumber||0) - (a.songNumber||0));
     render();
+    console.log(`[WS] songs.json OK (${SONGS.length})`);
   }catch(e){
-    elCards.innerHTML = `<div class="card">Errore nel caricamento dati.</div>`;
+    console.error('[WS] Errore caricamento songs.json:', e);
+    if (elCards){
+      elCards.innerHTML = `<div class="card">Errore nel caricamento dati.<br><small>Prova “Aggiorna app”.</small></div>`;
+    }
   }
 }
 load();
 
 /* ====== UPDATE (PWA) ====== */
-$('#btnUpdate').addEventListener('click', ()=>{
-  if ('serviceWorker' in navigator){
-    caches.keys().then(keys=> Promise.all(keys.map(k=>caches.delete(k)))).finally(()=>location.reload());
-  } else location.reload();
+$('#btnUpdate')?.addEventListener('click', async ()=>{
+  try {
+    if (window.caches) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    if (navigator.serviceWorker) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+  } catch {}
+  location.reload(true);
 });

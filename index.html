@@ -5,13 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Western Spritz — Line Dance Library</title>
 
-  <!-- Icone / PWA -->
   <link rel="icon" href="./assets/images/icon.png" />
   <link rel="apple-touch-icon" href="./assets/images/icon.png" />
   <link rel="manifest" href="./manifest.webmanifest" />
 
-  <!-- Stili -->
-  <link rel="stylesheet" href="./style.css?v=30" />
+  <link rel="stylesheet" href="./style.css?v=40" />
 </head>
 <body>
 
@@ -73,20 +71,22 @@
     </div>
   </div>
 
-  <!-- Overlay: PUZZLE -->
+  <!-- Overlay: PUZZLE (parte CHIUSO) -->
   <div id="pzOverlay" class="overlay hidden" aria-hidden="true">
     <div class="pz-topbar">
-      <button id="pzBack" class="chip">◀︎ Indietro</button>
-      <div class="chip"><span>⏱️</span><span id="pzTime">00:00</span></div>
-      <div class="chip"><span>⭐</span><span id="pzScore">0</span></div>
-      <!-- ▼ NUOVO: contatore vite -->
-      <div class="chip"><span>❤️</span><span id="pzLives">3</span></div>
-      <div class="chip">Difficoltà:
+      <div class="chip pz-diff" title="Difficoltà">
+        <span class="lbl">Difficoltà:</span>
         <button class="chip-btn" data-diff="3">3×3</button>
         <button class="chip-btn active" data-diff="4">4×4</button>
         <button class="chip-btn" data-diff="5">5×5</button>
       </div>
+
       <button id="pzNext" class="chip">📷 Nuova foto</button>
+
+      <div class="chip" title="Timer"><span>⏱️</span><span id="pzTime">00:00</span></div>
+      <div class="chip" title="Punteggio"><span>⭐</span><span id="pzScore">0</span></div>
+      <div class="chip" title="Vite"><span>❤️</span><span id="pzLives">3</span></div>
+
       <button id="pzClose" class="chip">✕</button>
     </div>
 
@@ -109,18 +109,17 @@
     <audio id="fxGun" preload="auto"><source src="./assets/audio/gun_shot.mp3" type="audio/mpeg" /></audio>
     <audio id="fxWhip" preload="auto"><source src="./assets/audio/frusta.mp3" type="audio/mpeg" /></audio>
     <audio id="fxVictory" preload="auto"><source src="./assets/audio/vittoria.mp3" type="audio/mpeg" /></audio>
-    <!-- ▼ NUOVO: musica di sottofondo del puzzle -->
+    <!-- musica di sottofondo del puzzle -->
     <audio id="fxBg" loop preload="auto">
       <source src="./assets/audio/lo_chiamavano_trinita.mp3" type="audio/mpeg" />
     </audio>
   </div>
 
-  <!-- Script -->
-  <script src="./app.js?v=30"></script>
+  <script src="./app.js?v=40"></script>
   <script>
     if ('serviceWorker' in navigator){
       addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=30').catch(()=>{});
+        navigator.serviceWorker.register('./sw.js?v=40').catch(()=>{});
       });
     }
   </script>

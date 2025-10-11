@@ -7,6 +7,10 @@
   --card:rgba(255,255,255,.07);
   --glass:rgba(255,255,255,.12);
   --text:#e8f0f6;
+
+  --pz-topbar-h: 58px; /* spazio sopra il puzzle */
+  --splash-shift: -96px;
+  --splash-btn-gap: 6px;
 }
 body{
   margin:0;
@@ -22,9 +26,8 @@ body{
 
 /* ==== splash ==== */
 .splash{ position:fixed; inset:0; z-index:9999; display:grid; place-items:center; background:#000; }
-.splash-inner{ display:flex; flex-direction:column; align-items:center; gap:12px; transform:translateY(var(--splash-shift)); }
-.splash-start{ margin-top:var(--splash-btn-gap); }
 .splash-img{max-width:min(80vw,480px); width:80%; height:auto}
+.splash-start{ margin-top:var(--splash-btn-gap); }
 .splash-tip{margin:0;color:#ddd;opacity:.9}
 
 .hidden{display:none !important}
@@ -37,14 +40,12 @@ body{
 .btn{border:0; border-radius:12px; padding:10px 14px; font-weight:700; cursor:pointer}
 .btn-primary{background:var(--brand); color:#fff}
 
-/* bottone puzzle visivamente diverso */
 .btn-puzzle{
   background: linear-gradient(180deg, #ffd86b, #ffb200);
-  color:#fd0404; /* testo scuro per contrasto */
+  color:#fd0404;
   box-shadow: 0 6px 20px rgba(81, 255, 0, 0.35);
 }
 .btn-puzzle:hover{ filter:brightness(1.05) }
-
 
 .ghost{background:transparent; color:#fff; border:1px solid #fff3; padding:9px 12px}
 .actions-top{display:flex; gap:10px; justify-content:center; margin:10px auto}
@@ -69,34 +70,62 @@ body{
 .action{display:inline-block; border:2px solid var(--brand); color:var(--brand); background:#fff;
   padding:8px 12px; border-radius:12px; font-weight:800; text-decoration:none}
 .action:hover{background:var(--brand); color:#fff}
-
-/* stato playlist */
 .action.play-added{background:var(--brand); color:#fff; border-color:var(--brand)}
 
-/* footer */
 .footer{text-align:center; opacity:.5; padding:24px}
 
-/* ==== Playlist modal ==== */
+/* ==== Overlay base ==== */
 .overlay{position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(6px); display:grid; place-items:center; z-index:20}
+.overlay.hidden{display:none !important}
+
+/* ==== Playlist modal ==== */
 .pl-card{width:min(92vw,720px); background:var(--glass); border-radius:16px; padding:16px; backdrop-filter:blur(14px) saturate(150%)}
 .pl-top{display:flex; align-items:center; justify-content:space-between}
 .gap8{display:flex; gap:8px}
 
 /* ==== Puzzle ==== */
+/* Topbar: una riga, centrata, autoscale */
 .pz-topbar{
-  position:fixed; top:10px; left:50%; transform:translateX(-50%);
-  display:flex; gap:10px; align-items:center; z-index:30;
-}
-.chip{background:var(--glass); padding:8px 10px; border-radius:999px; box-shadow:0 6px 20px #0006}
-.chip-btn{background:#222c33; color:#fff; border:0; padding:6px 10px; border-radius:999px; margin-left:4px; cursor:pointer}
-.chip-btn.active{background:var(--brand)}
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%) scale(var(--pz-scale, 1));
+  transform-origin: top center;
+  z-index: 50;
 
-/* ---- Puzzle stage: lascia spazio alla card Q/A in basso ---- */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+
+  padding: 6px 8px;
+  border-radius: 14px;
+  backdrop-filter: blur(10px) saturate(140%);
+  background: linear-gradient(180deg, rgba(10,15,20,.78), rgba(10,15,20,.45));
+  color:#fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,.35);
+}
+.pz-topbar .chip{
+  background:rgba(255,255,255,.12);
+  padding:6px 10px;
+  border-radius:999px;
+  box-shadow:0 6px 20px #0006;
+  display:inline-flex; align-items:center; gap:6px; font-weight:700;
+}
+.pz-diff .lbl{ opacity:.9; margin-right:2px; }
+.pz-topbar .chip-btn{
+  background:#222c33; color:#fff; border:0;
+  padding:4px 10px; border-radius:999px; margin-left:4px; cursor:pointer; font-weight:800;
+}
+.pz-topbar .chip-btn.active{background:#ff8a00}
+
+/* Stage: lascia spazio alla topbar */
 .pz-stage{
   display:grid; place-items:center;
   min-height:60vh;
-  padding-top:64px;
-  /* PRIMA non c’era il padding-bottom sufficiente */
+  padding-top: calc(var(--pz-topbar-h) + 22px);
   padding-bottom: clamp(150px, 28vh, 240px);
 }
 
@@ -104,7 +133,7 @@ body{
 .pz-img-wrap img#pzImg{position:absolute; inset:0; width:100%; height:100%; object-fit:contain; z-index:1}
 #pzGrid{position:absolute; inset:0; z-index:2; display:grid; gap:2px}
 
-/* tasselli più coprenti */
+/* tasselli */
 .pz-tile{
   background: rgba(10, 15, 20, 0.97);
   border-radius: 12px;
@@ -112,20 +141,12 @@ body{
   will-change: transform, opacity;
   opacity: 1;
 }
+.pz-tile.cleared{ visibility: hidden; pointer-events: none; }
 
-/* tassello "svelato" ma che mantiene lo spazio in grid */
-.pz-tile.cleared{
-  visibility: hidden;
-  pointer-events: none;
-}
-
-/* piccolo effetto "puff" (bagliore/fumo) sul punto del tassello */
+/* puff */
 .puff{
-  position:absolute;
-  width:120px; height:120px;
-  left:0; top:0;
-  transform: translate(-50%, -50%);
-  pointer-events:none;
+  position:absolute; width:120px; height:120px; left:0; top:0;
+  transform: translate(-50%, -50%); pointer-events:none;
   background: radial-gradient(circle at 50% 50%,
     rgba(255,255,255,.85) 0%,
     rgba(255,210,130,.45) 40%,
@@ -139,19 +160,14 @@ body{
   100% { transform: translate(-50%,-50%) scale(2.2); opacity:0; }
 }
 
-/* assicurati che l'animazione principale si chiami tileFlip */
-.pz-tile.hit{
-  animation: tileFlip .6s ease both, tileFlash .25s ease-in .05s both;
-}
+/* animazioni tassello */
+.pz-tile.hit{ animation: tileFlip .6s ease both, tileFlash .25s ease-in .05s both; }
 @keyframes tileFlip{
   0%   { transform: rotateY(0deg);   opacity:1; }
   50%  { transform: rotateY(360deg); opacity:.85; }
   100% { transform: rotateY(720deg); opacity:0;   }
 }
-@keyframes tileFlash{
-  0% { box-shadow: 0 0 0 rgba(255,255,255,0); }
-  100%{ box-shadow: 0 0 24px rgba(255,255,255,.6); }
-}
+@keyframes tileFlash{ 0%{box-shadow:0 0 0 rgba(255,255,255,0);} 100%{box-shadow:0 0 24px rgba(255,255,255,.6);} }
 
 /* QA in basso */
 .qa-card{
@@ -166,71 +182,20 @@ body{
 .qa-answers{display:grid; grid-template-columns:1fr 1fr; gap:10px}
 .qa-answers .btn{background:#fff; color:#111; border-radius:12px}
 
-/* puzzle bravo badge */
+/* bravo / no-img */
 .bravo{
   position:fixed; inset:0; display:grid; place-items:center; z-index:26;
   background:rgba(0,0,0,.35); backdrop-filter:blur(4px);
   color:#fff; font-weight:900; font-size:clamp(22px,5vw,44px);
 }
-/* ---- HUD / Topbar e spazio puzzle ---- */
-:root{
-  --pz-topbar-h: 76px;     /* altezza indicativa della barra in alto */
-}
-
-/* la barra rimane visibile ma non schiaccia la griglia */
-.pz-topbar{
-  position: sticky;
-  top: 12px;
-  z-index: 50;
-  display: flex; gap: 8px; align-items: center; justify-content: center;
-  padding: 8px 10px;
-  backdrop-filter: blur(10px) saturate(140%);
-  background: linear-gradient(180deg, rgba(10,15,20,.65), rgba(10,15,20,.35));
-  border-radius: 14px;
-  color:#fff;
-  text-shadow: 0 1px 2px rgba(0,0,0,.35);
-}
-
-/* più aria sopra la griglia così la prima fila NON sta sotto la topbar */
-.pz-stage{
-  display:grid; place-items:center;
-  min-height:60vh;
-  padding-top: calc(var(--pz-topbar-h) + 28px);
-  padding-bottom: clamp(150px, 28vh, 240px); /* lascia spazio alla card Q/A in basso */
-}
-
-/* chip (timer, punteggio, difficoltà) più leggibili */
-.chip, .chip-btn{
-  color:#fff;
-  text-shadow: 0 1px 2px rgba(0,0,0,.5);
-}
-
-/* card delle domande: testo più “staccato” dallo sfondo legno */
-#pzCard{
-  color:#fff;
-  text-shadow: 0 1px 2px rgba(0,0,0,.6);
-  border: 1px solid rgba(255,255,255,.12);
-}
-#pzAnswers .btn{
-  color:#101318;
-  font-weight: 800;
-}
-#pzAnswers .btn:hover{
-  filter: brightness(1.05);
-}
-
-:root{
-  --splash-shift: -96px;   /* alza TUTTO il blocco (valori negativi = più in alto) */
-  --splash-btn-gap: 6px;   /* distanza tra immagine e pulsante */
-}
-
-/* Alessia sopra a tutto, centrata, dimensione fissa */
 .no-img{
-  position:absolute;
-  left:50%; top:50%;
-  transform:translate(-50%,-50%);
-  width:min(42vw, 300px);
-  height:auto;
-  z-index: 3;               /* > grid */
-  pointer-events:none;
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:min(42vw, 300px); height:auto; z-index: 3; pointer-events:none;
+}
+.shake{ animation:shake .7s ease; }
+@keyframes shake{
+  10%, 90% { transform: translate(-50%,-50%) translateX(-1px); }
+  20%, 80% { transform: translate(-50%,-50%) translateX(2px); }
+  30%, 50%, 70% { transform: translate(-50%,-50%) translateX(-4px); }
+  40%, 60% { transform: translate(-50%,-50%) translateX(4px); }
 }
