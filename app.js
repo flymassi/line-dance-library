@@ -1,5 +1,5 @@
-/* Western Spritz — app.js v31 */
-console.log('[WS] app v31');
+/* Western Spritz — app.js v33 */
+console.log('[WS] app v33');
 
 /* ====== BACKGROUND RANDOM ====== */
 (function(){
@@ -16,25 +16,24 @@ console.log('[WS] app v31');
   const start  = document.getElementById('startApp');
   const music  = document.getElementById('introMusic');
 
-  // alza il bottone (regola qui: valori più negativi = più in alto)
-  start.style.transform = 'translateY(-90px)';
+  // alza il bottone (valori più negativi = più in alto)
+  if (start) start.style.transform = 'translateY(-90px)';
 
-  // 1) tenta di partire SUBITO (muted) quando la pagina si apre
+  // tenta autoplay mutato subito
   try {
-    music.muted = true;         // parte silenzioso (richiesto dai browser)
-    music.volume = 1;           // volume target (verrà usato dopo l’unmute)
-    music.play().catch(()=>{}); // se è bloccato, ignoriamo
+    music.muted = true;
+    music.volume = 1;
+    music.play().catch(()=>{});
   } catch {}
 
-  // helper: sblocca audio al primo gesto utente (tap/click/keypress)
+  // sblocca audio al primo gesto utente
   function unlockAudioOnce(){
     try {
-      music.muted = false;      // togli mute
-      music.currentTime = 0;    // riparti dall’inizio
+      music.muted = false;
+      music.currentTime = 0;
       const p = music.play();
       if (p?.catch) p.catch(()=>{});
     } catch {}
-    // rimuovi i listener: lo facciamo una sola volta
     window.removeEventListener('touchstart', unlockAudioOnce, {passive:true});
     window.removeEventListener('mousedown', unlockAudioOnce);
     window.removeEventListener('keydown',   unlockAudioOnce);
@@ -43,13 +42,12 @@ console.log('[WS] app v31');
   window.addEventListener('mousedown',   unlockAudioOnce, {once:true});
   window.addEventListener('keydown',     unlockAudioOnce, {once:true});
 
-  // 2) al tap su "Avvia" nascondi lo splash e (ri)garantisci l’audio
-  start.addEventListener('click', ()=>{
-    unlockAudioOnce();               // forza lo sblocco su iOS
-    splash.classList.add('hidden');  // chiudi splash
+  // tap su Avvia: chiudi splash e garantisci audio
+  start?.addEventListener('click', ()=>{
+    unlockAudioOnce();
+    splash.classList.add('hidden');
   }, { once:true });
 })();
-
 
 /* ====== UTIL ====== */
 const $  = sel => document.querySelector(sel);
@@ -60,7 +58,71 @@ const getYouTubeId = url => {
   return m ? m[1] : null;
 };
 
-/* ====== DATA ====== */
+/* ====== SUPABASE (LEADERBOARD) ====== */
+/* Inserisci le tue credenziali Supabase qui */
+const SUPA = {
+  url:  https://fnsgvdjeimhgqznlxlvj.supabase.co,     // es. https://abcd1234.supabase.co
+  anon: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuc2d2ZGplaW1oZ3F6bmx4bHZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNDE5MjksImV4cCI6MjA3NjYxNzkyOX0.oUCltxw_5t3ytsEsBRtWQbHFmcJxxFvc1PlJDJEzrd8 // chiave anon (public)
+};
+let sb = null;
+if (window.supabase && SUPA.url.startsWith('http') && SUPA.anon.length > 20) {
+  sb = window.supabase.createClient(SUPA.url, SUPA.anon);
+}
+
+// ID dispositivo (salvato localmente)
+const DEVICE_ID = (() => {
+  const k = 'ws_device_id';
+  let id = localStorage.getItem(k);
+  if (!id) { id = (crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`); localStorage.setItem(k, id); }
+  return id;
+})();
+
+const NICK_KEY = 'ws_nickname';
+function getNickname(){
+  let n = localStorage.getItem(NICK_KEY);
+  if (!n){
+    n = prompt('Scegli un nickname (2-20 caratteri):')?.trim();
+    if (!n || n.length < 2 || n.length > 20) n = 'Cowboy';
+    localStorage.setItem(NICK_KEY, n);
+  }
+  return n;
+}
+
+// punteggio semplice (tarabile)
+function computePoints({grid, seconds, livesLeft}){
+  const base = grid * 1000;
+  const timePenalty = Math.max(0, seconds) * 5;
+  const lifeBonus   = (livesLeft ?? 0) * 150;
+  return Math.max(0, Math.round(base - timePenalty + lifeBonus));
+}
+
+async function postScore({ nickname, grid, seconds, livesLeft }){
+  if (!sb) return null; // se Supabase non è configurato, esci silenziosamente
+  const points = computePoints({grid, seconds, livesLeft});
+  const { data, error } = await sb.from('scores').insert([{
+    nickname,
+    device_id: DEVICE_ID,
+    points,
+    seconds,
+    grid
+  }]).select();
+  if (error) { console.warn('postScore error', error); return null; }
+  return data?.[0];
+}
+
+async function fetchLeaderboard(limit=20){
+  if (!sb) return [];
+  const { data, error } = await sb
+    .from('scores')
+    .select('nickname, points, seconds, grid, created_at')
+    .order('points', { ascending:false })
+    .order('seconds', { ascending:true })
+    .limit(limit);
+  if (error) { console.warn('fetchLeaderboard error', error); return []; }
+  return data || [];
+}
+
+/* ====== DATA (brani) ====== */
 let SONGS = [];
 let FILTER = { dance:'', song:'' };
 let PLAYLIST = JSON.parse(localStorage.getItem('ws_playlist') || '[]');
@@ -153,7 +215,7 @@ document.addEventListener('click', e=>{
   updatePlaylistButton(b, idx<0);
 });
 
-$('#btnPlaylist').addEventListener('click', ()=>{
+$('#btnPlaylist')?.addEventListener('click', ()=>{
   const modal = $('#plModal');
   const list  = $('#plList');
   plIndex = 0;
@@ -165,14 +227,14 @@ $('#btnPlaylist').addEventListener('click', ()=>{
   modal.classList.remove('hidden');
 });
 
-$('#plClose').addEventListener('click', ()=> $('#plModal').classList.add('hidden'));
-$('#plClear').addEventListener('click', ()=>{
+$('#plClose')?.addEventListener('click', ()=> $('#plModal').classList.add('hidden'));
+$('#plClear')?.addEventListener('click', ()=>{
   PLAYLIST = [];
   localStorage.setItem('ws_playlist','[]');
   $('#plModal').classList.add('hidden');
   render();
 });
-$('#plPlay').addEventListener('click', ()=>{
+$('#plPlay')?.addEventListener('click', ()=>{
   if (!PLAYLIST.length) return;
   const ids = PLAYLIST
     .map(s => getYouTubeId(s.songUrl || s.danceVideoUrl))
@@ -181,25 +243,59 @@ $('#plPlay').addEventListener('click', ()=>{
   const url = `https://www.youtube.com/watch_videos?video_ids=${ids.join(',')}`;
   window.open(url, '_blank');
 });
-$('#plPrev').addEventListener('click', ()=>{
+$('#plPrev')?.addEventListener('click', ()=>{
   if (!PLAYLIST.length) return;
   plIndex = (plIndex - 1 + PLAYLIST.length) % PLAYLIST.length;
   openAt(plIndex);
 });
-$('#plNext').addEventListener('click', ()=>{
+$('#plNext')?.addEventListener('click', ()=>{
   if (!PLAYLIST.length) return;
   plIndex = (plIndex + 1) % PLAYLIST.length;
   openAt(plIndex);
 });
 
-/* ====== FILTRI ====== */
-$('#fDance').addEventListener('input', e=>{ FILTER.dance = e.target.value; render(); });
-$('#fSong' ).addEventListener('input', e=>{ FILTER.song  = e.target.value; render(); });
-$('#clearFilters').addEventListener('click', ()=>{
-  FILTER={dance:'',song:''}; $('#fDance').value=''; $('#fSong').value=''; render();
+/* ====== LEADERBOARD (opzionale: se hai aggiunto il modal in index.html) ====== */
+async function renderLeaderboard(){
+  const list = $('#lbList');
+  if (!list) return;
+  list.innerHTML = '<div class="card">Carico…</div>';
+  try{
+    const rows = await fetchLeaderboard(30);
+    if (!rows.length){
+      list.innerHTML = '<div class="card">Ancora nessun punteggio.</div>';
+      return;
+    }
+    list.innerHTML = rows.map((r,i)=>{
+      const mm = String(Math.floor(r.seconds/60)).padStart(2,'0');
+      const ss = String(r.seconds%60).padStart(2,'0');
+      return `
+        <div class="card" style="display:flex; align-items:center; gap:12px; margin-top:8px">
+          <div style="font-weight:900; width:28px; text-align:right">${i+1}.</div>
+          <div style="flex:1; min-width:0">
+            <div style="font-weight:800">${r.nickname}</div>
+            <div class="meta">Griglia ${r.grid}×${r.grid} • Tempo ${mm}:${ss}</div>
+          </div>
+          <div class="badge">⭐ ${r.points}</div>
+        </div>
+      `;
+    }).join('');
+  }catch(e){
+    list.innerHTML = '<div class="card">Errore caricamento classifica.</div>';
+  }
+}
+$('#btnLeaderboard')?.addEventListener('click', ()=>{
+  $('#lbModal')?.classList.remove('hidden');
+  renderLeaderboard();
 });
+$('#lbRefresh')?.addEventListener('click', renderLeaderboard);
+$('#lbClose')?.addEventListener('click', ()=> $('#lbModal')?.classList.add('hidden'));
 
 /* ====== PUZZLE ====== */
+const PZ_CFG = {
+  // vite massime in base alla dimensione griglia
+  livesByGrid: { 3: 7, 4: 5, 5: 4 }
+};
+
 const PZ = {
   root:  $('#pzOverlay'),
   grid:  $('#pzGrid'),
@@ -212,8 +308,49 @@ const PZ = {
   size:  4,
   tiles: [],
   timer: null,
-  t0: 0
+  t0: 0,
+  lives: 5
 };
+
+/* --- BG MUSIC helpers --- */
+function playBg(){
+  const bg = document.getElementById('fxBg');
+  if (!bg) return;
+  try {
+    bg.volume = 0.6;
+    bg.currentTime = 0;
+    bg.play().catch(()=>{});
+  } catch {}
+}
+function stopBg(){
+  const bg = document.getElementById('fxBg');
+  if (!bg) return;
+  try { bg.pause(); } catch {}
+}
+
+/* --- vite (❤️) --- */
+function setLives(n){
+  PZ.lives = n;
+  const el = document.getElementById('pzLives');
+  if (el) el.textContent = String(Math.max(0, n));
+}
+function gameOver(){
+  const over = document.createElement('div');
+  over.className = 'bravo';
+  over.textContent = 'Peccato! Tocca per riprovare';
+  const restart = ()=>{
+    over.remove();
+    loadNewPuzzleImage();
+    buildGrid(PZ.size);
+    const max = PZ_CFG.livesByGrid[PZ.size] ?? 5;
+    setLives(max);
+    nextQuestion();
+    startTimer();
+    playBg();
+  };
+  over.addEventListener('click', restart, { once:true });
+  document.body.appendChild(over);
+}
 
 /* --- foto casuale evitando ripetizione --- */
 let pzLastIndex = -1;
@@ -289,39 +426,98 @@ function nextQuestion(){
 function onAnswer(a){
   if (!CURRENT_Q) return;
 
- if (a === CURRENT_Q.correct){
-  try { document.getElementById('fxOk')?.play(); } catch {}
-  try { const gun = document.getElementById('fxGun'); if (gun){ gun.currentTime = 0; gun.play().catch(()=>{}); } } catch {}
+  // ===== risposta corretta =====
+  if (a === CURRENT_Q.correct){
+    try { document.getElementById('fxOk')?.play(); } catch {}
+    try { const gun = document.getElementById('fxGun'); if (gun){ gun.currentTime = 0; gun.play().catch(()=>{}); } } catch {}
 
-  // prendo tasselli ancora presenti e non già in animazione o già svelati
-  const tiles = Array.from(PZ.grid.querySelectorAll('.pz-tile'));
-  const live  = tiles.filter(t => !t.classList.contains('hit') && !t.classList.contains('cleared'));
+    // prendo tasselli non animati e non già svelati
+    const tiles = Array.from(PZ.grid.querySelectorAll('.pz-tile'));
+    const live  = tiles.filter(t => !t.classList.contains('hit') && !t.classList.contains('cleared'));
 
-  if (live.length){
-    // scelgo IL tassello
-    const t = live[Math.floor(Math.random() * live.length)];
+    if (live.length){
+      // scelgo IL tassello che verrà animato e "scoperto"
+      const t = live[Math.floor(Math.random() * live.length)];
 
-    // reset animazione (trucco reflow)
-    t.classList.remove('hit');
-    t.style.animation = 'none'; t.offsetHeight; t.style.animation = '';
-
-    // avvio animazione SOLO su questo tassello
-    t.classList.add('hit');
-
-    // quando FINISCE 'tileFlip', NON rimuovo il nodo: lo segno "cleared"
-    const onEnd = (ev)=>{
-      if (ev.target !== t) return;
-      if (ev.animationName !== 'tileFlip') return;
-      t.removeEventListener('animationend', onEnd);
-
-      // ► non rimuovere: lascia il box in griglia così il buco resta fermo
+      // reset animazione (trucco reflow)
       t.classList.remove('hit');
-      t.classList.add('cleared'); // diventa invisibile ma mantiene lo spazio
+      t.style.animation = 'none'; t.offsetHeight; t.style.animation = '';
 
-      // prosegui
-      const remaining = PZ.grid.querySelectorAll('.pz-tile:not(.cleared)').length;
-      if (remaining === 0) {
-        try { document.getElementById('fxVictory')?.play(); } catch {}
+      // avvio l’animazione SOLO su questo tassello
+      t.classList.add('hit');
+
+      // quando finisce 'tileFlip', marchio come cleared (non rimuovo il nodo)
+      const onEnd = (ev)=>{
+        if (ev.target !== t) return;
+        if (ev.animationName !== 'tileFlip') return;
+        t.removeEventListener('animationend', onEnd);
+
+        t.classList.remove('hit');
+        t.classList.add('cleared'); // invisibile, mantiene spazio
+
+        // puff grafico
+        try {
+          const wrap = PZ.grid.parentElement; // .pz-img-wrap
+          const tr = t.getBoundingClientRect();
+          const wr = wrap.getBoundingClientRect();
+          const puff = document.createElement('div');
+          puff.className = 'puff';
+          puff.style.left = (tr.left + tr.width/2 - wr.left) + 'px';
+          puff.style.top  = (tr.top  + tr.height/2 - wr.top)  + 'px';
+          wrap.appendChild(puff);
+          puff.addEventListener('animationend', ()=>puff.remove(), { once:true });
+        } catch {}
+
+        // controlla se è finito
+        const remaining = PZ.grid.querySelectorAll('.pz-tile:not(.cleared)').length;
+        if (remaining === 0) {
+          try { document.getElementById('fxVictory')?.play(); } catch {}
+          stopBg();
+
+          // raccogli dati e invia punteggio (non blocca UI)
+          const seconds   = Math.floor((Date.now() - PZ.t0)/1000);
+          const grid      = PZ.size;
+          const livesLeft = PZ.lives;
+          const nick      = getNickname();
+          postScore({ nickname: nick, grid, seconds, livesLeft }).catch(()=>{});
+
+          // attesa 3s, poi "Bravo!"
+          setTimeout(()=>{
+            const bravo = document.createElement('div');
+            bravo.className = 'bravo';
+            bravo.textContent = 'Bravo! Tocca per ricominciare';
+            const restart = ()=>{
+              bravo.remove();
+              loadNewPuzzleImage();
+              buildGrid(PZ.size);
+              const max = PZ_CFG.livesByGrid[PZ.size] ?? 5;
+              setLives(max);
+              nextQuestion();
+              startTimer();
+              playBg();
+            };
+            bravo.addEventListener('click', restart, { once:true });
+            document.body.appendChild(bravo);
+          }, 3000);
+
+        } else {
+          nextQuestion();
+        }
+      };
+      t.addEventListener('animationend', onEnd);
+
+    } else {
+      // edge-case: nessun tassello vivo
+      try { document.getElementById('fxVictory')?.play(); } catch {}
+      stopBg();
+
+      const seconds   = Math.floor((Date.now() - PZ.t0)/1000);
+      const grid      = PZ.size;
+      const livesLeft = PZ.lives;
+      const nick      = getNickname();
+      postScore({ nickname: nick, grid, seconds, livesLeft }).catch(()=>{});
+
+      setTimeout(()=>{
         const bravo = document.createElement('div');
         bravo.className = 'bravo';
         bravo.textContent = 'Bravo! Tocca per ricominciare';
@@ -329,69 +525,39 @@ function onAnswer(a){
           bravo.remove();
           loadNewPuzzleImage();
           buildGrid(PZ.size);
+          const max = PZ_CFG.livesByGrid[PZ.size] ?? 5;
+          setLives(max);
           nextQuestion();
           startTimer();
+          playBg();
         };
         bravo.addEventListener('click', restart, { once:true });
         document.body.appendChild(bravo);
-      } else {
-        nextQuestion();
-      }
-    };
-    t.addEventListener('animationend', onEnd);
-  } else {
-    // edge case: già tutti svelati
-    try { document.getElementById('fxVictory')?.play(); } catch {}
-    const bravo = document.createElement('div');
-    bravo.className = 'bravo';
-    bravo.textContent = 'Bravo! Tocca per ricominciare';
-    const restart = ()=>{
-      bravo.remove();
-      loadNewPuzzleImage();
-      buildGrid(PZ.size);
-      nextQuestion();
-      startTimer();
-    };
-    bravo.addEventListener('click', restart, { once:true });
-    document.body.appendChild(bravo);
+      }, 3000);
+    }
+    return;
   }
 
-  return;
-}
-
-  // risposta sbagliata
+  // ===== risposta sbagliata =====
   try { document.getElementById('fxWrong')?.play(); } catch {}
   const no = PZ.no; // <img id="noImg" class="no-img">
   if (no){
     no.classList.remove('hidden');
     no.classList.add('shake');
-    setTimeout(()=>{
+  }
+  setTimeout(()=>{
+    if (no){
       no.classList.add('hidden');
       no.classList.remove('shake');
-    }, 700);
-  }
-}
-
-
-function checkWin(){
-  const remaining = PZ.grid.querySelectorAll('.pz-tile').length;
-  if (remaining===0){
-    $('#fxVictory')?.play().catch(()=>{});
-    const bravo = document.createElement('div');
-    bravo.className = 'bravo';
-    bravo.textContent = 'Bravo! Tocca per ricominciare';
-    const restart = ()=>{
-      bravo.remove();
-      loadNewPuzzleImage();  // ► cambia SEMPRE foto
-      buildGrid(PZ.size);    // ► nuova griglia
-      nextQuestion();        // ► nuova domanda
-      startTimer();
-    };
-    bravo.addEventListener('click', restart, { once:true });
-    document.body.appendChild(bravo);
-  } else {
-    nextQuestion();
-  }
+    }
+    setLives(PZ.lives - 1);
+    if (PZ.lives <= 0){
+      stopBg();
+      gameOver();
+    } else {
+      nextQuestion();
+    }
+  }, 700);
 }
 
 function startTimer(){
@@ -406,18 +572,21 @@ function startTimer(){
 }
 
 function startPuzzle(){
-  loadNewPuzzleImage();  // ► prima scegli la foto…
-  buildGrid(PZ.size);    // ► …poi copri con la griglia
+  loadNewPuzzleImage();
+  buildGrid(PZ.size);
+  const max = PZ_CFG.livesByGrid[PZ.size] ?? 5;
+  setLives(max);                 // reset vite in base alla griglia
   PZ.root.classList.remove('hidden');
   nextQuestion();
   startTimer();
+  playBg();                      // musica di sottofondo ON
 }
 
 /* --- UI puzzle --- */
-$('#btnPuzzle').addEventListener('click', startPuzzle);
-$('#pzClose').addEventListener('click', ()=> PZ.root.classList.add('hidden'));
-$('#pzBack' ).addEventListener('click', ()=> PZ.root.classList.add('hidden'));
-$('#pzNext' ).addEventListener('click', startPuzzle);
+$('#btnPuzzle')?.addEventListener('click', startPuzzle);
+$('#pzClose' )?.addEventListener('click', ()=>{ PZ.root.classList.add('hidden'); stopBg(); });
+$('#pzBack'  )?.addEventListener('click', ()=>{ PZ.root.classList.add('hidden'); stopBg(); });
+$('#pzNext'  )?.addEventListener('click', startPuzzle);
 $$('.chip-btn').forEach(b=>{
   b.addEventListener('click', ()=>{
     $$('.chip-btn').forEach(x=>x.classList.remove('active'));
@@ -441,7 +610,7 @@ async function load(){
 load();
 
 /* ====== UPDATE (PWA) ====== */
-$('#btnUpdate').addEventListener('click', ()=>{
+$('#btnUpdate')?.addEventListener('click', ()=>{
   if ('serviceWorker' in navigator){
     caches.keys().then(keys=> Promise.all(keys.map(k=>caches.delete(k)))).finally(()=>location.reload());
   } else location.reload();
