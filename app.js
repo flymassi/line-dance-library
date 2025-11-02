@@ -1,19 +1,5 @@
-/* Western Spritz — app.js v34 */
-
-// Install prompt (Android/Chrome)
-let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', (e)=>{
-  e.preventDefault();
-  deferredPrompt = e;
-  const btn = document.getElementById('btnInstall');
-  if (btn) btn.classList.remove('hidden');
-});
-window.addEventListener('appinstalled', ()=>{
-  const btn = document.getElementById('btnInstall');
-  if (btn) btn.classList.add('hidden');
-});
-
-console.log('[WS] app v34');
+/* Western Spritz — app.js v35 */
+console.log('[WS] app v35');
 
 /* ====== BACKGROUND RANDOM ====== */
 (function(){
@@ -30,17 +16,17 @@ console.log('[WS] app v34');
   const start  = document.getElementById('startApp');
   const music  = document.getElementById('introMusic');
 
-  // alza il bottone (più negativo = più alto)
+  // alza il bottone (più negativo = più in alto)
   if (start) start.style.transform = 'translateY(-90px)';
 
-  // prova a far partire la musica in autoplay (muted)
+  // prova autoplay mutato
   try {
     music.muted = true;
     music.volume = 1;
     music.play().catch(()=>{});
   } catch {}
 
-  // sblocca audio al primo gesto utente
+  // sblocca audio al primo gesto
   function unlockAudioOnce(){
     try {
       music.muted = false;
@@ -56,7 +42,7 @@ console.log('[WS] app v34');
   window.addEventListener('mousedown',   unlockAudioOnce, {once:true});
   window.addEventListener('keydown',     unlockAudioOnce, {once:true});
 
-  // tap su Avvia: chiudi splash e garantisci l’audio
+  // click su Avvia
   start?.addEventListener('click', ()=>{
     unlockAudioOnce();
     splash.classList.add('hidden');
@@ -85,7 +71,7 @@ function openAt(index){
   if (!item) return;
   const url = item.songUrl || item.danceVideoUrl;
   if (!url) return;
-  window.open(url, plWindowName); // riusa sempre la stessa scheda
+  window.open(url, plWindowName);
 }
 
 const elCards = $('#cards');
@@ -192,7 +178,7 @@ $('#plPlay')?.addEventListener('click', ()=>{
     .filter(Boolean);
   if (!ids.length) return;
   const url = `https://www.youtube.com/watch_videos?video_ids=${ids.join(',')}`;
-  window.open(url, '_blank'); // YouTube esegue la coda
+  window.open(url, '_blank');
 });
 $('#plPrev')?.addEventListener('click', ()=>{
   if (!PLAYLIST.length) return;
@@ -227,7 +213,7 @@ const PZ = {
   lives: 5
 };
 
-/* --- musica di sottofondo puzzle --- */
+/* --- musica puzzle --- */
 function playBg(){
   const bg = document.getElementById('bgPuzzle');
   if (!bg) return;
@@ -336,12 +322,12 @@ function nextQuestion(){
 function onAnswer(a){
   if (!CURRENT_Q) return;
 
-  // ===== CORRETTA =====
+  // CORRETTA
   if (a === CURRENT_Q.correct){
     try { $('#fxOk')?.play(); } catch {}
     try { const gun = $('#fxGun'); if (gun){ gun.currentTime = 0; gun.play().catch(()=>{}); } } catch {}
 
-    // tasselli vivi non animati
+    // tasselli vivi non animati/non cleared
     const tiles = Array.from(PZ.grid.querySelectorAll('.pz-tile'));
     const live  = tiles.filter(t => !t.classList.contains('hit') && !t.classList.contains('cleared'));
 
@@ -364,7 +350,7 @@ function onAnswer(a){
         t.classList.remove('hit');
         t.classList.add('cleared'); // invisibile, mantiene spazio
 
-        // puff grafico
+        // puff
         try {
           const wrap = PZ.grid.parentElement; // .pz-img-wrap
           const tr = t.getBoundingClientRect();
@@ -382,7 +368,6 @@ function onAnswer(a){
         if (remaining === 0) {
           try { $('#fxVictory')?.play(); } catch {}
           stopBg();
-          // attesa 3s, poi "Bravo!"
           setTimeout(()=>{
             const bravo = document.createElement('div');
             bravo.className = 'bravo';
@@ -407,7 +392,7 @@ function onAnswer(a){
       t.addEventListener('animationend', onEnd);
 
     } else {
-      // nessun tassello vivo (edge)
+      // edge: nessun tassello vivo
       try { $('#fxVictory')?.play(); } catch {}
       stopBg();
       setTimeout(()=>{
@@ -431,7 +416,7 @@ function onAnswer(a){
     return;
   }
 
-  // ===== SBAGLIATA =====
+  // SBAGLIATA
   try { $('#fxWrong')?.play(); } catch {}
   const no = PZ.no;
   if (no){
@@ -472,7 +457,7 @@ function startPuzzle(){
   PZ.root.classList.remove('hidden');
   nextQuestion();
   startTimer();
-  playBg(); // musica ON
+  playBg();
 }
 
 /* --- UI puzzle --- */
@@ -487,6 +472,15 @@ $$('.chip-btn').forEach(b=>{
     PZ.size = +b.dataset.diff;
     buildGrid(PZ.size);
   });
+});
+
+/* ====== FILTRI ====== */
+$('#fDance').addEventListener('input', e=>{ FILTER.dance = e.target.value; render(); });
+$('#fSong' ).addEventListener('input', e=>{ FILTER.song  = e.target.value; render(); });
+$('#clearFilters').addEventListener('click', ()=>{
+  FILTER={dance:'',song:''};
+  $('#fDance').value=''; $('#fSong').value='';
+  render();
 });
 
 /* ====== DATA LOAD ====== */

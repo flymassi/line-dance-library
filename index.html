@@ -1,14 +1,9 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta name="theme-color" content="#a85b17">
-<link rel="manifest" href="./manifest.webmanifest">
-<!-- iOS -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="./assets/images/icon.png">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Western Spritz — Line Dance Library</title>
 
   <!-- Icone / PWA -->
   <link rel="icon" href="./assets/images/icon.png" />
@@ -16,7 +11,7 @@
   <link rel="manifest" href="./manifest.webmanifest" />
 
   <!-- Stili -->
-  <link rel="stylesheet" href="./style.css?v=34" />
+  <link rel="stylesheet" href="./style.css?v=35" />
 </head>
 <body>
 
@@ -107,6 +102,7 @@
       <div id="pzAnswers" class="qa-answers"></div>
     </div>
 
+    <!-- suoni -->
     <audio id="fxOk" preload="auto"><source src="./assets/audio/correct.mp3" type="audio/mpeg" /></audio>
     <audio id="fxWrong" preload="auto"><source src="./assets/audio/wrong.mp3" type="audio/mpeg" /></audio>
     <audio id="fxGun" preload="auto"><source src="./assets/audio/gun_shot.mp3" type="audio/mpeg" /></audio>
@@ -115,14 +111,12 @@
     <audio id="bgPuzzle" loop preload="auto"><source src="./assets/audio/lo_chiamavano_trinita.mp3" type="audio/mpeg" /></audio>
   </div>
 
-  <!-- Supabase -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="./app.js?v=34"></script>
-
+  <!-- Script -->
+  <script src="./app.js?v=35"></script>
   <script>
     if ('serviceWorker' in navigator){
       addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=34').catch(()=>{});
+        navigator.serviceWorker.register('./sw.js?v=35').catch(()=>{});
       });
     }
   </script>

@@ -1,17 +1,20 @@
 {
   "name": "Western Spritz — Line Dance Library",
-  "short_name": "Western Spritz",
-  "start_url": "/?src=pwa",
-  "scope": "/",
+  "short_name": "Line Dance",
+  "start_url": "./index.html",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#0f0f0f",
-  "theme_color": "#a85b17",
+  "background_color": "#000000",
+  "theme_color": "#b37b33",
   "icons": [
-    { "src": "/assets/images/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
-  ],
-  "shortcuts": [
-    { "name": "Gioco Puzzle", "short_name": "Puzzle", "url": "/#puzzle", "icons":[{ "src": "/assets/images/icon.png", "sizes":"192x192", "type":"image/png" }] },
-    { "name": "Playlist", "short_name":"Playlist", "url": "/#playlist", "icons":[{ "src": "/assets/images/icon.png", "sizes":"192x192", "type":"image/png" }] }
+    {
+      "src": "./assets/images/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./assets/images/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ]
 }
