@@ -1,52 +1,62 @@
-// sw.js v40 — cache solo asset statici; i JSON passano sempre di rete
-const CACHE = 'ws-v40';
-const PRECACHE = [
-  './',
-  './index.html',
-  './style.css',
-  './app.js',
-  './assets/images/icon.png',
+/* sw.js v35 */
+const CACHE = 'ws-cache-v35';
+const CORE = [
+  '/', '/index.html',
+  '/style.css?v=35', '/app.js?v=35',
+  '/manifest.webmanifest',
+  '/assets/images/icon.png',
+  '/assets/images/gruppo.png',
+  '/assets/audio/some_people.mp3'
 ];
 
-self.addEventListener('install', e => {
-  self.skipWaiting();
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(PRECACHE).catch(()=>{})));
+self.addEventListener('install', e=>{
+  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()));
 });
 
-self.addEventListener('activate', e => {
-  e.waitUntil((async ()=>{
-    const keys = await caches.keys();
-    await Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)));
-    await self.clients.claim();
-  })());
+self.addEventListener('activate', e=>{
+  e.waitUntil(caches.keys().then(keys=>Promise.all(
+    keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))
+  )).then(()=>self.clients.claim()));
 });
 
-self.addEventListener('fetch', e => {
-  const req = e.request;
-  const url = new URL(req.url);
+/* Strategia:
+   - JSON e immagini: Stale-While-Revalidate (veloce + aggiorna in background)
+   - asset core: Cache-First
+   - offline fallback per /data/songs.json e immagini puzzle
+*/
+self.addEventListener('fetch', e=>{
+  const url = new URL(e.request.url);
 
-  const isJSON = url.pathname.endsWith('.json') || req.headers.get('accept')?.includes('application/json');
-  const hasBuster = url.searchParams.has('v') || /no-store|no-cache/i.test(req.headers.get('cache-control') || '');
+  // bypass per chiamate non GET
+  if (e.request.method !== 'GET') return;
 
-  // JSON e richieste con cache-buster: network-first
-  if (isJSON || hasBuster){
-    e.respondWith(fetch(req).catch(()=>caches.match(req)));
+  // Cache-First per core e app shell
+  if (CORE.some(p=>url.pathname === p || url.pathname.startsWith(p.replace(/\?.*$/,'')))){
+    e.respondWith(
+      caches.match(e.request).then(cached => cached || fetch(e.request).then(r=>{
+        const copy = r.clone(); caches.open(CACHE).then(c=>c.put(e.request, copy));
+        return r;
+      }))
+    );
     return;
   }
 
-  if (req.method !== 'GET') return;
+  // Stale-While-Revalidate per JSON, immagini, audio
+  if (url.pathname.endsWith('.json') || url.pathname.match(/\.(png|jpg|jpeg|webp|mp3)$/i)){
+    e.respondWith(
+      caches.match(e.request).then(cached=>{
+        const net = fetch(e.request).then(r=>{
+          const copy = r.clone(); caches.open(CACHE).then(c=>c.put(e.request, copy));
+          return r;
+        }).catch(()=>cached || new Response('[]',{headers:{'Content-Type':'application/json'}}));
+        return cached || net;
+      })
+    );
+    return;
+  }
 
-  // Asset statici: cache-first
+  // Default: rete con fallback cache
   e.respondWith(
-    caches.match(req).then(cached => {
-      if (cached) return cached;
-      return fetch(req).then(res => {
-        if (res.ok && (res.type === 'basic' || res.type === 'cors')) {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(req, clone)).catch(()=>{});
-        }
-        return res;
-      });
-    })
+    fetch(e.request).catch(()=>caches.match(e.request))
   );
 });

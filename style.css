@@ -142,7 +142,7 @@ body{
 
 /* tasselli */
 .pz-tile{
-  background: rgba(10, 15, 20, 0.97);
+  background: rgba(10, 15, 20, 1);
   border-radius: 12px;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.10), 0 2px 8px rgba(0,0,0,.35);
   will-change: transform, opacity;
