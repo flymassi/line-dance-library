@@ -23,11 +23,26 @@ body{
 /* ==== splash ==== */
 .splash{
   position:fixed; inset:0; background:#000; display:grid; place-items:center;
-  grid-template-rows:auto auto auto; gap:10px; z-index:10;
+  grid-template-rows:auto auto auto auto auto; gap:10px; z-index:10;
 }
 .splash-img{max-width:min(80vw,480px); width:80%; height:auto}
 .splash-tip{margin:0;color:#ddd;opacity:.9}
 .splash-start{margin-top:-40px}
+
+/* --- splash: contatore visite --- */
+.splash-visit-label{
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: .3px;
+  opacity: .95;
+}
+.splash-counter{
+  font-size: clamp(22px, 4.5vw, 34px);
+  font-weight: 900;
+  color: var(--brand);
+  text-shadow: 0 2px 10px rgba(0,0,0,.35);
+  margin: 2px 0 6px;
+}
 
 .hidden{display:none !important}
 
@@ -42,11 +57,10 @@ body{
 /* bottone puzzle visivamente diverso */
 .btn-puzzle{
   background: linear-gradient(180deg, #ffd86b, #ffb200);
-  color:#fd0404; /* testo scuro per contrasto */
+  color:#fd0404;
   box-shadow: 0 6px 20px rgba(81, 255, 0, 0.35);
 }
 .btn-puzzle:hover{ filter:brightness(1.05) }
-
 
 .ghost{background:transparent; color:#fff; border:1px solid #fff3; padding:9px 12px}
 .actions-top{display:flex; gap:10px; justify-content:center; margin:10px auto}
@@ -85,32 +99,50 @@ body{
 .gap8{display:flex; gap:8px}
 
 /* ==== Puzzle ==== */
+/* TOPBAR puzzle – centrata e fuori dalla tacca */
 .pz-topbar{
-  position:fixed; top:10px; left:50%; transform:translateX(-50%);
-  display:flex; gap:10px; align-items:center; z-index:30;
-}
-.chip{background:var(--glass); padding:8px 10px; border-radius:999px; box-shadow:0 6px 20px #0006}
-.chip-btn{background:#222c33; color:#fff; border:0; padding:6px 10px; border-radius:999px; margin-left:4px; cursor:pointer}
-.chip-btn.active{background:var(--brand)}
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 12px); /* <<< spazio sicuro su iOS */
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(96vw, 980px);
+  box-sizing: border-box;
 
-/* ---- Puzzle stage: lascia spazio alla card Q/A in basso ---- */
+  z-index: 50;
+  display: flex; gap: 8px; align-items: center; justify-content: center;
+  padding: 8px 10px;
+  border-radius: 14px;
+
+  backdrop-filter: blur(10px) saturate(140%);
+  background: linear-gradient(180deg, rgba(10,15,20,.65), rgba(10,15,20,.35));
+  color:#fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,.35);
+}
+
+/* più aria sopra la griglia: tiene conto della topbar + safe-area */
 .pz-stage{
   display:grid; place-items:center;
   min-height:60vh;
-  padding-top:64px;
-  /* PRIMA non c’era il padding-bottom sufficiente */
+  padding-top: calc(env(safe-area-inset-top, 0px) + var(--pz-topbar-h, 76px) + 28px);
   padding-bottom: clamp(150px, 28vh, 240px);
 }
+
 
 .pz-img-wrap{position:relative; width:min(90vw,820px); aspect-ratio:4/3}
 .pz-img-wrap img#pzImg{position:absolute; inset:0; width:100%; height:100%; object-fit:contain; z-index:1}
 #pzGrid{position:absolute; inset:0; z-index:2; display:grid; gap:2px}
 
 .pz-tile{
-  /* PRIMA: background:#111d; molto trasparente */
   background: rgba(0, 4, 8, 1);
   border-radius:6px;
   box-shadow: inset 0 0 0 1px rgb(237, 234, 234);
+}
+
+/* tassello rimosso: invisibile e non intercettabile */
+.pz-tile.cleared{
+  opacity: 0 !important;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .pz-tile.hit{animation:spinOut .5s ease forwards}
@@ -129,6 +161,11 @@ body{
   60%{transform:translate(-50%,-4px) rotate(-2deg)}
   80%{transform:translate(-50%,2px) rotate(1deg)}
 }
+
+@media (max-width: 390px){
+  .pz-topbar{ width: 94vw; }
+}
+
 
 /* QA in basso */
 .qa-card{
@@ -149,50 +186,3 @@ body{
   background:rgba(0,0,0,.35); backdrop-filter:blur(4px);
   color:#fff; font-weight:900; font-size:clamp(22px,5vw,44px);
 }
-/* ---- HUD / Topbar e spazio puzzle ---- */
-:root{
-  --pz-topbar-h: 76px;     /* altezza indicativa della barra in alto */
-}
-
-/* la barra rimane visibile ma non schiaccia la griglia */
-.pz-topbar{
-  position: sticky;
-  top: 12px;
-  z-index: 50;
-  display: flex; gap: 8px; align-items: center; justify-content: center;
-  padding: 8px 10px;
-  backdrop-filter: blur(10px) saturate(140%);
-  background: linear-gradient(180deg, rgba(10,15,20,.65), rgba(10,15,20,.35));
-  border-radius: 14px;
-  color:#fff;
-  text-shadow: 0 1px 2px rgba(0,0,0,.35);
-}
-
-/* più aria sopra la griglia così la prima fila NON sta sotto la topbar */
-.pz-stage{
-  display:grid; place-items:center;
-  min-height:60vh;
-  padding-top: calc(var(--pz-topbar-h) + 28px);
-  padding-bottom: clamp(150px, 28vh, 240px); /* lascia spazio alla card Q/A in basso */
-}
-
-/* chip (timer, punteggio, difficoltà) più leggibili */
-.chip, .chip-btn{
-  color:#fff;
-  text-shadow: 0 1px 2px rgba(0,0,0,.5);
-}
-
-/* card delle domande: testo più “staccato” dallo sfondo legno */
-#pzCard{
-  color:#fff;
-  text-shadow: 0 1px 2px rgba(0,0,0,.6);
-  border: 1px solid rgba(255,255,255,.12);
-}
-#pzAnswers .btn{
-  color:#101318;
-  font-weight: 800;
-}
-#pzAnswers .btn:hover{
-  filter: brightness(1.05);
-}
-

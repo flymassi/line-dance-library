@@ -11,7 +11,7 @@
   <link rel="manifest" href="./manifest.webmanifest" />
 
   <!-- Stili -->
-  <link rel="stylesheet" href="./style.css?v=35" />
+  <link rel="stylesheet" href="./style.css?v=37" />
 </head>
 <body>
 
@@ -23,6 +23,11 @@
   <div id="splash" class="splash">
     <img src="./assets/images/gruppo.png" class="splash-img" alt="Western Spritz" />
     <p class="splash-tip">Tocca “Avvia” per entrare</p>
+
+    <!-- Contatore visite globale -->
+    <p class="splash-visit-label">Sei il visitatore</p>
+    <div id="visitCounter" class="splash-counter">—</div>
+
     <button id="startApp" class="btn btn-primary splash-start">Avvia</button>
     <audio id="introMusic" autoplay playsinline muted preload="auto">
       <source src="./assets/audio/some_people.mp3" type="audio/mpeg" />
@@ -112,11 +117,11 @@
   </div>
 
   <!-- Script -->
-  <script src="./app.js?v=35"></script>
+  <script src="./app.js?v=37"></script>
   <script>
     if ('serviceWorker' in navigator){
       addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=35').catch(()=>{});
+        navigator.serviceWorker.register('./sw.js?v=37').catch(()=>{});
       });
     }
   </script>
