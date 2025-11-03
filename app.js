@@ -430,25 +430,38 @@ function startTimer(){
   }, 500);
 }
 
-/* ====================== QUIZ ENGINE ====================== */
+/* ====================== QUIZ ENGINE (random vero) ====================== */
 const Quiz = (function(){
   let pool = [];        // tutte le chiavi disponibili
-  let deck = [];        // mazzo rimanente
+  let deck = [];        // mazzo rimanente (SEMpre mescolato)
   let current = null;   // { q, correct, answers }
 
-  function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+  function shuffle(a){
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
 
   function buildPool(){
+    // Costruisci l’elenco delle possibili domande dal database
     pool = SONGS.flatMap(s=>{
       const keys = [];
       if (s?.singerName && s?.songTitle) keys.push({ type:'SINGER', year:s.year, num:s.songNumber });
       if (s?.danceTitle  && s?.songTitle) keys.push({ type:'DANCE',  year:s.year, num:s.songNumber });
       return keys;
     });
+    // Prepara un mazzo iniziale già mescolato
     deck = shuffle([...pool]);
   }
 
-  function ensureDeck(){ if(!deck.length) deck = shuffle([...pool]); }
+  function ensureDeck(){
+    if (!deck.length) {
+      // quando finisce, ricrea un mazzo nuovo e mescolato
+      deck = shuffle([...pool]);
+    }
+  }
 
   function pickOptions(correct, field){
     const uniq = new Set([correct]);
@@ -482,20 +495,22 @@ const Quiz = (function(){
 
   function next(){
     ensureDeck();
-    const k = deck.pop();
+    const k = deck.pop();              // preleva dall’estremità del mazzo mescolato
     current = makeQuestion(k);
     return current;
   }
 
   function get(){ return current; }
+
   const norm = v => String(v??'').trim().toLowerCase();
   function isCorrect(ans){ return norm(ans) === norm(current?.correct); }
 
-  function init(){ buildPool(); }
-  function reset(){ deck = [...pool]; }
+  function init(){ buildPool(); }                // costruisce pool + deck mescolato
+  function reset(){ deck = shuffle([...pool]); } // <<< ora reset mescola SEMPRE
 
   return { init, next, get, isCorrect, reset };
 })();
+
 
 /* --- render domanda --- */
 function renderQuestion(){
