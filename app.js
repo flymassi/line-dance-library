@@ -16,7 +16,7 @@ console.log('[WS] app v40');
   const start   = document.getElementById('startApp');
   const music   = document.getElementById('introMusic');
 
-  // Chiudi splash
+  // --- 1️⃣ Chiude lo splash e avvia musica
   const hideSplash = ()=>{
     try {
       if (music){
@@ -29,9 +29,11 @@ console.log('[WS] app v40');
     splash?.classList.add('hidden');
   };
   start?.addEventListener('click', hideSplash, { once:true });
-  window.addEventListener('keydown', (e)=>{ if (e.key==='Enter' || e.key===' ') hideSplash(); }, { once:true });
+  window.addEventListener('keydown', (e)=>{
+    if (e.key==='Enter' || e.key===' ') hideSplash();
+  }, { once:true });
 
-  // Autoplay silenzioso (non blocca)
+  // --- 2️⃣ Avvio silenzioso dell’audio (per sbloccare autoplay)
   try {
     if (music){
       music.muted = true;
@@ -40,11 +42,45 @@ console.log('[WS] app v40');
     }
   } catch {}
 
-  // --- Contatore visite: funziona in locale e online (Upstash via Vercel)
+  // --- 3️⃣ Helper: animazione western del contatore
+  function animateCount(el, to) {
+    const prevStored = Number(localStorage.getItem('ws_last_visits') || 0);
+    const from = Number.isFinite(prevStored) && prevStored > 0
+      ? prevStored
+      : Number(el.textContent.replace(/\D/g,'') || 0);
+
+    const target = Number(to);
+    if (!Number.isFinite(target)) {
+      el.textContent = '—';
+      return;
+    }
+
+    const dur = 800; // durata animazione ms
+    const t0 = performance.now();
+
+    function step(t){
+      const p = Math.min(1, (t - t0) / dur);
+      const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
+      const val = Math.round(from + (target - from) * eased);
+      el.textContent = val.toLocaleString('it-IT');
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+
+    // Effetto “puff” western
+    el.classList.remove('count-pulse','count-shine');
+    void el.offsetWidth; // forza reflow per riavviare animazione
+    el.classList.add('count-pulse','count-shine');
+
+    // Memorizza ultimo valore locale
+    localStorage.setItem('ws_last_visits', String(target));
+  }
+
+  // --- 4️⃣ Contatore visite: Upstash via Vercel
   try {
     const el = document.getElementById('visitCounter');
     if (el) {
-      const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+      const isLocal = ['localhost','127.0.0.1'].includes(location.hostname);
       const PROD = 'https://western-spritz.vercel.app/api/visits';
       const URL = isLocal ? PROD : '/api/visits';
 
@@ -52,12 +88,18 @@ console.log('[WS] app v40');
         .then(r => r.json())
         .then(d => {
           const n = Number(d?.value || 0);
-          el.textContent = Number.isFinite(n) ? n.toLocaleString('it-IT') : '—';
+          if (Number.isFinite(n)) {
+            animateCount(el, n);
+          } else {
+            el.textContent = '—';
+          }
         })
         .catch(() => { el.textContent = '—'; });
     }
   } catch {}
+
 })();
+
 
 
 /* ====== UTIL ====== */
