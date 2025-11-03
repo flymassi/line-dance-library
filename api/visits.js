@@ -1,6 +1,20 @@
 // /api/visits.js — versione Upstash
 export default async function handler(req, res) {
   try {
+    
+    // inizializza se non esiste
+await fetch(`${process.env.UPSTASH_REDIS_REST_URL}/set/ws:visits/126`, {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}` }
+});
+
+    
+    
+    
+    
+    
+    
+    
     const r = await fetch(`${process.env.UPSTASH_REDIS_REST_URL}/incr/ws:visits`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}` }
