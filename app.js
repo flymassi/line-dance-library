@@ -1,5 +1,5 @@
-/* Western Spritz — app.js v38 */
-console.log('[WS] app v38');
+/* Western Spritz — app.js v40 */
+console.log('[WS] app v40');
 
 /* ====== BACKGROUND RANDOM ====== */
 (function(){
@@ -10,14 +10,13 @@ console.log('[WS] app v38');
   if (main) main.style.backgroundImage = `url('${url}')`;
 })();
 
-/* ====== SPLASH (robusto, con contatore globale) ====== */
+/* ====== SPLASH (robusto) ====== */
 (function(){
-  const splash = document.getElementById('splash');
-  const start  = document.getElementById('startApp');
-  const music  = document.getElementById('introMusic');
-  const visitEl= document.getElementById('visitCounter');
+  const splash  = document.getElementById('splash');
+  const start   = document.getElementById('startApp');
+  const music   = document.getElementById('introMusic');
 
-  // --- handler che NASCONDE lo splash (prima di tutto: non viene mai bloccato)
+  // 0) handler: nasconde splash (prima di tutto)
   const hideSplash = ()=>{
     try {
       if (music){
@@ -30,15 +29,9 @@ console.log('[WS] app v38');
     splash?.classList.add('hidden');
   };
   start?.addEventListener('click', hideSplash, { once:true });
-  // fallback tastiera
-  window.addEventListener('keydown', (e)=>{
-    if (e.key === 'Enter' || e.key === ' ') hideSplash();
-  }, { once:true });
+  window.addEventListener('keydown', (e)=>{ if (e.key==='Enter' || e.key===' ') hideSplash(); }, { once:true });
 
-  // UI: alza il bottone
-  if (start) start.style.transform = 'translateY(-90px)';
-
-  // autoplay silenzioso (non blocca nulla)
+  // 1) autoplay silenzioso (non blocca)
   try {
     if (music){
       music.muted = true;
@@ -47,57 +40,77 @@ console.log('[WS] app v38');
     }
   } catch {}
 
-  // --- Contatore visite globale (isolato: non può bloccare la UI)
+  // 2) Contatore visite: badge immagine + fallback testuale JSONP
   try {
-    const NS  = 'western-spritz'; // personalizza se vuoi dev/prod diversi
-    const KEY = 'visits';
+    const img = document.getElementById('visitCounterImg');   // <img> del badge
+    const txt = document.getElementById('visitCounter');      // <div> fallback testuale
+    const startBtn = document.getElementById('startApp');
+    const label = document.querySelector('.splash-visit-label');
 
-    const setCounter = (n)=>{
-      if (!visitEl) return;
-      const v = Number(n);
-      visitEl.textContent = Number.isFinite(v) ? v.toLocaleString('it-IT') : '—';
-    };
-
-    // JSONP per bypass CORS/caching
-    const cbName = 'wsCountCb_' + Math.random().toString(36).slice(2);
-    const script = document.createElement('script');
-    script.async = true;
-    script.referrerPolicy = 'no-referrer';
-    script.src = `https://api.countapi.xyz/hit/${encodeURIComponent(NS)}/${encodeURIComponent(KEY)}?callback=${cbName}&_=${Date.now()}`;
-
-    const cleanup = ()=>{
-      try { delete window[cbName]; } catch {}
-      try { script.remove(); } catch {}
-    };
-
-    let got = false;
-    window[cbName] = (data)=>{
-      got = true;
-      setCounter(data?.value ?? 1);
-      cleanup();
-    };
-
-    script.onerror = ()=>{
-      cleanup();
-      // Fallback fetch (create → update → get), sempre no-store
-      (async()=>{
-        try{
-          await fetch(`https://api.countapi.xyz/create?namespace=${encodeURIComponent(NS)}&key=${encodeURIComponent(KEY)}&value=0`, { cache:'no-store', credentials:'omit', mode:'cors' }).catch(()=>{});
-          await fetch(`https://api.countapi.xyz/update/${encodeURIComponent(NS)}/${encodeURIComponent(KEY)}?amount=1`, { cache:'no-store', credentials:'omit', mode:'cors' }).catch(()=>{});
-          const r = await fetch(`https://api.countapi.xyz/get/${encodeURIComponent(NS)}/${encodeURIComponent(KEY)}?${Date.now()}`, { cache:'no-store', credentials:'omit', mode:'cors' });
-          const d = await r.json();
-          setCounter(d?.value ?? 1);
-        } catch {
-          setCounter('—');
-        }
-      })();
-    };
-
-    script.onload = ()=>{ setTimeout(()=>{ if (!got) setCounter('—'); cleanup(); }, 200); };
-    document.head.appendChild(script);
-  } catch {
-    if (visitEl) visitEl.textContent = '—';
+  // --- Contatore visite globale (Upstash)
+  try {
+  const el = document.getElementById('visitCounter');
+  if (el) {
+    fetch('/api/visits', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(d => {
+        const n = Number(d?.value || 1);
+        el.textContent = Number.isFinite(n) ? n.toLocaleString('it-IT') : '—';
+      })
+      .catch(() => { el.textContent = '—'; });
   }
+  } catch {}
+
+
+
+
+    // assicurare ordine DOM: label -> contatore -> bottone
+    if (label && img && startBtn) {
+      startBtn.insertAdjacentElement('beforebegin', img);
+    }
+    if (label && txt && startBtn) {
+      startBtn.insertAdjacentElement('beforebegin', txt);
+    }
+
+    // tenta badge immagine (non richiede CORS)
+    if (img){
+      const SITE = (location.host || 'western-spritz.vercel.app'); // cambia se vuoi forzare dominio
+      const proto = location.protocol.startsWith('http') ? location.protocol : 'https:';
+      const urlParam = encodeURIComponent(`${proto}//${SITE}`);
+      const badge = `https://hits.seeyoufarm.com/api/count/incr/badge.svg` +
+        `?url=${urlParam}` +
+        `&count_bg=%23FF8A00` +
+        `&title_bg=%230B1820` +
+        `&title=VISITATORE` +
+        `&edge_flat=false` +
+        `&_=${Date.now()}`; // cache-buster
+      img.referrerPolicy = 'no-referrer';
+      img.src = badge;
+
+      // se il badge fallisce, fallback testuale con CountAPI JSONP
+      img.onerror = () => {
+        img.classList.add('hidden');
+        if (txt) txt.classList.remove('hidden');
+
+        const NS  = 'western-spritz';
+        const KEY = 'visits';
+        const cb  = 'wsCountCb_' + Math.random().toString(36).slice(2);
+
+        window[cb] = (data) => {
+          const v = Number(data?.value || 1);
+          if (txt) txt.textContent = Number.isFinite(v) ? v.toLocaleString('it-IT') : '—';
+          try { delete window[cb]; } catch {}
+          try { s.remove(); } catch {}
+        };
+
+        const s = document.createElement('script');
+        s.async = true;
+        s.referrerPolicy = 'no-referrer';
+        s.src = `https://api.countapi.xyz/hit/${encodeURIComponent(NS)}/${encodeURIComponent(KEY)}?callback=${cb}&_=${Date.now()}`;
+        document.head.appendChild(s);
+      };
+    }
+  } catch {}
 })();
 
 /* ====== UTIL ====== */
@@ -347,7 +360,7 @@ function revealRandomTileAndCheckWin(){
 
     t.classList.remove('hit');
     t.classList.add('cleared');
-    // fallback visivo inline (anche senza CSS)
+    // fallback visivo inline
     t.style.opacity = '0';
     t.style.visibility = 'hidden';
     t.style.pointerEvents = 'none';
@@ -472,6 +485,7 @@ const Quiz = (function(){
   return { init, next, get, isCorrect, reset };
 })();
 
+/* --- render domanda --- */
 function renderQuestion(){
   const q = Quiz.get() || Quiz.next();
   if (!PZ.q || !PZ.ans) return;
@@ -487,6 +501,7 @@ function renderQuestion(){
   });
 }
 
+/* --- gestione risposta --- */
 function onAnswer(val){
   if(!Quiz.get()) return;
 
@@ -510,10 +525,18 @@ function onAnswer(val){
   }, 700);
 }
 
+/* --- misura topbar per safe-area iOS e centratura --- */
+function updateTopbarHeight(){
+  const tb = document.querySelector('.pz-topbar');
+  if (!tb) return;
+  document.documentElement.style.setProperty('--pz-topbar-h', tb.offsetHeight + 'px');
+}
+
 /* --- avvio / UI puzzle --- */
 function startPuzzle(){
   PZ.root?.classList.remove('hidden');
   updateTopbarHeight();
+
   loadNewPuzzleImage();
   buildGrid(PZ.size);
   const max = PZ_CFG.livesByGrid[PZ.size] ?? 5;
@@ -526,14 +549,12 @@ function startPuzzle(){
   startTimer();
   playBg();
 }
-addEventListener('resize', updateTopbarHeight);
-addEventListener('orientationchange', updateTopbarHeight);
 
 /* --- bindings UI puzzle --- */
 $('#btnPuzzle')?.addEventListener('click', ()=> startPuzzle());
 $('#pzClose' )?.addEventListener('click', ()=>{ PZ.root?.classList.add('hidden'); stopBg(); });
 $('#pzBack'  )?.addEventListener('click', ()=>{ PZ.root?.classList.add('hidden'); stopBg(); });
-$('#pzNext'  )?.addEventListener('click', ()=>{ loadNewPuzzleImage(); buildGrid(PZ.size); });
+$('#pzNext'  )?.addEventListener('click', ()=>{ loadNewPuzzleImage(); buildGrid(PZ.size); updateTopbarHeight(); });
 
 $$('.chip-btn').forEach(b=>{
   b.addEventListener('click', ()=>{
@@ -545,6 +566,9 @@ $$('.chip-btn').forEach(b=>{
     setLives(max);
   });
 });
+
+addEventListener('resize', updateTopbarHeight);
+addEventListener('orientationchange', updateTopbarHeight);
 
 /* ====== FILTRI ====== */
 $('#fDance')?.addEventListener('input', e=>{ FILTER.dance = e.target.value; render(); });
@@ -588,9 +612,3 @@ $('#btnUpdate')?.addEventListener('click', async ()=>{
   }catch{}
   location.reload(true);
 });
-
-function updateTopbarHeight(){
-  const tb = document.querySelector('.pz-topbar');
-  if (!tb) return;
-  document.documentElement.style.setProperty('--pz-topbar-h', tb.offsetHeight + 'px');
-}

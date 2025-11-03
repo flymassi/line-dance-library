@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Western Spritz — Line Dance Library</title>
 
-  <!-- Icone / PWA -->
+  <!-- PWA / Icone -->
   <link rel="icon" href="./assets/images/icon.png" />
   <link rel="apple-touch-icon" href="./assets/images/icon.png" />
   <link rel="manifest" href="./manifest.webmanifest" />
 
   <!-- Stili -->
-  <link rel="stylesheet" href="./style.css?v=37" />
+  <link rel="stylesheet" href="./style.css?v=39" />
 </head>
 <body>
 
@@ -24,11 +24,14 @@
     <img src="./assets/images/gruppo.png" class="splash-img" alt="Western Spritz" />
     <p class="splash-tip">Tocca “Avvia” per entrare</p>
 
-    <!-- Contatore visite globale -->
+    <!-- Contatore visite globale: badge + fallback testuale -->
     <p class="splash-visit-label">Sei il visitatore</p>
-    <div id="visitCounter" class="splash-counter">—</div>
+    <img id="visitCounterImg" class="splash-counter-img" alt="Numero visite globali" />
+    <div id="visitCounter" class="splash-counter hidden">—</div>
 
     <button id="startApp" class="btn btn-primary splash-start">Avvia</button>
+
+    <!-- musica intro -->
     <audio id="introMusic" autoplay playsinline muted preload="auto">
       <source src="./assets/audio/some_people.mp3" type="audio/mpeg" />
     </audio>
@@ -71,9 +74,9 @@
       </div>
       <div id="plList"></div>
       <div class="actions" style="justify-content:flex-end; gap:8px">
-          <button id="plPrev" class="btn ghost">◀︎ Precedente</button>
-          <button id="plNext" class="btn ghost">Successivo ▶︎</button>
-          <button id="plPlay" class="btn btn-primary">Apri su YouTube</button>
+        <button id="plPrev" class="btn ghost">◀︎ Precedente</button>
+        <button id="plNext" class="btn ghost">Successivo ▶︎</button>
+        <button id="plPlay" class="btn btn-primary">Apri su YouTube</button>
       </div>
     </div>
   </div>
@@ -117,11 +120,11 @@
   </div>
 
   <!-- Script -->
-  <script src="./app.js?v=37"></script>
+  <script src="./app.js?v=39"></script>
   <script>
     if ('serviceWorker' in navigator){
       addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=37').catch(()=>{});
+        navigator.serviceWorker.register('./sw.js?v=39').catch(()=>{});
       });
     }
   </script>
