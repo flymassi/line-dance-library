@@ -252,6 +252,13 @@ $('#plNext')?.addEventListener('click', ()=>{
    =========================================================== */
 const PZ_CFG = { livesByGrid: { 3: 7, 4: 5, 5: 4 } };
 
+const TILE_COVERS = [
+  './assets/images/covers/stivali.png',
+  './assets/images/covers/luca_1.png',
+  './assets/images/covers/ws_logo.png'
+];
+
+
 const PZ = {
   root:  $('#pzOverlay'),
   grid:  $('#pzGrid'),
@@ -314,16 +321,32 @@ function loadNewPuzzleImage(){
 function buildGrid(n){
   PZ.size = n;
   if (!PZ.grid) return;
+
   PZ.grid.innerHTML = '';
   PZ.grid.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
   PZ.grid.style.gridTemplateRows    = `repeat(${n}, 1fr)`;
-  const total = n*n;
-  for(let i=0;i<total;i++){
-    const div = document.createElement('div');
-    div.className = 'pz-tile';
-    PZ.grid.appendChild(div);
+
+  // matrice copertine scelte
+  const coverAt = Array.from({length:n}, ()=> Array(n).fill(null));
+
+  for (let r = 0; r < n; r++){
+    for (let c = 0; c < n; c++){
+      const ban = new Set();
+      if (c > 0) ban.add(coverAt[r][c-1]); // vieta la stessa della tessera a sinistra
+      if (r > 0) ban.add(coverAt[r-1][c]); // vieta la stessa della tessera sopra
+
+      const choices = TILE_COVERS.filter(u => !ban.has(u));
+      const pick = choices[Math.floor(Math.random() * choices.length)];
+      coverAt[r][c] = pick;
+
+      const tile = document.createElement('div');
+      tile.className = 'pz-tile';
+      tile.style.setProperty('--cover-url', `url("${pick}")`);
+      PZ.grid.appendChild(tile);
+    }
   }
 }
+
 function livingTiles(){
   return PZ.grid ? Array.from(PZ.grid.querySelectorAll('.pz-tile:not(.cleared)')) : [];
 }
