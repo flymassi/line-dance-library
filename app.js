@@ -16,7 +16,7 @@ console.log('[WS] app v40');
   const start   = document.getElementById('startApp');
   const music   = document.getElementById('introMusic');
 
-  // 0) handler: nasconde splash (prima di tutto)
+  // Chiudi splash
   const hideSplash = ()=>{
     try {
       if (music){
@@ -31,7 +31,7 @@ console.log('[WS] app v40');
   start?.addEventListener('click', hideSplash, { once:true });
   window.addEventListener('keydown', (e)=>{ if (e.key==='Enter' || e.key===' ') hideSplash(); }, { once:true });
 
-  // 1) autoplay silenzioso (non blocca)
+  // Autoplay silenzioso (non blocca)
   try {
     if (music){
       music.muted = true;
@@ -40,78 +40,25 @@ console.log('[WS] app v40');
     }
   } catch {}
 
-  // 2) Contatore visite: badge immagine + fallback testuale JSONP
+  // --- Contatore visite: funziona in locale e online (Upstash via Vercel)
   try {
-    const img = document.getElementById('visitCounterImg');   // <img> del badge
-    const txt = document.getElementById('visitCounter');      // <div> fallback testuale
-    const startBtn = document.getElementById('startApp');
-    const label = document.querySelector('.splash-visit-label');
+    const el = document.getElementById('visitCounter');
+    if (el) {
+      const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+      const PROD = 'https://western-spritz.vercel.app/api/visits';
+      const URL = isLocal ? PROD : '/api/visits';
 
-  // --- Contatore visite globale (Upstash)
-  try {
-  const el = document.getElementById('visitCounter');
-  if (el) {
-    fetch('/api/visits', { cache: 'no-store' })
-      .then(r => r.json())
-      .then(d => {
-        const n = Number(d?.value || 1);
-        el.textContent = Number.isFinite(n) ? n.toLocaleString('it-IT') : '—';
-      })
-      .catch(() => { el.textContent = '—'; });
-  }
-  } catch {}
-
-
-
-
-    // assicurare ordine DOM: label -> contatore -> bottone
-    if (label && img && startBtn) {
-      startBtn.insertAdjacentElement('beforebegin', img);
-    }
-    if (label && txt && startBtn) {
-      startBtn.insertAdjacentElement('beforebegin', txt);
-    }
-
-    // tenta badge immagine (non richiede CORS)
-    if (img){
-      const SITE = (location.host || 'western-spritz.vercel.app'); // cambia se vuoi forzare dominio
-      const proto = location.protocol.startsWith('http') ? location.protocol : 'https:';
-      const urlParam = encodeURIComponent(`${proto}//${SITE}`);
-      const badge = `https://hits.seeyoufarm.com/api/count/incr/badge.svg` +
-        `?url=${urlParam}` +
-        `&count_bg=%23FF8A00` +
-        `&title_bg=%230B1820` +
-        `&title=VISITATORE` +
-        `&edge_flat=false` +
-        `&_=${Date.now()}`; // cache-buster
-      img.referrerPolicy = 'no-referrer';
-      img.src = badge;
-
-      // se il badge fallisce, fallback testuale con CountAPI JSONP
-      img.onerror = () => {
-        img.classList.add('hidden');
-        if (txt) txt.classList.remove('hidden');
-
-        const NS  = 'western-spritz';
-        const KEY = 'visits';
-        const cb  = 'wsCountCb_' + Math.random().toString(36).slice(2);
-
-        window[cb] = (data) => {
-          const v = Number(data?.value || 1);
-          if (txt) txt.textContent = Number.isFinite(v) ? v.toLocaleString('it-IT') : '—';
-          try { delete window[cb]; } catch {}
-          try { s.remove(); } catch {}
-        };
-
-        const s = document.createElement('script');
-        s.async = true;
-        s.referrerPolicy = 'no-referrer';
-        s.src = `https://api.countapi.xyz/hit/${encodeURIComponent(NS)}/${encodeURIComponent(KEY)}?callback=${cb}&_=${Date.now()}`;
-        document.head.appendChild(s);
-      };
+      fetch(URL, { cache: 'no-store', credentials: 'omit' })
+        .then(r => r.json())
+        .then(d => {
+          const n = Number(d?.value || 0);
+          el.textContent = Number.isFinite(n) ? n.toLocaleString('it-IT') : '—';
+        })
+        .catch(() => { el.textContent = '—'; });
     }
   } catch {}
 })();
+
 
 /* ====== UTIL ====== */
 const $  = sel => document.querySelector(sel);
