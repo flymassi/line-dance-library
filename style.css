@@ -285,3 +285,74 @@ body{
   opacity: 0; visibility: hidden; pointer-events: none;
 }
 
+/* === Puzzle tiles — Liquid / Fluid iOS style === */
+#pzGrid{
+  position:absolute; inset:0; display:grid; gap:6px;
+  /* variabili per l'effetto lucido che segue il dito */
+  --mx: 50%; --my: 40%;
+}
+
+.pz-tile{
+  position:relative; isolation:isolate; overflow:hidden;
+  border-radius:16px;
+  /* 1) Immagine della tessera */
+  background:
+    var(--cover-url) center/cover no-repeat padding-box,
+    linear-gradient(#0d1014,#0d1014) padding-box; /* base scura */
+  /* 2) Bordo liquido con conic-gradient animato */
+  border:1px solid transparent;
+  background-clip: padding-box, padding-box, border-box;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.06) inset,
+    0 8px 20px rgba(0,0,0,.35);
+}
+
+/* alone del bordo: pseudo che mostra SOLO il bordo animato */
+.pz-tile::after{
+  content:""; position:absolute; inset:-1px; border-radius:inherit; z-index:2;
+  background: conic-gradient(
+    from 0deg,
+    #ff8a00, #ffd36a 12%, #ff8a00 28%, #b14d00 52%,
+    #ff8a00 76%, #ffd36a 88%, #ff8a00
+  );
+  animation: liquidSpin 6s linear infinite;
+  /* maschera per lasciare visibile solo la cornice */
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  padding:1px; /* spessore del bordo */
+}
+
+/* riflesso “liquid” che segue il dito */
+.pz-tile::before{
+  content:""; position:absolute; inset:0; z-index:1; border-radius:inherit; pointer-events:none;
+  background:
+    radial-gradient(80% 60% at var(--mx) var(--my),
+      rgba(255,255,255,.18), rgba(255,255,255,.06) 35%, transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,.18));
+  mix-blend-mode: screen;
+}
+
+/* animazione flip quando si indovina (rimane la tua logica .hit/.cleared) */
+.pz-tile.hit { animation: pzFlipOut 0.6s ease forwards; }
+@keyframes pzFlipOut{
+  0%   { transform: perspective(700px) rotateY(0deg) scale(1);   opacity: 1; }
+  45%  { transform: perspective(700px) rotateY(90deg) scale(1.03); opacity: 1; }
+  60%  { opacity: .35; }
+  100% { transform: perspective(700px) rotateY(180deg) scale(.98); opacity: 0; }
+}
+.pz-tile.cleared{ opacity:0; visibility:hidden; pointer-events:none; }
+
+/* animazione bordo */
+@keyframes liquidSpin { to { transform: rotate(360deg); } }
+
+/* riduci motion per accessibilità */
+@media (prefers-reduced-motion: reduce){
+  .pz-tile::after{ animation:none; }
+  .pz-tile.hit{ animation:none; opacity:0; }
+}
+
+/* compattazione su schermi piccoli */
+@media (max-width:420px){
+  #pzGrid{ gap:4px; }
+  .pz-tile{ border-radius:14px; }
+}

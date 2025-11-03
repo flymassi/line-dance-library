@@ -562,6 +562,28 @@ function startPuzzle(){
   playBg();
 }
 
+// Effetto "liquid light" che segue il dito/mouse
+(function attachLiquidFollow(){
+  const grid = PZ.grid;
+  if (!grid || grid.__liquidBound) return;
+  grid.__liquidBound = true;
+
+  const move = (e)=>{
+    const r = grid.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * 100;
+    const y = ((e.clientY - r.top) / r.height) * 100;
+    grid.style.setProperty('--mx', x.toFixed(1) + '%');
+    grid.style.setProperty('--my', y.toFixed(1) + '%');
+  };
+  grid.addEventListener('pointermove', move);
+  grid.addEventListener('pointerleave', ()=> {
+    grid.style.setProperty('--mx', '50%');
+    grid.style.setProperty('--my', '40%');
+  });
+})();
+
+
+
 /* --- bindings UI puzzle --- */
 $('#btnPuzzle')?.addEventListener('click', ()=> startPuzzle());
 $('#pzClose' )?.addEventListener('click', ()=>{ PZ.root?.classList.add('hidden'); stopBg(); });
