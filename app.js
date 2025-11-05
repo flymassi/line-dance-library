@@ -654,22 +654,23 @@ $('#btnUpdate')?.addEventListener('click', async ()=>{
   location.reload(true);
 });
 
-/* ===========================================================
-   🎬 FINALE SPETTACOLARE — Western Spritz (compatibile iOS)
-   =========================================================== */
+/* -------------------------------------------------------
+   🎬  FINALE SPETTACOLARE — Western Spritz Missione Compiuta
+   ------------------------------------------------------- */
+
 function startFinaleWesternSpritz(){
   const container = PZ.root || document.body;
   const photo = PZ.img;
   if (!photo) return;
 
-  // 1️⃣ Zoom lento + whoosh
+  // Zoom lento + whoosh
   try {
     photo.style.transition = 'transform 1.2s ease-out';
     photo.style.transform = 'scale(1.08)';
   } catch {}
   playFx('whoosh.mp3');
 
-  // 2️⃣ Flash bianco → esplosione
+  // Flash bianco + esplosione
   setTimeout(()=>{
     const flash = document.createElement('div');
     flash.className = 'flash-screen';
@@ -681,11 +682,14 @@ function startFinaleWesternSpritz(){
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
       if (isIOS) {
-        // === Fallback CSS Explosion ===
+        // ==== Fallback CSS Explosion ====
         const explosion = document.createElement('div');
         explosion.className = 'css-explosion';
         container.appendChild(explosion);
+
         playFx('explosion.mp3');
+        setTimeout(()=> playFx('poof.mp3'), 120);  // effetto aggiuntivo iOS
+
         setTimeout(()=>{
           explosion.remove();
           showFinalTitleAndRoll(container);
@@ -693,12 +697,12 @@ function startFinaleWesternSpritz(){
         return;
       }
 
-      // === Video Explosion per altri dispositivi ===
+      // ==== Video Explosion (desktop/Android) ====
       const explosion = document.createElement('video');
       explosion.src = './assets/fx/dust_explosion_01.mp4';
       explosion.autoplay = true;
       explosion.playsInline = true;
-      explosion.muted = true; // sicurezza extra
+      explosion.muted = true;
       explosion.className = 'explosion-fx';
       container.appendChild(explosion);
       playFx('explosion.mp3');
@@ -707,8 +711,11 @@ function startFinaleWesternSpritz(){
   }, 1200);
 }
 
+/* -------------------------------------------------------
+   🍹  SCRITTA FINALE + SPRITZ CHE ROTOLA
+   ------------------------------------------------------- */
 function showFinalTitleAndRoll(container){
-  // 3️⃣ scritta finale
+  // Titolo
   const title = document.createElement('div');
   title.className = 'final-title';
   title.textContent = 'Western Spritz – Missione Compiuta!';
@@ -717,48 +724,52 @@ function showFinalTitleAndRoll(container){
   playFx('whip.mp3');
   setTimeout(()=> playFx('laugh.mp3'), 800);
 
-  // 4️⃣ elemento che rotola (spritz/tumbleweed)
+  // Spritz che rotola
   const roll = document.createElement('img');
   roll.src = './assets/fx/spritz_roll.png';
   roll.alt = 'spritz che rotola';
   roll.className = 'tumbleweed';
   container.appendChild(roll);
 
-  roll.animate(
+  // attraversa tutto lo schermo in ~6 s
+  const duration = 6000;
+  const anim = roll.animate(
     [
-      { transform: 'translateX(-150px) rotate(0deg)', opacity: 0 },
-      { transform: 'translateX(100%) rotate(720deg)', opacity: 1 }
+      { transform: 'translateX(-25vw) rotate(0deg)',   opacity: 1 },
+      { transform: 'translateX(125vw) rotate(1080deg)', opacity: 1 }
     ],
-    { duration: 4000, easing: 'ease-in-out', fill: 'forwards' }
+    { duration, easing: 'ease-in-out', fill: 'forwards' }
   );
 
-  // 5️⃣ musica country allegra + dissolvenza dolce
-  setTimeout(()=>{
+  // Musica e fade-out dopo il passaggio
+  anim.finished.then(() => {
     playMusic('country_happy.mp3');
     container.classList.add('fade-out');
-  }, 500);
 
-  // 6️⃣ dopo 6s mostra “tocca per ricominciare”
-  setTimeout(()=>{
-    const bravo = document.createElement('div');
-    bravo.className = 'bravo';
-    bravo.textContent = 'Bravo! Tocca per ricominciare';
-    const restart = ()=>{
-      container.classList.remove('fade-out');
-      title.remove();
-      roll.remove();
-      $$('.explosion-fx').forEach(x=>x.remove());
-      $$('.flash-screen').forEach(x=>x.remove());
-      $$('.css-explosion').forEach(x=>x.remove());
-      bravo.remove();
-      startPuzzle(true);
-    };
-    bravo.addEventListener('click', restart, { once:true });
-    document.body.appendChild(bravo);
-  }, 6000);
+    // Messaggio "ricomincia"
+    setTimeout(()=>{
+      const bravo = document.createElement('div');
+      bravo.className = 'bravo';
+      bravo.textContent = 'Bravo! Tocca per ricominciare';
+      const restart = ()=>{
+        container.classList.remove('fade-out');
+        title.remove();
+        roll.remove();
+        $$('.explosion-fx').forEach(x=>x.remove());
+        $$('.flash-screen').forEach(x=>x.remove());
+        $$('.css-explosion').forEach(x=>x.remove());
+        bravo.remove();
+        startPuzzle(true);
+      };
+      bravo.addEventListener('click', restart, { once:true });
+      document.body.appendChild(bravo);
+    }, 1800);
+  });
 }
 
-// audio helper locali
+/* -------------------------------------------------------
+   🔊  AUDIO HELPERS
+   ------------------------------------------------------- */
 function playFx(name){
   try{
     const a = new Audio('./assets/fx/'+name);
@@ -766,6 +777,7 @@ function playFx(name){
     a.play().catch(()=>{});
   }catch{}
 }
+
 function playMusic(name){
   try{
     const a = new Audio('./assets/fx/'+name);
@@ -774,3 +786,8 @@ function playMusic(name){
   }catch{}
 }
 
+/* -------------------------------------------------------
+   ✅  integrazione con il resto del gioco
+   ------------------------------------------------------- */
+// chiama startFinaleWesternSpritz() dopo completamento puzzle:
+// es.: if (!livingTiles().length) setTimeout(()=> startFinaleWesternSpritz(),300);
