@@ -253,6 +253,25 @@ body{
   pointer-events:none;
 }
 
+/* fallback iOS: esplosione simulata */
+.css-explosion {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center,
+    rgba(255,140,0,0.9) 0%,
+    rgba(255,190,80,0.7) 25%,
+    rgba(255,140,0,0.2) 60%,
+    transparent 80%);
+  animation: cssExplosion 1.2s ease-out forwards;
+  z-index: 999;
+  pointer-events: none;
+}
+@keyframes cssExplosion {
+  0%   { transform: scale(0.4); opacity: 1; filter: blur(0px); }
+  40%  { transform: scale(1.3); opacity: 1; filter: blur(4px); }
+  100% { transform: scale(3.5); opacity: 0; filter: blur(8px); }
+}
+
 .final-title{
   position:absolute;
   top:40%;

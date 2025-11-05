@@ -1,5 +1,5 @@
 /* Western Spritz — app.js v41 (finale spettacolare) */
-console.log('[WS] app v41');
+console.log('[WS] app v42');
 
 /* ====== BACKGROUND RANDOM ====== */
 (function(){
@@ -654,20 +654,22 @@ $('#btnUpdate')?.addEventListener('click', async ()=>{
   location.reload(true);
 });
 
-
 /* ===========================================================
-   🎬 FINALE SPETTACOLARE — Western Spritz
+   🎬 FINALE SPETTACOLARE — Western Spritz (compatibile iOS)
    =========================================================== */
 function startFinaleWesternSpritz(){
   const container = PZ.root || document.body;
   const photo = PZ.img;
   if (!photo) return;
 
-  // 1) leggero zoom + whoosh
-  try { photo.style.transition = 'transform 1.2s ease-out'; photo.style.transform = 'scale(1.08)'; } catch {}
+  // 1️⃣ Zoom lento + whoosh
+  try {
+    photo.style.transition = 'transform 1.2s ease-out';
+    photo.style.transform = 'scale(1.08)';
+  } catch {}
   playFx('whoosh.mp3');
 
-  // 2) flash bianco → esplosione (video)
+  // 2️⃣ Flash bianco → esplosione
   setTimeout(()=>{
     const flash = document.createElement('div');
     flash.className = 'flash-screen';
@@ -676,24 +678,37 @@ function startFinaleWesternSpritz(){
     setTimeout(()=>{
       flash.remove();
 
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+      if (isIOS) {
+        // === Fallback CSS Explosion ===
+        const explosion = document.createElement('div');
+        explosion.className = 'css-explosion';
+        container.appendChild(explosion);
+        playFx('explosion.mp3');
+        setTimeout(()=>{
+          explosion.remove();
+          showFinalTitleAndRoll(container);
+        }, 1200);
+        return;
+      }
+
+      // === Video Explosion per altri dispositivi ===
       const explosion = document.createElement('video');
       explosion.src = './assets/fx/dust_explosion_01.mp4';
       explosion.autoplay = true;
       explosion.playsInline = true;
-      explosion.muted = false;
+      explosion.muted = true; // sicurezza extra
       explosion.className = 'explosion-fx';
       container.appendChild(explosion);
-
       playFx('explosion.mp3');
-
-      // quando l'effetto finisce → titolo + spritz che rotola
       explosion.onended = ()=> showFinalTitleAndRoll(container);
     }, 280);
   }, 1200);
 }
 
 function showFinalTitleAndRoll(container){
-  // 3) scritta finale
+  // 3️⃣ scritta finale
   const title = document.createElement('div');
   title.className = 'final-title';
   title.textContent = 'Western Spritz – Missione Compiuta!';
@@ -702,7 +717,7 @@ function showFinalTitleAndRoll(container){
   playFx('whip.mp3');
   setTimeout(()=> playFx('laugh.mp3'), 800);
 
-  // 4) elemento che rotola (spritz/tumbleweed)
+  // 4️⃣ elemento che rotola (spritz/tumbleweed)
   const roll = document.createElement('img');
   roll.src = './assets/fx/spritz_roll.png';
   roll.alt = 'spritz che rotola';
@@ -717,26 +732,25 @@ function showFinalTitleAndRoll(container){
     { duration: 4000, easing: 'ease-in-out', fill: 'forwards' }
   );
 
-  // 5) musica country allegra + dissolvenza dolce
+  // 5️⃣ musica country allegra + dissolvenza dolce
   setTimeout(()=>{
     playMusic('country_happy.mp3');
     container.classList.add('fade-out');
   }, 500);
 
-  // 6) riavvio comodo: dopo 6s mostra “tocca per ricominciare”
+  // 6️⃣ dopo 6s mostra “tocca per ricominciare”
   setTimeout(()=>{
     const bravo = document.createElement('div');
     bravo.className = 'bravo';
     bravo.textContent = 'Bravo! Tocca per ricominciare';
     const restart = ()=>{
-      // pulizia overlay finale
       container.classList.remove('fade-out');
       title.remove();
       roll.remove();
       $$('.explosion-fx').forEach(x=>x.remove());
       $$('.flash-screen').forEach(x=>x.remove());
+      $$('.css-explosion').forEach(x=>x.remove());
       bravo.remove();
-      // riparte un nuovo puzzle
       startPuzzle(true);
     };
     bravo.addEventListener('click', restart, { once:true });
@@ -759,3 +773,4 @@ function playMusic(name){
     a.play().catch(()=>{});
   }catch{}
 }
+
