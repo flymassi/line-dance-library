@@ -30,19 +30,8 @@ body{
 .splash-start{margin-top:-40px}
 
 /* --- splash: contatore visite --- */
-.splash-visit-label{
-  margin: 0;
-  font-weight: 700;
-  letter-spacing: .3px;
-  opacity: .95;
-}
-.splash-counter{
-  font-size: clamp(22px, 4.5vw, 34px);
-  font-weight: 900;
-  color: var(--brand);
-  text-shadow: 0 2px 10px rgba(0,0,0,.35);
-  margin: 2px 0 6px;
-}
+.splash-visit-label{ margin:0; font-weight:700; letter-spacing:.3px; opacity:.95; }
+.splash-counter{ font-size: clamp(22px, 4.5vw, 34px); font-weight:900; color:var(--brand); text-shadow:0 2px 10px rgba(0,0,0,.35); margin:2px 0 6px; }
 
 .hidden{display:none !important}
 
@@ -82,8 +71,7 @@ body{
 .badge{background:#0008; color:#fff; padding:6px 10px; border-radius:999px; font-weight:800; font-size:.9rem}
 .badge.year{background:#16232b}
 .actions{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap}
-.action{display:inline-block; border:2px solid var(--brand); color:var(--brand); background:#fff;
-  padding:8px 12px; border-radius:12px; font-weight:800; text-decoration:none}
+.action{display:inline-block; border:2px solid var(--brand); color:var(--brand); background:#fff; padding:8px 12px; border-radius:12px; font-weight:800; text-decoration:none}
 .action:hover{background:var(--brand); color:#fff}
 
 /* stato playlist */
@@ -102,31 +90,28 @@ body{
 /* TOPBAR puzzle – centrata e fuori dalla tacca */
 .pz-topbar{
   position: fixed;
-  top: calc(env(safe-area-inset-top, 0px) + 12px); /* <<< spazio sicuro su iOS */
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
   left: 50%;
   transform: translateX(-50%);
   width: min(96vw, 980px);
   box-sizing: border-box;
-
   z-index: 50;
   display: flex; gap: 8px; align-items: center; justify-content: center;
   padding: 8px 10px;
   border-radius: 14px;
-
   backdrop-filter: blur(10px) saturate(140%);
   background: linear-gradient(180deg, rgba(10,15,20,.65), rgba(10,15,20,.35));
   color:#fff;
   text-shadow: 0 1px 2px rgba(0,0,0,.35);
 }
 
-/* più aria sopra la griglia: tiene conto della topbar + safe-area */
+/* più aria sopra la griglia */
 .pz-stage{
   display:grid; place-items:center;
   min-height:60vh;
   padding-top: calc(env(safe-area-inset-top, 0px) + var(--pz-topbar-h, 76px) + 28px);
   padding-bottom: clamp(150px, 28vh, 240px);
 }
-
 
 .pz-img-wrap{position:relative; width:min(90vw,820px); aspect-ratio:4/3}
 .pz-img-wrap img#pzImg{position:absolute; inset:0; width:100%; height:100%; object-fit:contain; z-index:1}
@@ -138,12 +123,8 @@ body{
   box-shadow: inset 0 0 0 1px rgb(237, 234, 234);
 }
 
-/* tassello rimosso: invisibile e non intercettabile */
-.pz-tile.cleared{
-  opacity: 0 !important;
-  visibility: hidden;
-  pointer-events: none;
-}
+/* tassello rimosso */
+.pz-tile.cleared{ opacity:0 !important; visibility:hidden; pointer-events:none; }
 
 .pz-tile.hit{animation:spinOut .5s ease forwards}
 @keyframes spinOut{
@@ -162,16 +143,13 @@ body{
   80%{transform:translate(-50%,2px) rotate(1deg)}
 }
 
-@media (max-width: 390px){
-  .pz-topbar{ width: 94vw; }
-}
+@media (max-width: 390px){ .pz-topbar{ width: 94vw; } }
 
 .pz-tile::after{
   content:''; position:absolute; inset:0; border-radius: inherit;
   box-shadow: inset 0 0 40px rgba(0,0,0,.35);
   pointer-events:none;
 }
-
 
 /* QA in basso */
 .qa-card{
@@ -193,166 +171,137 @@ body{
   color:#fff; font-weight:900; font-size:clamp(22px,5vw,44px);
 }
 
-/* badge SVG del contatore visite */
-.splash-counter-img{
-  height: 34px;
-  width: auto;
-  display: block;
-  margin: 2px 0 6px;
-}
-
-/* posiziona correttamente elementi nello splash */
-.splash { gap: 10px; }
-.splash-start { margin-top: 8px; transform: none !important; } /* niente spinta verso l’alto */
-
-/* badge SVG del contatore visite */
+/* badge + counter western */
 .splash-counter-img{ height:34px; width:auto; display:block; margin:2px 0 6px; }
+.splash { gap:10px; }
+.splash-start { margin-top:8px; transform:none !important; }
 .splash-counter{ font-size: clamp(22px, 4.5vw, 34px); font-weight: 900; color: var(--brand); }
 .hidden{ display: none !important; }
-
-/* --- Western counter style --- */
 .splash-counter {
   font-family: 'Rye', serif;
   font-size: clamp(36px, 6.5vw, 72px);
   line-height: 1;
   color: #ff8a00;
   letter-spacing: 1px;
-  text-shadow:
-    0 2px 0 #3a1e00,
-    0 4px 12px rgba(0,0,0,.35);
+  text-shadow: 0 2px 0 #3a1e00, 0 4px 12px rgba(0,0,0,.35);
   margin: 6px 0 12px;
   display: inline-block;
-  min-width: 2ch; /* evita “salti” quando passa a 2 cifre */
+  min-width: 2ch;
 }
+.splash-visit-label::after { content: " nr."; opacity: .85; }
+@keyframes countPulse{ 0%{transform:translateY(0) scale(1)} 25%{transform:translateY(-3px) scale(1.06)} 100%{transform:translateY(0) scale(1)} }
+.count-pulse{ animation: countPulse 380ms ease-out; }
+@keyframes shine{
+  0%{ text-shadow:0 2px 0 #3a1e00, 0 4px 12px rgba(0,0,0,.35) }
+  50%{ text-shadow:0 2px 0 #3a1e00, 0 0 22px rgba(255,138,0,.65) }
+  100%{ text-shadow:0 2px 0 #3a1e00, 0 4px 12px rgba(0,0,0,.35) }
+}
+.count-shine{ animation: shine 900ms ease-in-out; }
+@media (prefers-reduced-motion: reduce){ .count-pulse,.count-shine{ animation:none !important; } }
 
-/* piccolo badge “nr.” davanti se vuoi (opzionale) */
-.splash-visit-label::after {
-  content: " nr.";
-  opacity: .85;
-}
-
-/* Animazione quando il numero cambia */
-@keyframes countPulse {
-  0% { transform: translateY(0) scale(1); filter: brightness(1); }
-  25% { transform: translateY(-3px) scale(1.06); filter: brightness(1.15); }
-  100% { transform: translateY(0) scale(1); filter: brightness(1); }
-}
-.count-pulse {
-  animation: countPulse 380ms ease-out;
-}
-
-/* “scintilla” western (opzionale) */
-@keyframes shine {
-  0% { text-shadow: 0 2px 0 #3a1e00, 0 4px 12px rgba(0,0,0,.35); }
-  50% { text-shadow: 0 2px 0 #3a1e00, 0 0 22px rgba(255,138,0,.65); }
-  100% { text-shadow: 0 2px 0 #3a1e00, 0 4px 12px rgba(0,0,0,.35); }
-}
-.count-shine {
-  animation: shine 900ms ease-in-out;
-}
-
-/* accessibilità: se l’utente riduce le animazioni */
-@media (prefers-reduced-motion: reduce) {
-  .count-pulse, .count-shine { animation: none !important; }
-}
-
-/* Tessere puzzle con copertina */
-#pzGrid { position: absolute; inset: 0; display: grid; gap: 6px; }
-.pz-tile{
-  position: relative;
-  background: #000;                 /* fallback */
-  background-image: var(--cover-url);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,.35) inset, 0 2px 10px rgba(0,0,0,.25);
-  transition: opacity .25s ease, visibility .25s ease;
-  transform-style: preserve-3d;
-}
-
-/* effetto “flip out” quando indovinata */
-.pz-tile.hit { animation: pzFlipOut 0.6s ease forwards; }
-@keyframes pzFlipOut{
-  0%   { transform: perspective(700px) rotateY(0deg) scale(1);   opacity: 1; }
-  45%  { transform: perspective(700px) rotateY(90deg) scale(1.03); opacity: 1; }
-  60%  { opacity: .35; }
-  100% { transform: perspective(700px) rotateY(180deg) scale(.98); opacity: 0; }
-}
-
-/* stato finale dopo l’animazione */
-.pz-tile.cleared{
-  opacity: 0; visibility: hidden; pointer-events: none;
-}
-
-/* === Puzzle tiles — Liquid / Fluid iOS style === */
-#pzGrid{
-  position:absolute; inset:0; display:grid; gap:6px;
-  /* variabili per l'effetto lucido che segue il dito */
-  --mx: 50%; --my: 40%;
-}
-
+/* Tessere puzzle con copertina — effetto liquid */
+#pzGrid { position:absolute; inset:0; display:grid; gap:6px; --mx:50%; --my:40%; }
 .pz-tile{
   position:relative; isolation:isolate; overflow:hidden;
   border-radius:16px;
-  /* 1) Immagine della tessera */
-  background:
-    var(--cover-url) center/cover no-repeat padding-box,
-    linear-gradient(#0d1014,#0d1014) padding-box; /* base scura */
-  /* 2) Bordo liquido con conic-gradient animato */
+  background: var(--cover-url) center/cover no-repeat padding-box, linear-gradient(#0d1014,#0d1014) padding-box;
   border:1px solid transparent;
   background-clip: padding-box, padding-box, border-box;
-  box-shadow:
-    0 1px 0 rgba(255,255,255,.06) inset,
-    0 8px 20px rgba(0,0,0,.35);
+  box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 8px 20px rgba(0,0,0,.35);
 }
-
-/* alone del bordo: pseudo che mostra SOLO il bordo animato */
 .pz-tile::after{
   content:""; position:absolute; inset:-1px; border-radius:inherit; z-index:2;
-  background: conic-gradient(
-    from 0deg,
-    #ff8a00, #ffd36a 12%, #ff8a00 28%, #b14d00 52%,
-    #ff8a00 76%, #ffd36a 88%, #ff8a00
-  );
+  background: conic-gradient(from 0deg, #ff8a00, #ffd36a 12%, #ff8a00 28%, #b14d00 52%, #ff8a00 76%, #ffd36a 88%, #ff8a00);
   animation: liquidSpin 6s linear infinite;
-  /* maschera per lasciare visibile solo la cornice */
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
-  padding:1px; /* spessore del bordo */
+  padding:1px;
 }
-
-/* riflesso “liquid” che segue il dito */
 .pz-tile::before{
   content:""; position:absolute; inset:0; z-index:1; border-radius:inherit; pointer-events:none;
   background:
-    radial-gradient(80% 60% at var(--mx) var(--my),
-      rgba(255,255,255,.18), rgba(255,255,255,.06) 35%, transparent 60%),
+    radial-gradient(80% 60% at var(--mx) var(--my), rgba(255,255,255,.18), rgba(255,255,255,.06) 35%, transparent 60%),
     linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,.18));
   mix-blend-mode: screen;
 }
-
-/* animazione flip quando si indovina (rimane la tua logica .hit/.cleared) */
-.pz-tile.hit { animation: pzFlipOut 0.6s ease forwards; }
-@keyframes pzFlipOut{
-  0%   { transform: perspective(700px) rotateY(0deg) scale(1);   opacity: 1; }
-  45%  { transform: perspective(700px) rotateY(90deg) scale(1.03); opacity: 1; }
-  60%  { opacity: .35; }
-  100% { transform: perspective(700px) rotateY(180deg) scale(.98); opacity: 0; }
-}
-.pz-tile.cleared{ opacity:0; visibility:hidden; pointer-events:none; }
-
-/* animazione bordo */
 @keyframes liquidSpin { to { transform: rotate(360deg); } }
-
-/* riduci motion per accessibilità */
 @media (prefers-reduced-motion: reduce){
   .pz-tile::after{ animation:none; }
   .pz-tile.hit{ animation:none; opacity:0; }
 }
+@media (max-width:420px){ #pzGrid{ gap:4px; } .pz-tile{ border-radius:14px; } }
 
-/* compattazione su schermi piccoli */
-@media (max-width:420px){
-  #pzGrid{ gap:4px; }
-  .pz-tile{ border-radius:14px; }
+/* -----------------------------------------------------------
+   🎬 FINALE “Western Spritz – Missione Compiuta!”
+   ----------------------------------------------------------- */
+.flash-screen{
+  position:absolute;
+  inset:0;
+  background:#fff;
+  z-index:1000;
+  animation: flashOut .35s ease-out forwards;
+}
+@keyframes flashOut{ from{opacity:1} to{opacity:0} }
+
+.explosion-fx{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:999;
+  pointer-events:none;
+}
+
+.final-title{
+  position:absolute;
+  top:40%;
+  left:50%;
+  transform:translateX(-50%);
+  width:90%;
+  text-align:center;
+  font-family: 'Bebas Neue', system-ui, sans-serif;
+  font-size: clamp(28px, 6vw, 72px);
+  color:#ffa64d;
+  text-shadow: 3px 3px 8px #000;
+  letter-spacing:.5px;
+  opacity:0;
+  z-index:1001;
+  animation: fadeInUp 1.2s ease-out forwards;
+}
+@keyframes fadeInUp{
+  0%{ opacity:0; transform: translate(-50%, 30px) scale(.96); }
+  100%{ opacity:1; transform: translate(-50%, 0) scale(1); }
+}
+
+.tumbleweed{
+  position:absolute;
+  bottom:10%;
+  left:-150px;
+  width:120px;
+  height:auto;
+  z-index:1002;
+  user-select:none;
+  pointer-events:none;
+}
+
+.fade-out{
+  animation: fadeToBlack 3.2s ease-in forwards;
+}
+@keyframes fadeToBlack{
+  from{ opacity:1; }
+  to  { opacity:0; background:#000; }
+}
+
+/* piccolo “puff” quando sparisce il tassello (già usato nel JS) */
+.puff{
+  position:absolute;
+  width:40px;height:40px; border-radius:50%;
+  background: radial-gradient(circle, #ffa64d 0%, transparent 70%);
+  animation: puffAnim .5s ease-out forwards;
+  pointer-events:none;
+}
+@keyframes puffAnim{
+  from{ transform: scale(0); opacity:1; }
+  to  { transform: scale(3); opacity:0; }
 }

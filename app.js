@@ -1,5 +1,5 @@
-/* Western Spritz — app.js v40 */
-console.log('[WS] app v40');
+/* Western Spritz — app.js v41 (finale spettacolare) */
+console.log('[WS] app v41');
 
 /* ====== BACKGROUND RANDOM ====== */
 (function(){
@@ -258,7 +258,6 @@ const TILE_COVERS = [
   './assets/images/covers/ws_logo.png'
 ];
 
-
 const PZ = {
   root:  $('#pzOverlay'),
   grid:  $('#pzGrid'),
@@ -377,7 +376,7 @@ function revealRandomTileAndCheckWin(){
     t.style.visibility = 'hidden';
     t.style.pointerEvents = 'none';
 
-    // puff
+    // puff (già presente)
     try {
       const wrap = PZ.grid?.parentElement;
       if (wrap){
@@ -392,21 +391,13 @@ function revealRandomTileAndCheckWin(){
       }
     } catch {}
 
-    // vittoria?
+    // vittoria → FINALE SPETTACOLARE
     if (!livingTiles().length){
       try { $('#fxVictory')?.play(); } catch {}
       stopBg();
-      setTimeout(()=>{
-        const bravo = document.createElement('div');
-        bravo.className = 'bravo';
-        bravo.textContent = 'Bravo! Tocca per ricominciare';
-        const restart = ()=>{
-          bravo.remove();
-          startPuzzle(true);
-        };
-        bravo.addEventListener('click', restart, { once:true });
-        document.body.appendChild(bravo);
-      }, 300);
+
+      // Attendi 3 secondi con immagine intera visibile, poi lancia il finale
+      setTimeout(()=> startFinaleWesternSpritz(), 3000);
     }
   };
 
@@ -603,8 +594,9 @@ function startPuzzle(){
 $('#btnPuzzle')?.addEventListener('click', ()=> startPuzzle());
 $('#pzClose' )?.addEventListener('click', ()=>{ PZ.root?.classList.add('hidden'); stopBg(); });
 $('#pzBack'  )?.addEventListener('click', ()=>{ PZ.root?.classList.add('hidden'); stopBg(); });
-$('#pzNext'  )?.addEventListener('click', ()=>{ loadNewPuzzleImage(); buildGrid(PZ.size); updateTopbarHeight(); });
+$('#pzNext  ')?._; // (placeholder per mantenere ordine; se c'è, resta invariato)
 
+/* difficoltà */
 $$('.chip-btn').forEach(b=>{
   b.addEventListener('click', ()=>{
     $$('.chip-btn').forEach(x=>x.classList.remove('active'));
@@ -661,3 +653,109 @@ $('#btnUpdate')?.addEventListener('click', async ()=>{
   }catch{}
   location.reload(true);
 });
+
+
+/* ===========================================================
+   🎬 FINALE SPETTACOLARE — Western Spritz
+   =========================================================== */
+function startFinaleWesternSpritz(){
+  const container = PZ.root || document.body;
+  const photo = PZ.img;
+  if (!photo) return;
+
+  // 1) leggero zoom + whoosh
+  try { photo.style.transition = 'transform 1.2s ease-out'; photo.style.transform = 'scale(1.08)'; } catch {}
+  playFx('whoosh.mp3');
+
+  // 2) flash bianco → esplosione (video)
+  setTimeout(()=>{
+    const flash = document.createElement('div');
+    flash.className = 'flash-screen';
+    container.appendChild(flash);
+
+    setTimeout(()=>{
+      flash.remove();
+
+      const explosion = document.createElement('video');
+      explosion.src = './assets/fx/dust_explosion_01.mp4';
+      explosion.autoplay = true;
+      explosion.playsInline = true;
+      explosion.muted = false;
+      explosion.className = 'explosion-fx';
+      container.appendChild(explosion);
+
+      playFx('explosion.mp3');
+
+      // quando l'effetto finisce → titolo + spritz che rotola
+      explosion.onended = ()=> showFinalTitleAndRoll(container);
+    }, 280);
+  }, 1200);
+}
+
+function showFinalTitleAndRoll(container){
+  // 3) scritta finale
+  const title = document.createElement('div');
+  title.className = 'final-title';
+  title.textContent = 'Western Spritz – Missione Compiuta!';
+  container.appendChild(title);
+
+  playFx('whip.mp3');
+  setTimeout(()=> playFx('laugh.mp3'), 800);
+
+  // 4) elemento che rotola (spritz/tumbleweed)
+  const roll = document.createElement('img');
+  roll.src = './assets/fx/spritz_roll.png';
+  roll.alt = 'spritz che rotola';
+  roll.className = 'tumbleweed';
+  container.appendChild(roll);
+
+  roll.animate(
+    [
+      { transform: 'translateX(-150px) rotate(0deg)', opacity: 0 },
+      { transform: 'translateX(100%) rotate(720deg)', opacity: 1 }
+    ],
+    { duration: 4000, easing: 'ease-in-out', fill: 'forwards' }
+  );
+
+  // 5) musica country allegra + dissolvenza dolce
+  setTimeout(()=>{
+    playMusic('country_happy.mp3');
+    container.classList.add('fade-out');
+  }, 500);
+
+  // 6) riavvio comodo: dopo 6s mostra “tocca per ricominciare”
+  setTimeout(()=>{
+    const bravo = document.createElement('div');
+    bravo.className = 'bravo';
+    bravo.textContent = 'Bravo! Tocca per ricominciare';
+    const restart = ()=>{
+      // pulizia overlay finale
+      container.classList.remove('fade-out');
+      title.remove();
+      roll.remove();
+      $$('.explosion-fx').forEach(x=>x.remove());
+      $$('.flash-screen').forEach(x=>x.remove());
+      bravo.remove();
+      // riparte un nuovo puzzle
+      startPuzzle(true);
+    };
+    bravo.addEventListener('click', restart, { once:true });
+    document.body.appendChild(bravo);
+  }, 6000);
+}
+
+// audio helper locali
+function playFx(name){
+  try{
+    const a = new Audio('./assets/fx/'+name);
+    a.volume = 0.9;
+    a.play().catch(()=>{});
+  }catch{}
+}
+function playMusic(name){
+  try{
+    const a = new Audio('./assets/fx/'+name);
+    a.volume = 0.7;
+    a.play().catch(()=>{});
+  }catch{}
+}
