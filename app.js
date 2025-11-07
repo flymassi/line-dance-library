@@ -661,3 +661,44 @@ $('#btnUpdate')?.addEventListener('click', async ()=>{
   }catch{}
   location.reload(true);
 });
+
+
+/* === WS v41.2 Cinematic Pack hooks === */
+(function(){
+  // Ensure scroll-reveal observer
+  const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let io = null;
+  function ensureObserver(){
+    if(REDUCED || io) return;
+    io = new IntersectionObserver((entries)=>{
+      for(const e of entries){ if(e.isIntersecting){ e.target.classList.add('ws-in'); io.unobserve(e.target); } }
+    }, { threshold: 0.15 });
+  }
+  function observeAll(){
+    if(REDUCED) return;
+    ensureObserver();
+    document.querySelectorAll('.ws-reveal').forEach(el=>{ if(!el.__wsObserved){ io.observe(el); el.__wsObserved=true; } });
+  }
+  // Apply vintage frame + ws-reveal and stagger to cards
+  function styleCards(){
+    const cards = document.querySelectorAll('article.card');
+    let i=0;
+    cards.forEach(c=>{
+      c.classList.add('vintage','ws-reveal');
+      c.style.setProperty('--ws-stagger', Math.min(i*30, 450)+'ms');
+      i++;
+    });
+    observeAll();
+  }
+  // Hook into render() if exists, else run on DOM ready
+  try{
+    const _render = render;
+    render = function(){ _render.apply(this, arguments); styleCards(); };
+  }catch(e){
+    document.addEventListener('DOMContentLoaded', styleCards);
+  }
+  // Run once if DOM is already loaded
+  if (document.readyState === 'complete' || document.readyState === 'interactive'){
+    setTimeout(styleCards, 0);
+  }
+})();

@@ -356,3 +356,72 @@ body{
   #pzGrid{ gap:4px; }
   .pz-tile{ border-radius:14px; }
 }
+
+
+/* === WS v41.2 Cinematic Pack === */
+
+/* Overlay container */
+.ws-scenery{ position:fixed; inset:0; pointer-events:none; z-index:850; }
+.ws-scenery__sunset,
+.ws-scenery__cowboy,
+.ws-scenery__vignette{ position:absolute; inset:0; }
+
+/* Dynamic Sunset Light */
+.ws-scenery__sunset{
+  background: radial-gradient(120% 60% at 80% 0%, rgba(255,160,64,.25), transparent 60%),
+              radial-gradient(120% 60% at 0% 10%, rgba(255,210,120,.18), transparent 55%);
+  animation: wsSunsetDrift 28s linear infinite;
+  mix-blend-mode: multiply;
+}
+@keyframes wsSunsetDrift{
+  0%{ transform: translate3d(-2%,0,0); }
+  50%{ transform: translate3d(2%,1%,0); }
+  100%{ transform: translate3d(-2%,0,0); }
+}
+
+/* Cowboy Shadow */
+.ws-scenery__cowboy{
+  background-repeat: no-repeat;
+  background-position: -20% 92%;
+  background-size: 420px auto;
+  opacity:.25;
+  filter: blur(.6px);
+  animation: wsCowboyRide 42s linear infinite;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='200' viewBox='0 0 600 200'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='0' y1='0' y2='1'%3E%3Cstop offset='0' stop-color='%23000' stop-opacity='.22'/%3E%3Cstop offset='1' stop-color='%23000' stop-opacity='.0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M110 140c20-20 45-25 60-22 18 4 24-8 33-19 6-7 15-12 30-13 10-1 19-8 26-16 5-6 14-8 22-6 8 2 14 9 16 17 4 15 10 23 23 25 10 2 20 7 27 15 7 8 16 13 26 14 30 4 48 12 65 35l-470 0c20-16 36-24 42-26 12-5 24-2 31-4 12-3 16-11 19-14z' fill='url(%23g)'/%3E%3C/svg%3E");
+}
+@keyframes wsCowboyRide{
+  0%{ background-position: -30% 92%; opacity:.18; }
+  20%{ opacity:.28; }
+  50%{ background-position: 55% 92%; opacity:.24; }
+  80%{ opacity:.28; }
+  100%{ background-position: 130% 92%; opacity:.18; }
+}
+
+/* Cinematic Vignette */
+.ws-scenery__vignette{
+  background: radial-gradient(120% 90% at 50% 50%, transparent 65%, rgba(0,0,0,.18) 100%);
+  mix-blend-mode: multiply;
+}
+
+/* Vintage Photo Frame for song cards */
+article.card.vintage{
+  background: linear-gradient(#e9d7b9, #d2b48c);
+  color: #2b1c0d;
+  border: 1px solid #3a2816;
+  border-radius: 14px;
+  box-shadow: 0 10px 22px rgba(0,0,0,.12);
+  overflow: hidden;
+}
+article.card.vintage .title{ font-variant: small-caps; letter-spacing:.06em; }
+article.card.vintage .cover{ border-radius: 10px; filter: sepia(.08); }
+
+/* Wind-blown reveal */
+.ws-reveal{ opacity:0; transform: translate3d(-10px,10px,0) rotate(-0.3deg); }
+.ws-reveal.ws-in{ opacity:1; transform: none; transition: transform .7s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
+article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .ws-scenery__sunset, .ws-scenery__cowboy{ animation: none !important; }
+  .ws-reveal, .ws-reveal.ws-in{ transition: none !important; transform:none !important; opacity:1 !important; }
+}
