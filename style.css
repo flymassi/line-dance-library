@@ -26,7 +26,35 @@ body{
   grid-template-rows:auto auto auto auto auto; gap:10px; z-index:10;
 }
 .splash-img{max-width:min(80vw,480px); width:80%; height:auto}
-.splash-tip{margin:0;color:#ddd;opacity:.9}
+
+.splash-group {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.splash-tip {
+  margin: 4px 0;
+  line-height: 1.2;
+  color: #ccc;
+}
+
+.splash-tip.version {
+  font-weight: 700;
+  color: #fff;
+}
+
+.splash-tip.spacer {
+  line-height: 0.6;
+  margin-bottom: 8px;
+}
+
+.splash-tip.center {
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: 400;
+}
+
+
 .splash-start{margin-top:-40px}
 
 /* --- splash: contatore visite --- */
@@ -65,26 +93,85 @@ body{
 .ghost{background:transparent; color:#fff; border:1px solid #fff3; padding:9px 12px}
 .actions-top{display:flex; gap:10px; justify-content:center; margin:10px auto}
 
-/* ==== cards ==== */
-.cards{max-width:980px; margin:16px auto; padding:0 12px; display:grid; gap:16px}
-.card{
-  background:var(--glass);
-  border-radius:18px;
-  padding:16px;
-  box-shadow:0 12px 38px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.08);
-  backdrop-filter:blur(14px) saturate(150%);
+/* ==== cards (iOS Liquid Glass) ==== */
+.cards{
+  max-width:980px; margin:16px auto; padding:0 12px;
+  display:grid; gap:16px;
 }
-.card-row{display:flex; gap:12px; align-items:center; justify-content:space-between}
-.cover{width:60px;height:60px;border-radius:10px;object-fit:cover;background:#111}
+
+article.card{
+  position: relative;
+  border-radius: 20px;
+  --mx: 50%;
+  --my: 30%;
+  /* fondo vetroso */
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06)) padding-box,
+    linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,0)) border-box;
+  border: 1px solid rgba(255,255,255,.22);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  box-shadow:
+    0 8px 28px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.10);
+  padding:16px;
+  transition: transform .25s ease, box-shadow .25s ease, background .25s ease, border-color .25s ease;
+}
+
+/* sheen interno che segue il dito */
+article.card::before{
+  content:"";
+  position:absolute; inset:0; border-radius:inherit; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(60% 45% at var(--mx) var(--my), rgba(255,255,255,.20), transparent 55%),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.12));
+  mix-blend-mode: screen;
+}
+
+/* bordo “liquido” delicato */
+article.card::after{
+  content:"";
+  position:absolute; inset:-1px; border-radius:inherit; pointer-events:none; z-index:0;
+  background: conic-gradient(from 0deg,
+    rgba(255,255,255,.45),
+    rgba(255,255,255,.12) 22%,
+    rgba(255,255,255,.35) 48%,
+    rgba(255,255,255,.10) 70%,
+    rgba(255,255,255,.45) 100%);
+  /* mostra solo la cornice */
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  padding:1px;
+  opacity:.55;
+  filter: blur(.2px);
+}
+
+article.card:hover{
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 34px rgba(0,0,0,.32),
+    inset 0 1px 0 rgba(255,255,255,.12);
+  border-color: rgba(255,255,255,.28);
+}
+
+/* contenuto */
+.card-row{display:flex; gap:12px; align-items:center; justify-content:space-between; position:relative; z-index:1;}
+.cover{width:60px;height:60px;border-radius:12px;object-fit:cover;background:#111}
 .title{font-weight:800; letter-spacing:.2px}
 .meta{opacity:.75; margin-top:4px}
 .badges{display:flex; gap:8px; align-items:center}
 .badge{background:#0008; color:#fff; padding:6px 10px; border-radius:999px; font-weight:800; font-size:.9rem}
 .badge.year{background:#16232b}
-.actions{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap}
+.actions{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; position:relative; z-index:1;}
 .action{display:inline-block; border:2px solid var(--brand); color:var(--brand); background:#fff;
   padding:8px 12px; border-radius:12px; font-weight:800; text-decoration:none}
 .action:hover{background:var(--brand); color:#fff}
+.action.play-added{background:var(--brand); color:#fff; border-color:var(--brand)}
+
+/* accessibilità: motion ridotta */
+@media (prefers-reduced-motion: reduce){
+  article.card{ transition:none !important; }
+}
 
 /* stato playlist */
 .action.play-added{background:var(--brand); color:#fff; border-color:var(--brand)}

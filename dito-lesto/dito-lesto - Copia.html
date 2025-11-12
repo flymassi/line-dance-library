@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Dito Lesto — Spara!</title>
+  <link rel="icon" href="../assets/images/icon.png" />
+  <link rel="apple-touch-icon" href="../assets/images/icon.png" />
+  <link rel="manifest" href="../manifest.webmanifest" />
+  <link rel="stylesheet" href="./dito-lesto.css?v=2" />
+</head>
+<body>
+
+  <header class="dl-topbar">
+    <a class="btn ghost" href="../index.html">◀︎ Torna</a>
+    <h1 class="title">🎸 Dito Lesto</h1>
+    <button id="btnHelp" class="btn ghost" aria-label="Istruzioni">?</button>
+  </header>
+
+  <main id="arena" class="arena" aria-live="polite">
+    <div id="hud" class="hud">
+      <div class="chip">⏱ <span id="round">1</span></div>
+      <div class="chip">⭐ <span id="score">0</span></div>
+      <div class="chip">❤️ <span id="lives">4</span></div>
+      <div class="chip">⚙️ <select id="difficulty" aria-label="Difficoltà">
+        <option value="easy">Facile</option>
+        <option value="normal" selected>Normale</option>
+        <option value="hard">Difficile</option>
+      </select></div>
+    </div>
+
+    <div id="cta" class="cta">
+      <h2>Pronto a sparare?</h2>
+      <p>Tocca il bersaglio appena compare. Più veloce sei, più punti fai!</p>
+      <button id="start" class="btn primary">Avvia</button>
+    </div>
+
+    <!-- Bersaglio con immagine random e scritta SPARA -->
+    <button id="target" class="target" aria-label="Spara" hidden>
+      <span class="tag">SPARA!</span>
+      <img id="sprite" src="" alt="bersaglio" />
+    </button>
+
+    <div id="toast" class="toast" hidden></div>
+  </main>
+
+  <footer class="footer">
+    Western Spritz • Dito Lesto v2
+  </footer>
+
+  <!-- Suoni (variazione random con playbackRate) -->
+  <audio id="sfxShot" preload="auto">
+    <source src="../assets/audio/gun_shot.mp3" type="audio/mpeg" />
+  </audio>
+  <audio id="sfxOk" preload="auto">
+    <source src="../assets/audio/correct.mp3" type="audio/mpeg" />
+  </audio>
+  <audio id="sfxWrong" preload="auto">
+    <source src="../assets/audio/wrong.mp3" type="audio/mpeg" />
+  </audio>
+
+  <script src="./dito-lesto.js?v=2"></script>
+</body>
+</html>
