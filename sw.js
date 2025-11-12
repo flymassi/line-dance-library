@@ -1,4 +1,4 @@
-/* sw.js v40 */
+/* sw.js v44 — Western Spritz */
 const CACHE = 'ws-cache-v44';
 const ASSETS = [
   './',
@@ -10,7 +10,7 @@ const ASSETS = [
   './data/songs.json'
 ];
 
-// install
+/* Install: precache asset principali e attiva subito */
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE)
@@ -19,35 +19,51 @@ self.addEventListener('install', (e) => {
   );
 });
 
-// activate: pulizia cache vecchie
+/* Activate: pulizia cache vecchie + claim immediato */
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.map(k => (k !== CACHE ? caches.delete(k) : Promise.resolve())))
+      Promise.all(
+        keys.map(k => (k !== CACHE ? caches.delete(k) : Promise.resolve()))
+      )
     ).then(() => self.clients.claim())
   );
 });
 
-// fetch (cache-first con write-back)
+/* Fetch: 
+   - BYPASS rete per API (/api/...) e host contatori/endpoint
+   - Cache-first + write-back per asset statici
+*/
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
 
-  // bypass per host esterni che non vanno in cache (es. contatori)
-  const bypassHosts = new Set(['api.countapi.xyz', 'countapi.xyz']);
-  if (bypassHosts.has(url.hostname)) {
+  // 🔴 BYPASS: tutte le API e alcuni host (contatori / endpoint Vercel)
+  const isApiPath = url.pathname.startsWith('/api/');
+  const bypassHosts = new Set([
+    'api.countapi.xyz',
+    'countapi.xyz',
+    'western-spritz.vercel.app' // usato per /api/visits quando lavori in locale
+  ]);
+
+  if (isApiPath || bypassHosts.has(url.hostname)) {
     e.respondWith(fetch(req).catch(() => Response.error()));
     return;
   }
 
+  // ✅ Cache-first con write-back per il resto (asset statici)
   e.respondWith(
     caches.match(req).then(cached =>
-      cached || fetch(req).then(res => {
+      cached ||
+      fetch(req).then(res => {
         const copy = res.clone();
+        // metti in cache solo risposte OK e solo http/https
         if (res.ok && /^https?:$/.test(url.protocol)) {
-          caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
+          caches.open(CACHE)
+            .then(c => c.put(req, copy))
+            .catch(() => {});
         }
         return res;
       }).catch(() => cached || Response.error())
