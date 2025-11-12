@@ -1,5 +1,5 @@
 /* Western Spritz — app.js v40 */
-console.log('[WS] app v40');
+console.log('[WS] app v41');
 
 /* ====== BACKGROUND RANDOM ====== */
 (function(){
@@ -680,12 +680,30 @@ $('#btnUpdate')?.addEventListener('click', async ()=>{
     document.querySelectorAll('.ws-reveal').forEach(el=>{ if(!el.__wsObserved){ io.observe(el); el.__wsObserved=true; } });
   }
   // Apply vintage frame + ws-reveal and stagger to cards
+  f// Apply liquid glass + ws-reveal and stagger to cards
   function styleCards(){
     const cards = document.querySelectorAll('article.card');
-    let i=0;
+    let i = 0;
     cards.forEach(c=>{
-      c.classList.add('vintage','ws-reveal');
+      c.classList.remove('vintage');     // ← via il frame vintage
+      c.classList.add('ws-reveal');      // keep reveal
       c.style.setProperty('--ws-stagger', Math.min(i*30, 450)+'ms');
+      // bind liquid follow
+      if (!c.__liquidBound){
+        c.__liquidBound = true;
+        const move = (e)=>{
+          const r = c.getBoundingClientRect();
+          const x = ((e.clientX - r.left) / r.width) * 100;
+          const y = ((e.clientY - r.top) / r.height) * 100;
+          c.style.setProperty('--mx', x.toFixed(1) + '%');
+          c.style.setProperty('--my', y.toFixed(1) + '%');
+        };
+        c.addEventListener('pointermove', move);
+        c.addEventListener('pointerleave', ()=>{
+          c.style.setProperty('--mx','50%');
+          c.style.setProperty('--my','30%');
+        });
+      }
       i++;
     });
     observeAll();
