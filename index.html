@@ -13,7 +13,7 @@
   <link rel="manifest" href="./manifest.webmanifest" />
 
   <!-- Stili -->
-  <link rel="stylesheet" href="./style.css?v=50" />
+  <link rel="stylesheet" href="./style.css?v=41" />
 </head>
 <body>
 
@@ -53,9 +53,14 @@
     <div class="actions-top">
       <button id="btnUpdate" class="btn btn-primary">Aggiorna app</button>
       <button id="btnPuzzle" class="btn btn-puzzle">🎯 Gioco Puzzle</button>
+      
+      
       <button id="btnPlaylist" class="btn btn-primary">▶︎ Playlist</button>
+    
     </div>
-  </header>
+
+  </div>
+</header>
 
   <!-- Cards -->
   <main id="cards" class="cards" aria-live="polite"></main>
@@ -122,11 +127,11 @@
   </div>
 
   <!-- Script -->
-  <script src="./app.js?v=50"></script>
+  <script src="./app.js?v=43"></script>
   <script>
     if ('serviceWorker' in navigator){
       addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=50').catch(()=>{});
+        navigator.serviceWorker.register('./sw.js?v=40').catch(()=>{});
       });
     }
   </script>
@@ -137,6 +142,45 @@
     <div class="ws-scenery__cowboy"></div>
     <div class="ws-scenery__vignette"></div>
   </div>
+
+<script>
+
+
+    // 2) Se c’è l’header .hero, append lì
+    var hero = document.querySelector('header.hero');
+    if (hero){
+      // Prova a trovare un contenitore pulsanti; se non c'è, creane uno
+      var container = hero.querySelector('.actions-top');
+      if (!container){
+        container = document.createElement('div');
+        container.className = 'actions-top';
+        // stile base compatibile
+        container.style.display = 'flex';
+        container.style.gap = '10px';
+        container.style.justifyContent = 'center';
+        container.style.margin = '10px auto';
+        hero.appendChild(container);
+      }
+      container.appendChild(makeBtn());
+      
+      return;
+    }
+
+    // 3) Fallback: inserisci prima del main .cards
+    var cards = document.getElementById('cards');
+    if (cards && cards.parentNode){
+      var wrap = document.createElement('div');
+      wrap.style.textAlign='center';
+      wrap.style.margin='12px 0';
+      wrap.appendChild(makeBtn());
+      cards.parentNode.insertBefore(wrap, cards);
+      
+      return;
+    }
+
+    
+
+</script>
 
 </body>
 </html>

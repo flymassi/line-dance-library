@@ -1,5 +1,5 @@
-/* Western Spritz — app.js v50 */
-console.log('[WS] app v50');
+/* Western Spritz — app.js v40 */
+console.log('[WS] app v41');
 
 /* ====== BACKGROUND RANDOM ====== */
 (function(){
@@ -506,7 +506,7 @@ const Quiz = (function(){
   function isCorrect(ans){ return norm(ans) === norm(current?.correct); }
 
   function init(){ buildPool(); }                // costruisce pool + deck mescolato
-  function reset(){ deck = shuffle([...pool]); } // reset mescola SEMPRE
+  function reset(){ deck = shuffle([...pool]); } // <<< ora reset mescola SEMPRE
 
   return { init, next, get, isCorrect, reset };
 })();
@@ -561,17 +561,6 @@ function updateTopbarHeight(){
 
 /* --- avvio / UI puzzle --- */
 function startPuzzle(){
-  // Evita crash se i brani non sono ancora caricati
-  if (!SONGS.length) {
-    alert('Sto ancora caricando i brani… riprova tra un attimo 🤠');
-    return;
-  }
-
-  // Assicura che il pool del quiz sia pronto
-  if (typeof Quiz.init === 'function') {
-    Quiz.init();
-  }
-
   PZ.root?.classList.remove('hidden');
   updateTopbarHeight();
 
@@ -672,3 +661,62 @@ $('#btnUpdate')?.addEventListener('click', async ()=>{
   }catch{}
   location.reload(true);
 });
+
+
+/* === WS v41.2 Cinematic Pack hooks === */
+(function(){
+  // Ensure scroll-reveal observer
+  const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let io = null;
+  function ensureObserver(){
+    if(REDUCED || io) return;
+    io = new IntersectionObserver((entries)=>{
+      for(const e of entries){ if(e.isIntersecting){ e.target.classList.add('ws-in'); io.unobserve(e.target); } }
+    }, { threshold: 0.15 });
+  }
+  function observeAll(){
+    if(REDUCED) return;
+    ensureObserver();
+    document.querySelectorAll('.ws-reveal').forEach(el=>{ if(!el.__wsObserved){ io.observe(el); el.__wsObserved=true; } });
+  }
+  // Apply vintage frame + ws-reveal and stagger to cards
+  f// Apply liquid glass + ws-reveal and stagger to cards
+  function styleCards(){
+    const cards = document.querySelectorAll('article.card');
+    let i = 0;
+    cards.forEach(c=>{
+      c.classList.remove('vintage');     // ← via il frame vintage
+      c.classList.add('ws-reveal');      // keep reveal
+      c.style.setProperty('--ws-stagger', Math.min(i*30, 450)+'ms');
+      // bind liquid follow
+      if (!c.__liquidBound){
+        c.__liquidBound = true;
+        const move = (e)=>{
+          const r = c.getBoundingClientRect();
+          const x = ((e.clientX - r.left) / r.width) * 100;
+          const y = ((e.clientY - r.top) / r.height) * 100;
+          c.style.setProperty('--mx', x.toFixed(1) + '%');
+          c.style.setProperty('--my', y.toFixed(1) + '%');
+        };
+        c.addEventListener('pointermove', move);
+        c.addEventListener('pointerleave', ()=>{
+          c.style.setProperty('--mx','50%');
+          c.style.setProperty('--my','30%');
+        });
+      }
+      i++;
+    });
+    observeAll();
+  }
+  // Hook into render() if exists, else run on DOM ready
+  try{
+    const _render = render;
+    render = function(){ _render.apply(this, arguments); styleCards(); };
+  }catch(e){
+    document.addEventListener('DOMContentLoaded', styleCards);
+  }
+  // Run once if DOM is already loaded
+  if (document.readyState === 'complete' || document.readyState === 'interactive'){
+    setTimeout(styleCards, 0);
+  }
+})();
