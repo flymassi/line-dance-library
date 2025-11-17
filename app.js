@@ -80,33 +80,36 @@ console.log('[WS] app v41');
   try {
     const el = document.getElementById('visitCounter');
     if (el) {
-      const PROD_HOSTS = ['western-spritz.vercel.app']; // aggiungi qui eventuale dominio custom
+      // host considerati "sviluppo"
+      const devHosts = ['', 'localhost', '127.0.0.1'];
 
-      // Se NON siamo in produzione → niente chiamata, mostra solo "DEV"
-      if (!PROD_HOSTS.includes(location.hostname)) {
+      const isDev = devHosts.includes(location.hostname);
+
+      // 👉 In sviluppo: NON chiamiamo l'API, mostriamo solo "DEV"
+      if (isDev) {
         el.textContent = 'DEV';
         console.log('[WS] contatore disattivato in dev (host:', location.hostname, ')');
-        return;
-      }
+      } else {
+        // 👉 Online (qualsiasi dominio reale): usa sempre /api/visits
+        const URL = '/api/visits';
+        console.log('[WS] visits endpoint:', URL, 'host:', location.hostname);
 
-      // In produzione: usa il relativo /api/visits (same origin)
-      const URL = '/api/visits';
-      console.log('[WS] visits endpoint:', URL, 'host:', location.hostname);
-
-      fetch(URL, { cache: 'no-store', credentials: 'omit' })
-        .then(r => r.json())
-        .then(d => {
-          const n = Number(d?.value || 0);
-          if (Number.isFinite(n)) {
-            animateCount(el, n);
-          } else {
+        fetch(URL, { cache: 'no-store', credentials: 'omit' })
+          .then(r => r.json())
+          .then(d => {
+            console.log('[WS] visits response:', d);
+            const n = Number(d?.value || 0);
+            if (Number.isFinite(n)) {
+              animateCount(el, n);
+            } else {
+              el.textContent = '—';
+            }
+          })
+          .catch((err) => {
+            console.error('[WS] errore contatore visite', err);
             el.textContent = '—';
-          }
-        })
-        .catch((err) => {
-          console.error('[WS] errore contatore visite', err);
-          el.textContent = '—';
-        });
+          });
+      }
     }
   } catch (err) {
     console.error('[WS] errore inizializzazione contatore', err);
