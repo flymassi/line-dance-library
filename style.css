@@ -26,7 +26,35 @@ body{
   grid-template-rows:auto auto auto auto auto; gap:10px; z-index:10;
 }
 .splash-img{max-width:min(80vw,480px); width:80%; height:auto}
-.splash-tip{margin:0;color:#ddd;opacity:.9}
+
+.splash-group {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.splash-tip {
+  margin: 4px 0;
+  line-height: 1.2;
+  color: #ccc;
+}
+
+.splash-tip.version {
+  font-weight: 700;
+  color: #fff;
+}
+
+.splash-tip.spacer {
+  line-height: 0.6;
+  margin-bottom: 8px;
+}
+
+.splash-tip.center {
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: 400;
+}
+
+
 .splash-start{margin-top:-40px}
 
 /* --- splash: contatore visite --- */
