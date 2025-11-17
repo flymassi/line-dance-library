@@ -28,20 +28,25 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// fetch (cache-first con write-back)
-self.addEventListener('fetch', (e) => {
+self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
 
-  // bypass per host esterni che non vanno in cache (es. contatori)
+  // BYPASS per CountAPI (anche JSONP <script>)
   const bypassHosts = new Set(['api.countapi.xyz', 'countapi.xyz']);
-  if (bypassHosts.has(url.hostname)) {
+
+  // 👉 BYPASS anche il nostro endpoint dinamico delle visite
+  if (
+    bypassHosts.has(url.hostname) ||
+    url.pathname.startsWith('/api/visits')
+  ) {
     e.respondWith(fetch(req).catch(() => Response.error()));
     return;
   }
 
+  // Strategia cache-first per il resto
   e.respondWith(
     caches.match(req).then(cached =>
       cached || fetch(req).then(res => {
@@ -54,3 +59,4 @@ self.addEventListener('fetch', (e) => {
     )
   );
 });
+

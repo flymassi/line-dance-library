@@ -127,7 +127,7 @@
   </div>
 
   <!-- Script -->
-  <script src="./app.js?v=43"></script>
+    <script src="./app.js?v=43"></script>
   <script>
     if ('serviceWorker' in navigator){
       addEventListener('load', () => {
@@ -136,51 +136,11 @@
     }
   </script>
 
-  <!-- WS Scenery: sunset light, cowboy shadow, vignette -->
+  <!-- WS Scenery: ... -->
   <div class="ws-scenery" aria-hidden="true">
-    <div class="ws-scenery__sunset"></div>
-    <div class="ws-scenery__cowboy"></div>
-    <div class="ws-scenery__vignette"></div>
+    ...
   </div>
-
-<script>
-
-
-    // 2) Se c’è l’header .hero, append lì
-    var hero = document.querySelector('header.hero');
-    if (hero){
-      // Prova a trovare un contenitore pulsanti; se non c'è, creane uno
-      var container = hero.querySelector('.actions-top');
-      if (!container){
-        container = document.createElement('div');
-        container.className = 'actions-top';
-        // stile base compatibile
-        container.style.display = 'flex';
-        container.style.gap = '10px';
-        container.style.justifyContent = 'center';
-        container.style.margin = '10px auto';
-        hero.appendChild(container);
-      }
-      container.appendChild(makeBtn());
-      
-      return;
-    }
-
-    // 3) Fallback: inserisci prima del main .cards
-    var cards = document.getElementById('cards');
-    if (cards && cards.parentNode){
-      var wrap = document.createElement('div');
-      wrap.style.textAlign='center';
-      wrap.style.margin='12px 0';
-      wrap.appendChild(makeBtn());
-      cards.parentNode.insertBefore(wrap, cards);
-      
-      return;
-    }
-
-    
-
-</script>
 
 </body>
 </html>
+

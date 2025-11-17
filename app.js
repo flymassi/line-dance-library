@@ -76,13 +76,22 @@ console.log('[WS] app v41');
     localStorage.setItem('ws_last_visits', String(target));
   }
 
-  // --- 4️⃣ Contatore visite: Upstash via Vercel
+   // --- 4️⃣ Contatore visite: Upstash via Vercel
   try {
     const el = document.getElementById('visitCounter');
     if (el) {
-      const isLocal = ['localhost','127.0.0.1'].includes(location.hostname);
-      const PROD = 'https://western-spritz.vercel.app/api/visits';
-      const URL = isLocal ? PROD : '/api/visits';
+      const PROD_HOSTS = ['western-spritz.vercel.app']; // aggiungi qui eventuale dominio custom
+
+      // Se NON siamo in produzione → niente chiamata, mostra solo "DEV"
+      if (!PROD_HOSTS.includes(location.hostname)) {
+        el.textContent = 'DEV';
+        console.log('[WS] contatore disattivato in dev (host:', location.hostname, ')');
+        return;
+      }
+
+      // In produzione: usa il relativo /api/visits (same origin)
+      const URL = '/api/visits';
+      console.log('[WS] visits endpoint:', URL, 'host:', location.hostname);
 
       fetch(URL, { cache: 'no-store', credentials: 'omit' })
         .then(r => r.json())
@@ -94,11 +103,17 @@ console.log('[WS] app v41');
             el.textContent = '—';
           }
         })
-        .catch(() => { el.textContent = '—'; });
+        .catch((err) => {
+          console.error('[WS] errore contatore visite', err);
+          el.textContent = '—';
+        });
     }
-  } catch {}
+  } catch (err) {
+    console.error('[WS] errore inizializzazione contatore', err);
+  }
 
-})();
+})(); // ✅ CHIUSURA DELL'IIFE SPLASH
+
 
 
 
@@ -680,7 +695,6 @@ $('#btnUpdate')?.addEventListener('click', async ()=>{
     document.querySelectorAll('.ws-reveal').forEach(el=>{ if(!el.__wsObserved){ io.observe(el); el.__wsObserved=true; } });
   }
   // Apply vintage frame + ws-reveal and stagger to cards
-  f// Apply liquid glass + ws-reveal and stagger to cards
   function styleCards(){
     const cards = document.querySelectorAll('article.card');
     let i = 0;
