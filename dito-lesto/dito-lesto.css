@@ -1,0 +1,134 @@
+/* Dito Lesto — stile minimale western */
+:root{
+  --brand:#ff8a00;
+  --bg:#0b1820;
+  --glass:rgba(255,255,255,.12);
+  --text:#e8f0f6;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; color:var(--text); background:var(--bg);
+  font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+}
+
+.dl-topbar{
+  position: fixed; top: max(8px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
+  z-index: 20;
+  display:flex; gap:10px; align-items:center; justify-content:center;
+  padding: 8px 10px; border-radius: 12px;
+  background: linear-gradient(180deg, rgba(10,15,20,.65), rgba(10,15,20,.35));
+  backdrop-filter: blur(8px) saturate(140%);
+}
+.title{ margin:0; font-size: 18px; font-weight: 900; letter-spacing:.3px; }
+.btn{border:0; border-radius:12px; padding:8px 12px; font-weight:800; cursor:pointer}
+.btn.primary{ background: var(--brand); color: #111; }
+.btn.ghost{ background: transparent; color:#fff; border:1px solid #fff3; }
+
+.arena{
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding: max(70px, calc(env(safe-area-inset-top) + 70px)) 12px 80px;
+}
+
+.hud{
+  position: fixed; top: calc(env(safe-area-inset-top) + 60px);
+  left: 50%; transform: translateX(-50%);
+  display:flex; gap:8px; z-index:15;
+}
+.chip{ background: var(--glass); border:1px solid #ffffff22; border-radius:999px; padding:6px 10px; }
+
+.cta{
+  z-index: 40;
+  text-align:center; background: var(--glass); border-radius: 14px; padding: 18px; border:1px solid #ffffff1c;
+  box-shadow: 0 12px 38px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.target{
+  position: absolute;
+  display: flex; align-items:center; justify-content:center;
+  width: 64px; height: 64px;
+  background: #fff; color: #111;
+  border-radius: 50%;
+  border: 3px solid var(--brand);
+  box-shadow: 0 12px 26px rgba(0,0,0,.3);
+  isolation:isolate;
+  z-index: 30;
+  z-index: 30;
+}
+.target .tag{
+  position: absolute; top: -26px; left: 50%; transform: translateX(-50%);
+  font-weight: 900; letter-spacing: .5px;
+  background: #000; color: #fff; padding: 3px 8px; border-radius: 8px;
+  border: 1px solid #ffffff22;
+  box-shadow: 0 6px 16px rgba(0,0,0,.35);
+  animation: yell .4s ease;
+}
+#sprite{
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover; /* riempie la sfera completamente */
+  border-radius: 50%; /* adatta l'immagine al cerchio */
+  display: block;
+  transform-origin: 50% 50%;
+  pointer-events: none; /* evita click sull’immagine invece che sul bottone */
+}
+
+/* rotazione applicata quando il bersaglio è visibile */
+.target.spinning #sprite{
+  animation: dlSpin 2.8s linear infinite;
+}
+@keyframes dlSpin{
+  to { transform: rotate(360deg); }
+}
+
+@keyframes yell{
+  0%{ transform: translateX(-50%) scale(.9); opacity:.6; }
+  100%{ transform: translateX(-50%) scale(1); opacity:1; }
+}
+
+.footer{ position:fixed; inset:auto 0 8px 0; text-align:center; opacity:.5; }
+
+.toast{
+  position: fixed; left:50%; top: 50%; transform: translate(-50%, -50%);
+  background:#000c; color:#fff; border:1px solid #ffffff33; border-radius:12px; padding:10px 14px;
+  box-shadow: 0 16px 40px rgba(0,0,0,.4);
+}
+
+/* Piccola animazione comparsa */
+.target{ transition: transform .1s ease; }
+.target:active{ transform: scale(.96); }
+
+
+/* --- Countdown overlay "Pronti... Via!" --- */
+#dlCountdown{
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 45; /* sopra CTA e target */
+  background: rgba(0,0,0,.25);
+  backdrop-filter: blur(2px);
+}
+#dlCountdown .bubble{
+  font-size: clamp(36px, 8vw, 96px);
+  font-weight: 900;
+  color: var(--brand);
+  text-shadow: 0 2px 0 #3a1e00, 0 8px 28px rgba(0,0,0,.45);
+  background: rgba(0,0,0,.6);
+  border: 2px solid #ffffff33;
+  border-radius: 22px;
+  padding: 10px 24px;
+  box-shadow: 0 14px 42px rgba(0,0,0,.45);
+  letter-spacing: .02em;
+}
+
+
+/* Forza l'invisibilità del bersaglio quando hidden è presente */
+.target[hidden]{ display: none !important; }

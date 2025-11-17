@@ -1,10 +1,10 @@
 /* sw.js v40 */
-const CACHE = 'ws-cache-v40';
+const CACHE = 'ws-cache-v44';
 const ASSETS = [
   './',
   './index.html',
-  './style.css?v=40',
-  './app.js?v=40',
+  './style.css?v=41',
+  './app.js?v=43',
   './manifest.webmanifest',
   './assets/images/icon.png',
   './data/songs.json'
