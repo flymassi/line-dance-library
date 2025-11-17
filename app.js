@@ -1,5 +1,5 @@
-/* Western Spritz — app.js v40 */
-console.log('[WS] app v40');
+/* Western Spritz — app.js v50 */
+console.log('[WS] app v50');
 
 /* ====== BACKGROUND RANDOM ====== */
 (function(){
@@ -506,7 +506,7 @@ const Quiz = (function(){
   function isCorrect(ans){ return norm(ans) === norm(current?.correct); }
 
   function init(){ buildPool(); }                // costruisce pool + deck mescolato
-  function reset(){ deck = shuffle([...pool]); } // <<< ora reset mescola SEMPRE
+  function reset(){ deck = shuffle([...pool]); } // reset mescola SEMPRE
 
   return { init, next, get, isCorrect, reset };
 })();
@@ -561,6 +561,17 @@ function updateTopbarHeight(){
 
 /* --- avvio / UI puzzle --- */
 function startPuzzle(){
+  // Evita crash se i brani non sono ancora caricati
+  if (!SONGS.length) {
+    alert('Sto ancora caricando i brani… riprova tra un attimo 🤠');
+    return;
+  }
+
+  // Assicura che il pool del quiz sia pronto
+  if (typeof Quiz.init === 'function') {
+    Quiz.init();
+  }
+
   PZ.root?.classList.remove('hidden');
   updateTopbarHeight();
 
