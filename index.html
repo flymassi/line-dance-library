@@ -21,23 +21,45 @@
   <div id="bg-blur" class="bg blur"></div>
   <div id="bg-main" class="bg main"></div>
 
-  <!-- SPLASH -->
-  <div id="splash" class="splash">
-    <img src="./assets/images/gruppo.png" class="splash-img" alt="Western Spritz" />
-    
-    <p class="splash-tip">Tocca “Avvia” per entrare</p>
+<!-- SPLASH -->
+<div id="splash" class="splash">
 
-    <!-- Contatore visite globale (testuale) -->
-    <p class="splash-visit-label">Sei il visitatore</p>
-    <div id="visitCounter" class="splash-counter">—</div>
+  <!-- Foto di gruppo -->
+  <img src="./assets/images/gruppo.png" class="splash-img" alt="Western Spritz" />
 
-    <button id="startApp" class="btn btn-primary splash-start">Avvia</button>
+<!-- Targhetta autore (subito dopo la foto) -->
+<div class="splash-author">
+  <div class="splash-author-inner">
+    <img src="./assets/images/logo_max_credit.png" alt="Logo Western Spritz" class="splash-author-logo" />
 
-    <!-- Musica intro (auto-mute; sblocco al click) -->
-    <audio id="introMusic" autoplay playsinline muted preload="auto">
-      <source src="./assets/audio/some_people.mp3" type="audio/mpeg" />
-    </audio>
+    <div class="splash-author-text">
+      <span class="splash-author-label">Creato da</span>
+      <span class="splash-author-name">Max</span>
+    </div>
   </div>
+</div>
+
+<!-- Contatto sotto la targhetta -->
+<div class="splash-contact">
+  contacts: <a href="mailto:flymassi@hotmail.com">flymassi@hotmail.com</a>
+</div>
+
+  <!-- Testo istruzioni -->
+  <p class="splash-tip">Tocca “Avvia” per entrare</p>
+
+  <!-- Contatore visite -->
+  <p class="splash-visit-label">Sei il visitatore</p>
+  <div id="visitCounter" class="splash-counter">—</div>
+
+  <!-- Bottone Avvia -->
+  <button id="startApp" class="btn btn-primary splash-start">Avvia</button>
+
+  <!-- Musica intro -->
+  <audio id="introMusic" autoplay playsinline muted preload="auto">
+    <source src="./assets/audio/some_people.mp3" type="audio/mpeg" />
+  </audio>
+
+</div>
 
   <!-- Header -->
   <header class="hero" data-heat="true">
