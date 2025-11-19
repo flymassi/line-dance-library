@@ -1,26 +1,33 @@
-// api/saggio-login.js
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return res.status(405).json({ error: 'Method Not Allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
 
   const { username, password } = req.body || {};
 
-  // username e password "vere" dalle variabili d'ambiente (non nel JS pubblico)
-  const ADMIN_USER = process.env.SAGGIO_USER;
-  const ADMIN_PASS = process.env.SAGGIO_PASS;
+  try {
+    // Leggiamo la lista utenti dalle variabili ENV
+    const raw = process.env.SAGGIO_USERS || "[]";
+    const users = JSON.parse(raw);
 
-  if (!ADMIN_USER || !ADMIN_PASS) {
-    console.error('Missing SAGGIO_USER / SAGGIO_PASS env vars');
-    return res.status(500).json({ error: 'Server config error' });
-  }
+    // Cerchiamo una coppia user/pass valida
+    const found = users.find(
+      u => u.user === username && u.pass === password
+    );
 
-  if (username === ADMIN_USER && password === ADMIN_PASS) {
-    // token semplice per segnare che l'utente è dentro
-    const token = 'saggio-2026-ok';
+    if (!found) {
+      return res.status(401).json({ ok: false, error: "Invalid credentials" });
+    }
+
+    // Generiamo token
+    const token = Buffer.from(
+      `${username}:${Date.now()}`
+    ).toString("base64");
+
     return res.status(200).json({ ok: true, token });
+  } catch (err) {
+    console.error("Login error:", err);
+    return res.status(500).json({ error: "Server error" });
   }
-
-  return res.status(401).json({ ok: false });
 }
+
