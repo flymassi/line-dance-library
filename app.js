@@ -268,10 +268,12 @@ $('#plNext')?.addEventListener('click', ()=>{
 
 /* ====== AREA RISERVATA: SAGGIO 2026 ====== */
 
-const S_KEY = 'ws_saggio_auth_token_v1';
-
 function isSaggioAuth(){
-  return localStorage.getItem(S_KEY) === 'saggio-2026-ok';
+  try {
+    return sessionStorage.getItem(S_KEY) === 'saggio-2026-ok';
+  } catch {
+    return false;
+  }
 }
 
 function openSaggioArea(){
@@ -311,10 +313,11 @@ $('#saggioLoginForm')?.addEventListener('submit', async e=>{
     const data = await res.json();
 
     if (res.ok && data?.ok && data?.token) {
-      localStorage.setItem(S_KEY, data.token);
-      if (err) err.classList.add('hidden');
-      openSaggioArea();
-    } else {
+        sessionStorage.setItem(S_KEY, data.token);
+    if (err) err.classList.add('hidden');
+        openSaggioArea();
+    } 
+    else {
       if (err) err.classList.remove('hidden');
     }
   } catch (e) {
