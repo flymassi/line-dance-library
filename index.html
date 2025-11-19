@@ -74,12 +74,10 @@
     </div>
 
     <div class="actions-top">
-      <button id="btnUpdate" class="btn btn-primary">Aggiorna app</button>
+      <button id="btnSaggio" class="btn btn-saggio">Saggio 2026</button>
+      <button id="btnUpdate" class="btn btn-primary">Aggiorna</button>
       <button id="btnPuzzle" class="btn btn-puzzle">🎯 Gioco Puzzle</button>
-      
-      
       <button id="btnPlaylist" class="btn btn-primary">▶︎ Playlist</button>
-    
     </div>
 
   </div>
@@ -110,6 +108,51 @@
       </div>
     </div>
   </div>
+
+  
+  <!-- Overlay: LOGIN SAGGIO 2026 -->
+  <div id="saggioLoginModal" class="overlay hidden" aria-hidden="true">
+    <div class="pl-card">
+      <div class="pl-top">
+        <h3>Area riservata — Saggio 2026</h3>
+        <button id="saggioCloseLogin" class="btn ghost">Chiudi</button>
+      </div>
+
+      <form id="saggioLoginForm" class="saggio-form">
+        <label>
+          Username
+          <input id="saggioUser" type="text" class="input" autocomplete="off" />
+        </label>
+        <label>
+          Password
+          <input id="saggioPass" type="password" class="input" autocomplete="off" />
+        </label>
+        <p id="saggioError" class="saggio-error hidden">
+          Credenziali non valide.
+        </p>
+        <div class="actions" style="justify-content:flex-end;">
+          <button type="submit" class="btn btn-primary">Entra</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Overlay: AREA RISERVATA SAGGIO 2026 -->
+  <div id="saggioArea" class="overlay hidden" aria-hidden="true">
+    <div class="pl-card">
+      <div class="pl-top">
+        <h3>Saggio 2026 — Area riservata</h3>
+        <button id="saggioCloseArea" class="btn ghost">Chiudi</button>
+      </div>
+
+      <p class="saggio-note">
+        Benvenuto nell’area riservata per il Saggio 2026.<br/>
+        Qui potrai inserire più avanti link ai video, scalette, istruzioni, ecc.
+      </p>
+    </div>
+  </div>
+
+
 
   <!-- Overlay: PUZZLE -->
   <div id="pzOverlay" class="overlay hidden" aria-hidden="true">

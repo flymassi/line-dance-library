@@ -593,3 +593,36 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
   from{ opacity:0; transform:translateY(8px); }
   to  { opacity:1; transform:translateY(0); }
 }
+
+/* === Bottone Saggio 2026 === */
+.btn-saggio{
+  background:transparent;
+  border:1px solid #ffd36a;
+  color:#ffd36a;
+}
+.btn-saggio:hover{
+  background:#ffd36a;
+  color:#000;
+}
+
+/* === Login Saggio 2026 === */
+.saggio-form label{
+  display:block;
+  margin:8px 0;
+  text-align:left;
+  font-size:14px;
+}
+.saggio-form .input{
+  width:100%;
+  margin-top:4px;
+}
+.saggio-error{
+  color:#ffb3b3;
+  font-size:12px;
+  margin-top:4px;
+}
+.saggio-note{
+  margin-top:10px;
+  font-size:14px;
+  line-height:1.4;
+}

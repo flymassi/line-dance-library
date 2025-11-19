@@ -265,6 +265,66 @@ $('#plNext')?.addEventListener('click', ()=>{
   openAt(plIndex);
 });
 
+
+/* ====== AREA RISERVATA: SAGGIO 2026 ====== */
+
+const S_KEY = 'ws_saggio_auth_token_v1';
+
+function isSaggioAuth(){
+  return localStorage.getItem(S_KEY) === 'saggio-2026-ok';
+}
+
+function openSaggioArea(){
+  $('#saggioLoginModal')?.classList.add('hidden');
+  $('#saggioArea')?.classList.remove('hidden');
+}
+
+$('#btnSaggio')?.addEventListener('click', ()=>{
+  if (isSaggioAuth()){
+    openSaggioArea();
+  } else {
+    $('#saggioLoginModal')?.classList.remove('hidden');
+  }
+});
+
+$('#saggioCloseLogin')?.addEventListener('click', ()=>{
+  $('#saggioLoginModal')?.classList.add('hidden');
+});
+
+$('#saggioCloseArea')?.addEventListener('click', ()=>{
+  $('#saggioArea')?.classList.add('hidden');
+});
+
+$('#saggioLoginForm')?.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const u = $('#saggioUser')?.value.trim() || '';
+  const p = $('#saggioPass')?.value || '';
+  const err = $('#saggioError');
+
+  try {
+    const res = await fetch('/api/saggio-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p })
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data?.ok && data?.token) {
+      localStorage.setItem(S_KEY, data.token);
+      if (err) err.classList.add('hidden');
+      openSaggioArea();
+    } else {
+      if (err) err.classList.remove('hidden');
+    }
+  } catch (e) {
+    console.error('Errore login saggio', e);
+    if (err) err.classList.remove('hidden');
+  }
+});
+
+
+
 /* ===========================================================
    PUZZLE / QUIZ — domanda casuale; esatto: rivela + nuova domanda; errato: non cambia
    =========================================================== */
