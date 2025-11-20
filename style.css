@@ -739,6 +739,29 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
   border-color: rgba(255,240,190,.95);
 }
 
+/* ===== Glow ring dorato per pulsante attivo ===== */
+
+.btn-glass.btn-amber.active{
+  box-shadow:
+    0 0 12px rgba(255,210,100,0.65),
+    0 0 22px rgba(255,200,80,0.55),
+    0 0 32px rgba(255,190,60,0.40),
+    inset 0 1px 1px rgba(255,255,255,0.35),
+    inset 0 -1px 1px rgba(0,0,0,0.35);
+  border-color: rgba(255,230,150,0.95);
+  transition: box-shadow 0.25s ease-out, border-color 0.25s ease-out;
+}
+
+/* Piccolo ring più stretto ma luminoso */
+.btn-glass.btn-amber.active::after{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  border-radius:inherit;
+  border:2px solid rgba(255,225,130,.55);
+  pointer-events:none;
+}
+
 /* Riduce un filo l’altezza senza toccare gli altri bottoni dell’app */
 .btn-slim{
   padding-block: 7px;
