@@ -728,20 +728,30 @@ async function load(){
 }
 load();
 
-/* ====== UPDATE (PWA) molto aggressivo ====== */
+/* ====== UPDATE (PWA) “quasi hard refresh” ====== */
 $('#btnUpdate')?.addEventListener('click', async ()=>{
-  try{
-    if ('serviceWorker' in navigator){
+  try {
+    // 1) disinstalla TUTTI i service worker
+    if ('serviceWorker' in navigator) {
       const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map(r=> r.unregister().catch(()=>{})));
+      await Promise.all(regs.map(r => r.unregister().catch(()=>{})));
     }
-    if (window.caches){
+
+    // 2) svuota tutte le cache del Service Worker
+    if (window.caches) {
       const keys = await caches.keys();
-      await Promise.all(keys.map(k=> caches.delete(k).catch(()=>{})));
+      await Promise.all(keys.map(k => caches.delete(k).catch(()=>{})));
     }
-  }catch{}
-  location.reload(true);
+  } catch (err) {
+    console.error('[WS] errore update', err);
+  }
+
+  // 3) “finta” hard-refresh: cambia l’URL per bypassare anche la HTTP cache
+  const url = new URL(window.location.href);
+  url.searchParams.set('refresh', Date.now().toString());
+  window.location.replace(url.toString());
 });
+
 
 
 /* === WS v41.2 Cinematic Pack hooks === */
