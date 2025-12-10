@@ -878,7 +878,7 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
 .card-asia-special{
   position: relative;
   /* meno padding per abbassare l’altezza */
-  padding: 6px 12px 8px;
+  padding: 0px 10px 1px;
   border-radius: 18px;
 
   /* più piccola delle altre, come nel mockup */
@@ -923,7 +923,8 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
   font-size: 12px;
   font-weight: 700;
   text-decoration: none;
-
+  white-space: nowrap;   /* 👈 IMPEDISCE IL CAPO-RIGA SU iOS */
+  
   /* font premium */
   font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 
