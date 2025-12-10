@@ -166,6 +166,23 @@ function openAt(index){
 const elCards = $('#cards');
 const elCount = $('#count');
 
+/* === Canzone in evidenza: FUN WITH ASIA sempre in cima === */
+const FEATURED_KEY = 'FUN WITH ASIA';
+
+function isFeaturedSong(s){
+  const up = v => (v || '').toUpperCase().trim();
+  return up(s.danceTitle) === FEATURED_KEY || up(s.songTitle) === FEATURED_KEY;
+}
+
+function promoteFeaturedSong(list){
+  const idx = list.findIndex(isFeaturedSong);
+  if (idx > 0){
+    const [feat] = list.splice(idx, 1);
+    list.unshift(feat);
+  }
+  return list;
+}
+
 /* ====== RENDER CARDS ====== */
 function render(){
   if (!elCards || !elCount) return;
@@ -178,13 +195,69 @@ function render(){
     (!qs || (s.songTitle||'').toLowerCase().includes(qs))
   );
 
-  elCount.textContent = `Brani trovati: ${rows.length}`;
+  elCount.textContent = `Record trovati: ${rows.length}`;
 
   elCards.innerHTML = rows.map(s=>{
     const vid = getYouTubeId(s.songUrl || s.danceVideoUrl);
     const cover = vid ? `https://img.youtube.com/vi/${vid}/0.jpg` : './assets/images/icon.png';
     const inPl  = PLAYLIST.some(p=>p.songNumber===s.songNumber && p.year===s.year);
+    const featured = isFeaturedSong(s);
 
+    if (featured){
+      // 🎯 CARD SPECIALE "FUN WITH ASIA"
+      return `
+      <article class="card card-asia-special">
+        <div class="asia-top">
+          <a class="asia-btn asia-btn-left"
+             href="https://www.youtube.com/@funwithasia"
+             target="_blank" rel="noopener">
+            Fun with ASIA</span>
+          </a>
+          <div class="asia-follow">FOLLOW&nbsp;US!</div>
+          <a class="asia-btn asia-btn-right"
+             href="https://www.youtube.com/@funfamilytravelvlog"
+             target="_blank" rel="noopener">
+            Fun&nbsp;Family
+          </a>
+        </div>
+
+        <div class="asia-main">
+
+  <!-- LEFT SIDE -->
+  <div class="asia-side">
+    <a href="https://www.youtube.com/@funwithasia" target="_blank" rel="noopener">
+      <img src="./assets/images/fun-asia-logo.png"
+           alt="Fun with Asia"
+           class="asia-circle">
+    </a>
+  </div>
+
+  <!-- CENTER PHOTO -->
+  <div class="asia-center">
+  <img src="./assets/images/fun-asia-photo.png"
+       alt="Fun with Asia Family"
+       class="asia-photo">
+
+  <div class="asia-subtext">SUBSCRIBE!!!</div>
+</div>
+
+
+  <!-- RIGHT SIDE -->
+  <div class="asia-side">
+    <a href="https://www.youtube.com/@funfamilytravelvlog" target="_blank" rel="noopener">
+      <img src="./assets/images/fun-family-logo.png"
+           alt="Fun Family Travel Vlog"
+           class="asia-circle">
+    </a>
+  </div>
+
+</div>
+
+      </article>
+      `;
+    }
+
+    // CARD NORMALE
     return `
       <article class="card">
         <div class="card-row">
@@ -736,6 +809,9 @@ async function load(){
     SONGS = await res.json();
     SONGS.sort((a,b)=> (b.songNumber||0) - (a.songNumber||0)); // ordine inverso
 
+    // spinge "FUN WITH ASIA" in cima
+    promoteFeaturedSong(SONGS);
+
     Quiz.init();   // prepara pool domande
 
     render();
@@ -753,8 +829,6 @@ $('#btnUpdate')?.addEventListener('click', () => {
   url.searchParams.set('refresh', Date.now().toString());
   window.location.replace(url.toString());
 });
-
-
 
 
 /* === WS v41.2 Cinematic Pack hooks === */

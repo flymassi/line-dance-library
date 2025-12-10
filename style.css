@@ -139,8 +139,13 @@ article.card::after{
     rgba(255,255,255,.10) 70%,
     rgba(255,255,255,.45) 100%);
   /* mostra solo la cornice */
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude;
+/* CORRETTO — con proprietà standard e prefissi */
+-webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+mask:        linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+
+-webkit-mask-composite: xor;
+mask-composite: exclude;
+
   padding:1px;
   opacity:.55;
   filter: blur(.2px);
@@ -424,9 +429,13 @@ article.card:hover{
   );
   animation: liquidSpin 6s linear infinite;
   /* maschera per lasciare visibile solo la cornice */
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor; mask-composite: exclude;
-  padding:1px; /* spessore del bordo */
+  /* CORRETTO — con proprietà standard */
+-webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+mask:        linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+
+-webkit-mask-composite: xor;
+mask-composite: exclude;
+
 }
 
 /* riflesso “liquid” che segue il dito */
@@ -527,7 +536,6 @@ article.card.vintage .cover{ border-radius: 10px; filter: sepia(.08); }
 .ws-reveal.ws-in{ opacity:1; transform: none; transition: transform .7s cubic-bezier(.2,.8,.2,1), opacity .7s ease; }
 article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
 
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce){
   .ws-scenery__sunset, .ws-scenery__cowboy{ animation: none !important; }
   .ws-reveal, .ws-reveal.ws-in{ transition: none !important; transform:none !important; opacity:1 !important; }
@@ -775,4 +783,354 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
 
 .btn-label{
   white-space: nowrap;
+}
+
+/* === CARD SPECIALE "FUN WITH ASIA" === */
+
+.card-featured{
+  border-width:2px;
+  border-color: rgba(255,230,160,.95);
+  background:
+    radial-gradient(120% 220% at 0% 0%, rgba(255,190,130,.85), transparent 60%),
+    radial-gradient(120% 220% at 100% 100%, rgba(160,60,20,.97), rgba(20,6,2,.98));
+  box-shadow:
+    0 10px 32px rgba(0,0,0,.55),
+    0 0 24px rgba(255,190,90,.50);
+}
+
+.cover-wrap-featured{
+  position:relative;
+}
+.cover-featured{
+  width:70px;
+  height:70px;
+  border-radius:16px;
+}
+.featured-star{
+  position:absolute;
+  left:-6px;
+  top:-6px;
+  background:radial-gradient(circle at 30% 30%, #fff, #ffd36a 50%, #b15b00 100%);
+  color:#4a2600;
+  border-radius:50%;
+  width:26px;
+  height:26px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:16px;
+  box-shadow:0 4px 10px rgba(0,0,0,.45);
+}
+
+.featured-title{
+  letter-spacing:.03em;
+}
+.featured-meta{
+  opacity:.9;
+}
+
+.badges-featured{
+  gap:6px;
+}
+.badge-featured-label{
+  background:linear-gradient(135deg,#000,#222);
+  color:#ffd980;
+}
+
+/* pulsanti speciali */
+.actions-featured{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:12px;
+}
+
+.action-featured-main{
+  flex:1 1 160px;
+  background:#fff;
+  color:#ff7a00;
+  border-color:#ffcf8a;
+  box-shadow:0 6px 18px rgba(0,0,0,.45);
+}
+.action-featured-main:hover{
+  background:#ffe5c7;
+  color:#d35400;
+}
+
+.action-featured{
+  border-color:#ffe0b0;
+  color:#ffe0b0;
+  background:transparent;
+}
+.action-featured:hover{
+  background:rgba(0,0,0,.22);
+}
+
+/* la versione "in playlist" sulla card speciale resta leggibile */
+.action-featured.play-added{
+  background:#ff8a00;
+  border-color:#ff8a00;
+  color:#fff;
+}
+
+/* === CARD SPECIALE: FUN WITH ASIA (banner discreto) =================== */
+
+.card-asia-special{
+  position: relative;
+  /* meno padding per abbassare l’altezza */
+  padding: 6px 12px 8px;
+  border-radius: 18px;
+
+  /* più piccola delle altre, come nel mockup */
+  transform: scale(.68);
+  transform-origin: center;
+  max-width: 92%;
+  margin: 4px auto 6px;
+
+  background:
+    radial-gradient(120% 180% at 50% 0%, rgba(0,0,0,.55), transparent 60%),
+    linear-gradient(135deg, rgba(15,10,5,.92), rgba(40,20,8,.95));
+  border: 1px solid rgba(255, 220, 140, .45);
+  box-shadow:
+    0 4px 14px rgba(0,0,0,.55),
+    0 0 14px rgba(0,0,0,.35);
+}
+
+/* disattivo il bordo/liquid sheen standard per questa card */
+.card-asia-special::before,
+.card-asia-special::after{
+  display:none;
+}
+
+/* riga superiore con i due pulsanti e il badge FOLLOW US */
+.asia-top{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+/* pulsanti dorati stile banner */
+.asia-btn{
+  position: relative;
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+
+  /* font premium */
+  font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  color: #1905ff;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255,255,255,.65), transparent 55%),
+    linear-gradient(135deg, #ffdd86, #c6841e);
+  border: 1px solid rgba(133,78,18,.95);
+
+  box-shadow:
+    0 2px 6px rgba(0,0,0,.5),
+    0 0 0 1px rgba(255,255,255,.22) inset;
+
+  text-shadow: 0 1px 1px rgba(0,0,0,.65);
+
+  overflow: hidden;
+  transition:
+    transform .16s ease-out,
+    box-shadow .22s ease-out,
+    background .22s ease-out,
+    border-color .22s ease-out;
+}
+
+/* riflesso interno che si muove leggermente */
+.asia-btn::before{
+  content:"";
+  position:absolute;
+  inset:-30%;
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(255,255,255,.55), transparent 55%),
+    radial-gradient(120% 120% at 100% 0%, rgba(255,255,255,.25), transparent 60%);
+  mix-blend-mode: screen;
+  opacity:.7;
+  transform: translate3d(-6%, -4%, 0);
+  transition: transform .32s ease-out, opacity .25s ease-out;
+  pointer-events:none;
+}
+
+.asia-btn:hover,
+.asia-btn:focus-visible{
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 12px rgba(0,0,0,.6),
+    0 0 14px rgba(255,210,110,.66);
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255,255,255,.75), transparent 55%),
+    linear-gradient(135deg, #ffe89b, #d89223);
+  border-color: rgba(255,230,160,.95);
+}
+
+.asia-btn:hover::before,
+.asia-btn:focus-visible::before{
+  transform: translate3d(0, 0, 0);
+  opacity:.95;
+}
+
+.asia-btn:active{
+  transform: translateY(0) scale(.97);
+  box-shadow:
+    0 1px 4px rgba(0,0,0,.7),
+    0 0 10px rgba(255,190,90,.5);
+}
+
+
+/* badge centrale FOLLOW US! */
+.asia-follow{
+  flex: 0 0 auto;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  color:#fff;
+  background: linear-gradient(135deg,#ff4b6a,#ff9a2b);
+  box-shadow: 0 2px 6px rgba(0,0,0,.5);
+  text-shadow: 0 1px 1px rgba(0,0,0,.7);
+}
+
+/* riga con loghi e foto: 3 colonne allineate */
+.asia-main{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: flex-start;
+  justify-items: center;
+  gap: 10px;
+}
+
+/* colonne laterali (logo tondo + subscribe) */
+.asia-side{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+}
+
+/* colonna centrale con foto */
+.asia-center{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+
+.asia-circle,
+.asia-photo{
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  box-shadow: 0 3px 8px rgba(0,0,0,.45);
+  transition:
+    transform .18s ease-out,
+    box-shadow .22s ease-out,
+    border-color .22s ease-out;
+}
+
+.asia-subtext{
+  margin-top: 4px;
+  font-size: 14px;          /* compatto */
+  font-weight: 700;
+  letter-spacing: .1px;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(252, 1, 1, 0.7);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.asia-center{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+/* cerchi restano tondi, foto leggermente arrotondata */
+.asia-circle{ border-radius: 50%; }
+.asia-photo{ border-radius: 12px; }
+
+/* wrapper cliccabile: centra e permette il glow */
+.asia-side a{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  padding:2px;
+  border:1px solid rgba(255,215,140,.45);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.6),
+    0 2px 6px rgba(0,0,0,.55);
+  transition:
+    box-shadow .22s ease-out,
+    transform .16s ease-out,
+    border-color .22s ease-out;
+}
+
+/* hover premium sui loghi */
+.asia-side a:hover{
+  transform: translateY(-1px);
+  border-color: rgba(255,235,180,.95);
+  box-shadow:
+    0 4px 12px rgba(0,0,0,.7),
+    0 0 18px rgba(255,210,120,.7);
+}
+
+.asia-side a:hover .asia-circle{
+  transform: scale(1.03);
+}
+
+/* foto centrale: glow leggero ma elegante */
+.asia-center .asia-photo{
+  border:1px solid rgba(255,225,170,.45);
+}
+
+.asia-center .asia-photo:hover{
+  transform: translateY(-1px) scale(1.02);
+  box-shadow:
+    0 4px 12px rgba(0,0,0,.7),
+    0 0 16px rgba(255,210,130,.65);
+  border-color: rgba(255,235,190,.9);
+}
+
+
+
+/* un po’ più compatta su schermi stretti */
+@media (max-width:480px){
+  .card-asia-special{
+  position: relative;
+  padding: 0px 10px 1px;     /* ⬅️ Altezza molto più bassa */
+  border-radius: 18px;
+
+  transform: scale(.63);     /* ⬅️ Riduzione uniforme della card */
+  transform-origin: center;
+  max-width: 92%;
+  margin: 2px auto 4px;
+
+  background:
+    radial-gradient(120% 180% at 50% 0%, rgba(0,0,0,.55), transparent 60%),
+    linear-gradient(135deg, rgba(15,10,5,.92), rgba(40,20,8,.95));
+  border: 1px solid rgba(255, 220, 140, .45);
+  box-shadow:
+    0 4px 14px rgba(0,0,0,.55),
+    0 0 14px rgba(0,0,0,.35);
+}
+
+.asia-top{
+  margin-bottom: 2px;    /* ⬅️ meno spazio */
+}
+
+.asia-main{
+  gap: 6px;              /* ⬅️ più compatta */
+}
+
 }
