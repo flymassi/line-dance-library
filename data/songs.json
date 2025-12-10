@@ -1,6 +1,15 @@
 [
 {
     "year": 3,
+    "songNumber": 6,
+    "danceTitle": "SEVEN",
+    "danceVideoUrl": "https://youtu.be/e5xFZzT_xO0?si=XSOzHxgTCbt9xWtu",
+    "singerName": "Mike Denver",
+    "songTitle": "Seven Drunken Nights",
+    "songUrl": "https://youtu.be/X3cqz6z4jKo?si=xHgEAUZGFPukl9ik"
+  },
+  {
+    "year": 3,
     "songNumber": 61,
     "danceTitle": "NOTHING BUT YOU",
     "danceVideoUrl": "https://youtu.be/7DIXlRzbKbI?si=b40MXRxpR_3NV-eT",

@@ -1,62 +1,21 @@
-/* sw.js v40 */
-const CACHE = 'ws-cache-v44';
-const ASSETS = [
-  './',
-  './index.html',
-  './style.css?v=41',
-  './app.js?v=43',
-  './manifest.webmanifest',
-  './assets/images/icon.png',
-  './data/songs.json'
-];
+// sw.js - versione "sempre fresco"
 
-// install
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE)
-      .then(c => c.addAll(ASSETS))
-      .then(() => self.skipWaiting())
-  );
+self.addEventListener('install', event => {
+  // salta subito alla nuova versione
+  self.skipWaiting();
 });
 
-// activate: pulizia cache vecchie
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.map(k => (k !== CACHE ? caches.delete(k) : Promise.resolve())))
-    ).then(() => self.clients.claim())
-  );
+self.addEventListener('activate', event => {
+  // prendi il controllo di tutte le pagine aperte
+  event.waitUntil(self.clients.claim());
 });
 
-self.addEventListener('fetch', e => {
-  const req = e.request;
-  if (req.method !== 'GET') return;
+// NIENTE CACHE: ogni richiesta va direttamente alla rete
+self.addEventListener('fetch', event => {
+  // per sicurezza, usiamo no-store sugli asset
+  const req = new Request(event.request, { cache: 'no-store' });
 
-  const url = new URL(req.url);
-
-  // BYPASS per CountAPI (anche JSONP <script>)
-  const bypassHosts = new Set(['api.countapi.xyz', 'countapi.xyz']);
-
-  // 👉 BYPASS anche il nostro endpoint dinamico delle visite
-  if (
-    bypassHosts.has(url.hostname) ||
-    url.pathname.startsWith('/api/visits')
-  ) {
-    e.respondWith(fetch(req).catch(() => Response.error()));
-    return;
-  }
-
-  // Strategia cache-first per il resto
-  e.respondWith(
-    caches.match(req).then(cached =>
-      cached || fetch(req).then(res => {
-        const copy = res.clone();
-        if (res.ok && /^https?:$/.test(url.protocol)) {
-          caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
-        }
-        return res;
-      }).catch(() => cached || Response.error())
-    )
+  event.respondWith(
+    fetch(req).catch(() => fetch(event.request)) // piccola fallback
   );
 });
-

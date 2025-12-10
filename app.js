@@ -1,6 +1,24 @@
 /* Western Spritz — app.js v40 */
 console.log('[WS] app v41');
 
+// Pulizia vecchi service worker / cache dalle versioni precedenti
+(async () => {
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister().catch(() => {})));
+    }
+    if (window.caches) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k).catch(() => {})));
+    }
+    console.log('[WS] pulizia vecchie cache completata');
+  } catch (err) {
+    console.error('[WS] errore pulizia cache', err);
+  }
+})();
+
+
 /* ====== BACKGROUND RANDOM ====== */
 (function(){
   const blur = document.getElementById('bg-blur');
@@ -728,29 +746,14 @@ async function load(){
 }
 load();
 
-/* ====== UPDATE (PWA) “quasi hard refresh” ====== */
-$('#btnUpdate')?.addEventListener('click', async ()=>{
-  try {
-    // 1) disinstalla TUTTI i service worker
-    if ('serviceWorker' in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map(r => r.unregister().catch(()=>{})));
-    }
-
-    // 2) svuota tutte le cache del Service Worker
-    if (window.caches) {
-      const keys = await caches.keys();
-      await Promise.all(keys.map(k => caches.delete(k).catch(()=>{})));
-    }
-  } catch (err) {
-    console.error('[WS] errore update', err);
-  }
-
-  // 3) “finta” hard-refresh: cambia l’URL per bypassare anche la HTTP cache
+/* ====== Aggiorna app (semplice reload pulito) ====== */
+$('#btnUpdate')?.addEventListener('click', () => {
+  // forziamo una nuova richiesta ignorando ogni cache
   const url = new URL(window.location.href);
   url.searchParams.set('refresh', Date.now().toString());
   window.location.replace(url.toString());
 });
+
 
 
 
