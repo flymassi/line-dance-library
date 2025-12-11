@@ -441,10 +441,10 @@ const PZ = {
   time:  $('#pzTime'),
   livesEl: $('#pzLives'),
   no:    $('#noImg'),
-  size:  4,
+  size:  3,
   timer: null,
   t0: 0,
-  lives: 5
+  lives: 7
 };
 
 /* --- musica puzzle --- */
