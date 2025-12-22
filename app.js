@@ -887,3 +887,314 @@ $('#btnUpdate')?.addEventListener('click', () => {
     setTimeout(styleCards, 0);
   }
 })();
+
+
+/* ====== Snow (Splash) ====== */
+(function initSplashSnow(){
+  const canvas = document.getElementById('snowCanvas');
+  if (!canvas) return;
+
+  // rispetta "Riduci animazioni"
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) return;
+
+  const ctx = canvas.getContext('2d', { alpha: true });
+  let W = 0, H = 0, raf = 0;
+  const flakes = [];
+  const FLAKES = 90; // aumenta/diminuisci densità
+
+  function resize(){
+    const rect = canvas.parentElement?.getBoundingClientRect();
+    W = Math.max(1, Math.floor(rect?.width || window.innerWidth));
+    H = Math.max(1, Math.floor(rect?.height || window.innerHeight));
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width  = Math.floor(W * dpr);
+    canvas.height = Math.floor(H * dpr);
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function spawnFlake(){
+    return {
+      x: Math.random() * W,
+      y: -10 - Math.random() * H,
+      r: 1 + Math.random() * 2.2,
+      vx: -0.35 + Math.random() * 0.7,
+      vy: 0.6 + Math.random() * 1.3,
+      wobble: Math.random() * Math.PI * 2,
+      wobbleSpeed: 0.01 + Math.random() * 0.02
+    };
+  }
+
+  function fill(){
+    flakes.length = 0;
+    for (let i=0;i<FLAKES;i++) flakes.push(spawnFlake());
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.beginPath();
+    for (const f of flakes){
+      f.wobble += f.wobbleSpeed;
+      f.x += f.vx + Math.sin(f.wobble) * 0.25;
+      f.y += f.vy;
+
+      if (f.y > H + 12) {
+        // ricicla dall’alto
+        f.y = -12;
+        f.x = Math.random() * W;
+      }
+      if (f.x < -20) f.x = W + 20;
+      if (f.x > W + 20) f.x = -20;
+
+      ctx.moveTo(f.x + f.r, f.y);
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+    }
+    ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+    ctx.fill();
+
+    raf = requestAnimationFrame(draw);
+  }
+
+  // avvia solo se splash visibile
+  function start(){
+    stop();
+    resize();
+    fill();
+    raf = requestAnimationFrame(draw);
+  }
+  function stop(){
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+  }
+
+  // quando lo splash si mostra/nasconde (adatta questi selettori se diversi)
+  const splash = canvas.parentElement; // tipicamente il container splash
+  start();
+
+  window.addEventListener('resize', resize);
+
+  // se il tuo splash viene "chiuso" (display:none), fermiamo l’animazione automaticamente
+  const obs = new MutationObserver(()=>{
+    const hidden = splash && (getComputedStyle(splash).display === 'none' || getComputedStyle(splash).visibility === 'hidden');
+    if (hidden) stop(); else if (!raf) start();
+  });
+  if (splash) obs.observe(splash, { attributes:true, attributeFilter:['style','class'] });
+})();
+
+/* ====== Snow (APP – schede, vento + stelline oro + micro-trail ghiaccio) ====== */
+(function initAppSnow(){
+  const canvas = document.getElementById('snowCanvasApp');
+  if (!canvas) return;
+
+  const reduceMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) return;
+
+  const ctx = canvas.getContext('2d', { alpha:true });
+  let W=0, H=0, raf=0;
+
+  const flakes=[];
+  const sparkles=[];
+
+  const FLAKES = 80;          // densità neve
+  const SPARKLE_RATE = 0.014; // 1 ogni ~1-2s
+  const MAX_SPARKLES = 5;
+
+  // vento: dolce oscillazione + micro raffiche
+  let windT = 0;
+
+  function resize(){
+    const rect = canvas.parentElement?.getBoundingClientRect();
+    W = Math.max(1, Math.floor(rect?.width || window.innerWidth));
+    H = Math.max(1, Math.floor(rect?.height || window.innerHeight));
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W+'px';
+    canvas.style.height = H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  function spawnFlake(){
+    return {
+      x: Math.random()*W,
+      y: Math.random()*H,
+      r: 0.8 + Math.random()*1.6,
+      vy: 0.35 + Math.random()*0.85,
+      drift: -0.15 + Math.random()*0.3,
+      wobble: Math.random()*Math.PI*2,
+      wobbleSpeed: 0.008 + Math.random()*0.015
+    };
+  }
+
+  function fill(){
+    flakes.length=0;
+    for(let i=0;i<FLAKES;i++) flakes.push(spawnFlake());
+  }
+
+  // stellina 5 punte
+  function drawStar(cx, cy, spikes, outerR, innerR){
+    let rot = Math.PI / 2 * 3;
+    let x = cx, y = cy;
+    const step = Math.PI / spikes;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - outerR);
+    for (let i = 0; i < spikes; i++){
+      x = cx + Math.cos(rot) * outerR;
+      y = cy + Math.sin(rot) * outerR;
+      ctx.lineTo(x, y);
+      rot += step;
+
+      x = cx + Math.cos(rot) * innerR;
+      y = cy + Math.sin(rot) * innerR;
+      ctx.lineTo(x, y);
+      rot += step;
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function spawnSparkle(){
+    const size = 5 + Math.random()*4;
+    return {
+      x: Math.random()*W,
+      y: -18,
+      vy: 0.9 + Math.random()*1.2,
+      vx: -0.12 + Math.random()*0.24,
+      spin: Math.random()*Math.PI*2,
+      spinSpeed: 0.03 + Math.random()*0.05,
+      life: 0,
+      maxLife: 220 + Math.random()*140,
+      size,
+
+      // micro-trail: memorizzo un po' di posizioni recenti
+      trail: [],
+      trailMax: 14 + Math.floor(Math.random()*6) // scia corta
+    };
+  }
+
+  function alphaLife(life, maxLife){
+    const fadeIn = Math.min(1, life / 28);
+    const fadeOut = Math.min(1, (maxLife - life) / 45);
+    return Math.max(0, Math.min(fadeIn, fadeOut));
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+
+    // vento orizzontale
+    windT += 0.01;
+    const baseWind = Math.sin(windT) * 0.35;
+    const gust = Math.sin(windT * 0.37) * 0.12;
+    const wind = baseWind + gust;
+
+    // NEVE
+    ctx.beginPath();
+    for(const f of flakes){
+      f.wobble += f.wobbleSpeed;
+      f.y += f.vy;
+      f.x += f.drift + wind + Math.sin(f.wobble) * 0.2;
+
+      if (f.y > H + 10){
+        f.y = -10;
+        f.x = Math.random()*W;
+      }
+      if (f.x < -20) f.x = W + 20;
+      if (f.x > W + 20) f.x = -20;
+
+      ctx.moveTo(f.x+f.r, f.y);
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+    }
+    ctx.fillStyle='rgba(255,255,255,.72)';
+    ctx.fill();
+
+    // genera stelline
+    if (sparkles.length < MAX_SPARKLES && Math.random() < SPARKLE_RATE){
+      sparkles.push(spawnSparkle());
+    }
+
+    // STELLINE + TRAIL
+    for(let i=sparkles.length-1; i>=0; i--){
+      const s = sparkles[i];
+      s.life++;
+
+      // aggiorna posizione
+      s.spin += s.spinSpeed;
+      s.y += s.vy;
+      s.x += s.vx + wind * 0.9;
+
+      // trail: salva posizione corrente (testa trail)
+      s.trail.unshift({ x: s.x, y: s.y });
+      if (s.trail.length > s.trailMax) s.trail.pop();
+
+      const a = alphaLife(s.life, s.maxLife);
+      const pulse = 0.86 + 0.14 * Math.sin(s.life * 0.08); // lieve pulsazione premium
+      const starAlpha = a * pulse;
+
+      // --- MICRO-TRAIL (ghiaccio) ---
+      // scia con piccoli segmenti, più trasparente verso il fondo
+      for(let t=0; t<s.trail.length-1; t++){
+        const p0 = s.trail[t];
+        const p1 = s.trail[t+1];
+        const ta = starAlpha * (1 - t / s.trail.length);
+
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineWidth = Math.max(1, (s.size * 0.20) * (1 - t / s.trail.length));
+
+        // glow ghiaccio (bianco/azzurro)
+        ctx.shadowColor = 'rgba(210,245,255,0.9)';
+        ctx.shadowBlur = 10;
+
+        const icy = `rgba(225, 250, 255, ${0.25 * ta})`;
+        ctx.strokeStyle = icy;
+
+        ctx.beginPath();
+        ctx.moveTo(p0.x, p0.y);
+        ctx.lineTo(p1.x, p1.y);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // --- STELLA ORO (più luminosa) ---
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(s.spin);
+
+      // glow oro forte ma pulito
+      ctx.shadowColor = 'rgba(255, 215, 120, 0.95)';
+      ctx.shadowBlur = 20;
+
+      // oro brillante
+      ctx.fillStyle = `rgba(255, 220, 130, ${0.95 * starAlpha})`;
+      drawStar(0, 0, 5, s.size, s.size * 0.45);
+
+      // core bianco caldo per "sparkle" premium
+      ctx.shadowColor = 'rgba(255, 255, 255, 0.9)';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.22 * starAlpha})`;
+      drawStar(0, 0, 5, s.size * 0.7, s.size * 0.33);
+
+      ctx.restore();
+
+      // riciclo
+      if (s.life >= s.maxLife || s.y > H + 40){
+        sparkles.splice(i, 1);
+      } else {
+        // wrap laterale
+        if (s.x < -30) s.x = W + 30;
+        if (s.x > W + 30) s.x = -30;
+      }
+    }
+
+    raf=requestAnimationFrame(draw);
+  }
+
+  resize();
+  fill();
+  raf=requestAnimationFrame(draw);
+  window.addEventListener('resize', resize);
+})();
