@@ -1,6 +1,8 @@
 /* Western Spritz — app.js v40 */
 console.log('[WS] app v41');
 
+/*-- VERSIONE ORIGINALE */
+
 // Pulizia vecchi service worker / cache dalle versioni precedenti
 (async () => {
   try {
