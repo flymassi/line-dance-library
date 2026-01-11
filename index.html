@@ -7,10 +7,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Rye&display=swap" rel="stylesheet">
 
-<!-- VERSIONE ORIGINALE -->
-
-
-   <!-- PWA / Icone -->
+  <!-- PWA / Icone -->
   <link rel="icon" href="./assets/images/icon.png" />
   <link rel="apple-touch-icon" href="./assets/images/icon.png" />
   <link rel="manifest" href="./manifest.webmanifest" />
@@ -26,9 +23,6 @@
 
 <!-- SPLASH -->
 <div id="splash" class="splash">
-
-  <!-- ❄️ NEVE SOLO NELLO SPLASH -->
-  <canvas id="snowCanvas" aria-hidden="true"></canvas>
 
   <!-- Foto di gruppo -->
   <img src="./assets/images/gruppo.png" class="splash-img" alt="Western Spritz" />
@@ -63,9 +57,7 @@
 
   <!-- Musica intro -->
   <audio id="introMusic" autoplay playsinline muted preload="auto">
-  
-  <!-- <source src="./assets/audio/some_people.mp3" type="audio/mpeg" />-->
-  <source src="./assets/audio/jingle-bells.mp3" type="audio/mpeg" />
+    <source src="./assets/audio/some_people.mp3" type="audio/mpeg" />
   </audio>
 
 </div>
@@ -93,7 +85,7 @@
 
 <button id="btnPuzzle" class="btn btn-glass btn-amber btn-slim">
   <span class="btn-icon">🎯</span>
-  <span class="btn-label">Indovina la Canzone</span>
+  <span class="btn-label">Gioco Puzzle</span>
 </button>
 
 <button id="btnPlaylist" class="btn btn-glass btn-amber btn-slim">
@@ -110,8 +102,6 @@
 
   <!-- Cards -->
   <main id="cards" class="cards" aria-live="polite"></main>
-
-  <canvas id="snowCanvasApp" aria-hidden="true"></canvas>
 
   <footer class="footer">
     Western Spritz • Aggiungi l’app alla Home per un’esperienza migliore
@@ -189,8 +179,8 @@
       <div class="chip"><span>❤️</span><span id="pzLives">3</span></div>
       <div class="chip"><span>⭐</span><span id="pzScore">0</span></div>
       <div class="chip">Difficoltà:
-        <button class="chip-btn active" data-diff="3">3×3</button>
-        <button class="chip-btn" data-diff="4">4×4</button>
+        <button class="chip-btn" data-diff="3">3×3</button>
+        <button class="chip-btn active" data-diff="4">4×4</button>
         <button class="chip-btn" data-diff="5">5×5</button>
       </div>
       <button id="pzNext" class="chip">📷 Nuova foto</button>
