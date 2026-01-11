@@ -7,7 +7,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Rye&display=swap" rel="stylesheet">
 
-  <!-- PWA / Icone -->
+   <!-- PWA / Icone -->
   <link rel="icon" href="./assets/images/icon.png" />
   <link rel="apple-touch-icon" href="./assets/images/icon.png" />
   <link rel="manifest" href="./manifest.webmanifest" />
@@ -23,6 +23,9 @@
 
 <!-- SPLASH -->
 <div id="splash" class="splash">
+
+  <!-- ❄️ NEVE SOLO NELLO SPLASH -->
+  <canvas id="snowCanvas" aria-hidden="true"></canvas>
 
   <!-- Foto di gruppo -->
   <img src="./assets/images/gruppo.png" class="splash-img" alt="Western Spritz" />
@@ -57,7 +60,9 @@
 
   <!-- Musica intro -->
   <audio id="introMusic" autoplay playsinline muted preload="auto">
-    <source src="./assets/audio/some_people.mp3" type="audio/mpeg" />
+  
+  <!-- <source src="./assets/audio/some_people.mp3" type="audio/mpeg" />-->
+  <source src="./assets/audio/jingle-bells.mp3" type="audio/mpeg" />
   </audio>
 
 </div>
@@ -102,6 +107,8 @@
 
   <!-- Cards -->
   <main id="cards" class="cards" aria-live="polite"></main>
+
+  <canvas id="snowCanvasApp" aria-hidden="true"></canvas>
 
   <footer class="footer">
     Western Spritz • Aggiungi l’app alla Home per un’esperienza migliore
