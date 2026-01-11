@@ -1,6 +1,15 @@
 [
 {
     "year": 3,
+    "songNumber": 64,
+    "danceTitle": "A DIFFERENT SUMMER",
+    "danceVideoUrl": "https://youtu.be/MSSZv5CWko0?si=7EOBwjaIiErotiDe",
+    "singerName": "Thomas Rhett",
+    "songTitle": "Beer Can't Fix",
+    "songUrl": "https://youtu.be/XINXceJjarI?si=v4us-pOAw1SDmAdi"
+  },
+  {
+    "year": 3,
     "songNumber": 63,
     "danceTitle": "DEAR LIFE",
     "danceVideoUrl": "https://youtu.be/OrrMAvrkrBQ?si=9J5v_5zBa9ZToNYX",
