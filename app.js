@@ -196,8 +196,7 @@ function render(){
     (!qd || (s.danceTitle||'').toLowerCase().includes(qd)) &&
     (!qs || (s.songTitle||'').toLowerCase().includes(qs))
   );
-
-  elCount.textContent = `Record trovati: ${rows.length}`;
+elCount.style.display = 'none';
 
   elCards.innerHTML = rows.map(s=>{
     const vid = getYouTubeId(s.songUrl || s.danceVideoUrl);

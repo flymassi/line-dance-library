@@ -64,8 +64,47 @@
 
   <!-- Header -->
   <header class="hero" data-heat="true">
-    <h1>Western Spritz — Line Dance Library</h1>
-    <div id="count" class="count">Brani trovati: 0</div>
+
+<style>
+/* Elimina spazio del contenitore */
+.hero{
+  padding:0 !important;
+  margin:0 !important;
+  line-height:0 !important;
+}
+
+/* Banner attaccato sopra e sotto */
+.hero-sign-wrap{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin:-130px auto -150px !important;
+}
+
+/* Rimuove spazio fantasma sotto immagini */
+.hero-sign{
+  display:block;
+}
+
+/* Filtri subito sotto */
+.filters{
+  margin-top:-25px !important;
+}
+</style>
+
+<style>
+.hero{padding-top:6px;padding-bottom:6px}
+.actions, .buttons, .cta{margin-top:6px!important}
+</style>
+    <div class="hero-sign-wrap" style="display:flex;justify-content:center;align-items:center;margin:-60px auto 4px;max-width:100%;">
+      <img
+        src="./western-spritz-sign-fixed.png"
+        alt="Western Spritz — Line Dance Library"
+        class="hero-sign"
+        style="display:block;width:min(92vw, 760px);height:auto;max-width:100%;object-fit:contain;filter:drop-shadow(0 10px 24px rgba(0,0,0,.35));"
+      />
+    </div>
+    <div id="count" class="count" style="display:none;"></div>
 
     <div class="filters">
       <input id="fDance" class="input" placeholder="Filtra per titolo del ballo…" />
