@@ -79,26 +79,26 @@ body{
 /* ==== UI ==== */
 .hero{padding:16px 12px 8px; text-align:center; backdrop-filter:blur(6px)}
 .count{opacity:.85; margin-bottom:8px}
-.filters{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
-.input{padding:10px 12px; border-radius:10px; border:0}
-.btn{border:0; border-radius:12px; padding:10px 14px; font-weight:700; cursor:pointer}
-.btn-primary{background:var(--brand); color:#fff}
-
-/* bottone puzzle visivamente diverso */
-.btn-puzzle{
-  background: linear-gradient(180deg, #ffd86b, #ffb200);
-  color:#fd0404;
-  box-shadow: 0 6px 20px rgba(81, 255, 0, 0.35);
+.filters{
+  margin-top: -18px;
 }
 .btn-puzzle:hover{ filter:brightness(1.05) }
 
 .ghost{background:transparent; color:#fff; border:1px solid #fff3; padding:9px 12px}
-.actions-top{display:flex; gap:8px; justify-content:center; margin:10px auto}
-
-/* ==== cards (iOS Liquid Glass) ==== */
-.cards{
-  max-width:980px; margin:16px auto; padding:0 12px;
-  display:grid; gap:16px;
+.actions-top{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  flex-wrap: nowrap;
+  overflow-x:auto;
+  overflow-y:hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin:8px auto 0;
+}
+.actions-top::-webkit-scrollbar{
+  display:none;
 }
 
 article.card{
@@ -1197,7 +1197,7 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
 }
 
 .filters{
-  margin-top: -18px;
+  margin-top: 0;
 }
 
 .actions-top{
@@ -1224,7 +1224,7 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
   }
 
   .hero-sign-wrap{
-    margin: -18px auto -4px;
+    margin: -28px auto -10px;
   }
 
   .hero-sign-wrap::before,
@@ -1242,28 +1242,44 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
   }
 
   .filters{
-    margin-top: 0;
+    margin-top: -8px;
     gap: 8px;
   }
 
   .actions-top{
-    margin-top: 8px;
     gap: 8px;
+    margin-top: 8px;
+    justify-content: flex-start;
+    padding: 0 8px 2px;
+  }
+
+  .actions-top .btn{
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
 }
 
 @media (max-width: 430px){
   .hero-sign-wrap{
-    margin-top: max(-12px, calc(env(safe-area-inset-top, 0px) * -0.15));
-    margin-bottom: -2px;
+    margin-top: -16px;
+    margin-bottom: -6px;
   }
 
   .hero-sign{
     width: min(88vw, 560px);
   }
 
+  .filters{
+    margin-top: -10px;
+  }
+
   .filters .input{
     min-width: 0;
     width: min(100%, 280px);
+  }
+
+  .actions-top{
+    padding-inline: 6px;
+    gap: 6px;
   }
 }
