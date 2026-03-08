@@ -1283,3 +1283,43 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
     gap: 6px;
   }
 }
+
+/* ================== UNIFORM SPACING REFINEMENT ================== */
+
+.hero-sign-wrap{
+  margin: -70px auto -24px;
+}
+
+.filters{
+  margin-top: -6px;
+  margin-bottom: 12px;
+}
+
+.actions-top{
+  margin: 10px auto 18px;
+  gap: 10px;
+}
+
+.cards{
+  margin-top: 10px;
+}
+
+@media (max-width:600px){
+  .hero-sign-wrap{
+    margin: -32px auto -12px;
+  }
+
+  .filters{
+    margin-top: -4px;
+    margin-bottom: 10px;
+  }
+
+  .actions-top{
+    margin: 8px auto 14px;
+    gap: 8px;
+  }
+
+  .cards{
+    margin-top: 8px;
+  }
+}
