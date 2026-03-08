@@ -538,16 +538,34 @@ function renderPuzzleLeaderboard(data){
     return;
   }
 
-  PZ.lbList.innerHTML = top.map((row, idx) => `
-    <div class="pz-lb-row">
-      <div class="pz-lb-rank">#${idx + 1}</div>
+  PZ.lbList.innerHTML = top.map((row, idx) => {
+  const pos = idx + 1;
+  const medal =
+    pos === 1 ? '🥇' :
+    pos === 2 ? '🥈' :
+    pos === 3 ? '🥉' : '';
+
+  const topClass =
+    pos === 1 ? ' top1' :
+    pos === 2 ? ' top2' :
+    pos === 3 ? ' top3' : '';
+
+  const meClass =
+    me && normalizePlayerName(row.name) === me ? ' me' : '';
+
+  return `
+    <div class="pz-lb-row${topClass}${meClass}">
+      <div class="pz-lb-rank">
+        ${medal ? `<span class="pz-medal" aria-hidden="true">${medal}</span>` : `#${pos}`}
+      </div>
       <div class="pz-lb-main">
         <div class="pz-lb-name">${row.name || 'Giocatore'}</div>
         <div class="pz-lb-meta">${row.difficulty || '-'} · ${formatPuzzleTime(row.timeSeconds)} · errori ${row.errors ?? 0} · vite ${row.livesLeft ?? 0}</div>
       </div>
       <div class="pz-lb-score">${row.score ?? 0}</div>
     </div>
-  `).join('');
+  `;
+}).join('');
 }
 async function openPuzzleLeaderboard(){
   PZ.lbModal?.classList.remove('hidden');
