@@ -467,7 +467,7 @@ function stopBg(){
 }
 
 
-/* --- leaderboard puzzle V1 --- */
+/* --- leaderboard puzzle V2 PROFESSIONAL --- */
 function getPuzzleDifficultyLabel(){
   return `${PZ.size}x${PZ.size}`;
 }
@@ -484,6 +484,7 @@ function getPuzzlePreviewScore(){
 function refreshPuzzleScore(){
   if (PZ.score) PZ.score.textContent = String(getPuzzlePreviewScore());
 }
+
 function normalizePlayerName(name){
   return String(name || '')
     .trim()
@@ -491,6 +492,24 @@ function normalizePlayerName(name){
     .replace(/[^\p{L}\p{N}\s._-]/gu, '')
     .slice(0, 18);
 }
+
+function generatePuzzlePlayerId(){
+  try {
+    if (window.crypto?.randomUUID) return `ws_${crypto.randomUUID()}`;
+  } catch {}
+  return `ws_${Math.random().toString(36).slice(2,10)}${Date.now().toString(36)}`;
+}
+
+function getPuzzlePlayerId(){
+  const KEY = 'ws_puzzle_player_id';
+  let id = localStorage.getItem(KEY) || '';
+  if (!id) {
+    id = generatePuzzlePlayerId();
+    localStorage.setItem(KEY, id);
+  }
+  return id;
+}
+
 function getPuzzlePlayerName(){
   const KEY = 'ws_puzzle_player_name';
   let name = normalizePlayerName(localStorage.getItem(KEY) || '');
@@ -501,29 +520,58 @@ function getPuzzlePlayerName(){
   localStorage.setItem(KEY, name);
   return name;
 }
+
+function getPuzzlePlayerProfile(){
+  return {
+    playerId: getPuzzlePlayerId(),
+    name: getPuzzlePlayerName()
+  };
+}
+
+function shortPlayerSuffix(playerId){
+  const clean = String(playerId || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  return clean.slice(-2) || 'XX';
+}
+
 function formatPuzzleTime(totalSeconds){
   const s = Math.max(0, Number(totalSeconds) || 0);
   const mm = String(Math.floor(s / 60)).padStart(2, '0');
   const ss = String(s % 60).padStart(2, '0');
   return `${mm}:${ss}`;
 }
-async function fetchPuzzleLeaderboard(){
-  const res = await fetch('/api/puzzle-leaderboard', { cache:'no-store' });
-  if (!res.ok) throw new Error('leaderboard fetch failed');
-  return await res.json();
+
+function decorateLeaderboardNames(top){
+  const counts = new Map();
+  top.forEach(row => {
+    const key = normalizePlayerName(row?.name || 'Giocatore') || 'Giocatore';
+    counts.set(key, (counts.get(key) || 0) + 1);
+  });
+
+  return top.map(row => {
+    const baseName = normalizePlayerName(row?.name || 'Giocatore') || 'Giocatore';
+    const duplicated = (counts.get(baseName) || 0) > 1;
+    return {
+      ...row,
+      displayName: duplicated ? `${baseName} · ${shortPlayerSuffix(row?.playerId)}` : baseName
+    };
+  });
 }
+
 function renderPuzzleLeaderboard(data){
   if (PZ.lbWeek) PZ.lbWeek.textContent = `Settimana ${data?.weekKey || 'corrente'}`;
 
-  const me = normalizePlayerName(localStorage.getItem('ws_puzzle_player_name') || '');
+  const myPlayerId = getPuzzlePlayerId();
+  const myName = normalizePlayerName(localStorage.getItem('ws_puzzle_player_name') || '');
+
   if (PZ.lbPlayer){
     const rank = Number(data?.myRank || 0);
     const myBest = Number(data?.myBest || 0);
-    if (me && rank > 0){
-      PZ.lbPlayer.textContent = `${me} · posizione #${rank} · miglior punteggio ${myBest}`;
+    const myLabel = data?.myDisplayName || myName || 'Tu';
+    if (rank > 0){
+      PZ.lbPlayer.textContent = `TU · ${myLabel} · posizione #${rank} · miglior punteggio ${myBest}`;
       PZ.lbPlayer.classList.remove('hidden');
-    } else if (me && myBest > 0){
-      PZ.lbPlayer.textContent = `${me} · miglior punteggio ${myBest}`;
+    } else if (myBest > 0){
+      PZ.lbPlayer.textContent = `TU · ${myLabel} · miglior punteggio ${myBest}`;
       PZ.lbPlayer.classList.remove('hidden');
     } else {
       PZ.lbPlayer.classList.add('hidden');
@@ -532,47 +580,51 @@ function renderPuzzleLeaderboard(data){
   }
 
   if (!PZ.lbList) return;
-  const top = Array.isArray(data?.top) ? data.top : [];
+  const topRaw = Array.isArray(data?.top) ? data.top : [];
+  const top = decorateLeaderboardNames(topRaw);
+
   if (!top.length){
     PZ.lbList.innerHTML = '<div class="card">Nessun risultato questa settimana. Sii il primo a giocare!</div>';
     return;
   }
 
   PZ.lbList.innerHTML = top.map((row, idx) => {
-  const pos = idx + 1;
-  const medal =
-    pos === 1 ? '🥇' :
-    pos === 2 ? '🥈' :
-    pos === 3 ? '🥉' : '';
+    const pos = idx + 1;
+    const isMe = String(row.playerId || '') === String(myPlayerId || '');
+    const medal =
+      pos === 1 ? '🥇' :
+      pos === 2 ? '🥈' :
+      pos === 3 ? '🥉' : '';
 
-  const topClass =
-    pos === 1 ? ' top1' :
-    pos === 2 ? ' top2' :
-    pos === 3 ? ' top3' : '';
+    const topClass =
+      pos === 1 ? ' top1' :
+      pos === 2 ? ' top2' :
+      pos === 3 ? ' top3' : '';
 
-  const meClass =
-    me && normalizePlayerName(row.name) === me ? ' me' : '';
+    const meClass = isMe ? ' me' : '';
+    const meBadge = isMe ? '<span class="pz-me-badge">TU</span>' : '';
 
-  return `
-    <div class="pz-lb-row${topClass}${meClass}">
-      <div class="pz-lb-rank">
-        ${medal ? `<span class="pz-medal" aria-hidden="true">${medal}</span>` : `#${pos}`}
+    return `
+      <div class="pz-lb-row${topClass}${meClass}">
+        <div class="pz-lb-rank">
+          ${medal ? `<span class="pz-medal" aria-hidden="true">${medal}</span>` : `#${pos}`}
+        </div>
+        <div class="pz-lb-main">
+          <div class="pz-lb-name">${meBadge}${row.displayName || row.name || 'Giocatore'}</div>
+          <div class="pz-lb-meta">${row.difficulty || '-'} · ${formatPuzzleTime(row.timeSeconds)} · errori ${row.errors ?? 0} · vite ${row.livesLeft ?? 0}</div>
+        </div>
+        <div class="pz-lb-score">${row.score ?? 0}</div>
       </div>
-      <div class="pz-lb-main">
-        <div class="pz-lb-name">${row.name || 'Giocatore'}</div>
-        <div class="pz-lb-meta">${row.difficulty || '-'} · ${formatPuzzleTime(row.timeSeconds)} · errori ${row.errors ?? 0} · vite ${row.livesLeft ?? 0}</div>
-      </div>
-      <div class="pz-lb-score">${row.score ?? 0}</div>
-    </div>
-  `;
-}).join('');
+    `;
+  }).join('');
 }
+
 async function openPuzzleLeaderboard(){
   PZ.lbModal?.classList.remove('hidden');
   if (PZ.lbList) PZ.lbList.innerHTML = '<div class="card">Caricamento classifica…</div>';
   try {
-    const me = normalizePlayerName(localStorage.getItem('ws_puzzle_player_name') || '');
-    const url = me ? `/api/puzzle-leaderboard?name=${encodeURIComponent(me)}` : '/api/puzzle-leaderboard';
+    const playerId = getPuzzlePlayerId();
+    const url = playerId ? `/api/puzzle-leaderboard?playerId=${encodeURIComponent(playerId)}` : '/api/puzzle-leaderboard';
     const res = await fetch(url, { cache:'no-store' });
     const data = await res.json();
     renderPuzzleLeaderboard(data);
@@ -581,15 +633,18 @@ async function openPuzzleLeaderboard(){
     if (PZ.lbList) PZ.lbList.innerHTML = '<div class="card">Classifica momentaneamente non disponibile.</div>';
   }
 }
+
 async function submitPuzzleScore(){
-  const name = getPuzzlePlayerName();
+  const player = getPuzzlePlayerProfile();
   const payload = {
-    name,
+    playerId: player.playerId,
+    name: player.name,
     difficulty: getPuzzleDifficultyLabel(),
     timeSeconds: getPuzzleElapsedSeconds(),
     livesLeft: PZ.lives,
     errors: PZ.errors
   };
+
   const res = await fetch('/api/puzzle-score', {
     method:'POST',
     headers:{ 'Content-Type':'application/json' },
@@ -598,6 +653,7 @@ async function submitPuzzleScore(){
   if (!res.ok) throw new Error('score submit failed');
   return await res.json();
 }
+
 async function showPuzzleVictoryCard(){
   let result = null;
   try {
@@ -612,11 +668,13 @@ async function showPuzzleVictoryCard(){
   const time = formatPuzzleTime(getPuzzleElapsedSeconds());
   const score = Number(result?.score || getPuzzlePreviewScore());
   const rank = Number(result?.rank || 0);
+  const myLabel = result?.displayName || getPuzzlePlayerName();
 
   bravo.innerHTML = `
     <div class="bravo-card">
       <div class="bravo-title">Bravo!</div>
       <div class="bravo-lines">
+        Giocatore: <b>${myLabel}</b><br>
         Tempo: <b>${time}</b><br>
         Difficoltà: <b>${getPuzzleDifficultyLabel()}</b><br>
         Errori: <b>${PZ.errors}</b> · Vite rimaste: <b>${PZ.lives}</b><br>

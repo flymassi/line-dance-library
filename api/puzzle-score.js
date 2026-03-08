@@ -1,3 +1,11 @@
+function normalizeName(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[^\p{L}\p{N}\s._-]/gu, '')
+    .slice(0, 18) || 'Cowboy';
+}
+
 function normalizeDifficulty(value) {
   return ['3x3', '4x4', '5x5'].includes(value) ? value : '3x3';
 }
@@ -38,4 +46,75 @@ async function redis(command) {
   }
 
   return await response.json();
+}
+
+function profileKey(weekKey, playerId) {
+  return `ws:puzzle:profile:${weekKey}:${playerId}`;
+}
+
+function leaderboardKey(weekKey) {
+  return `ws:puzzle:leaderboard:${weekKey}`;
+}
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    res.status(405).json({ ok: false, error: 'Method not allowed' });
+    return;
+  }
+
+  try {
+    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+    const playerId = String(body.playerId || '').trim();
+    const name = normalizeName(body.name || '');
+    const difficulty = normalizeDifficulty(body.difficulty);
+    const timeSeconds = Math.max(1, Number(body.timeSeconds) || 1);
+    const livesLeft = Math.max(0, Number(body.livesLeft) || 0);
+    const errors = Math.max(0, Number(body.errors) || 0);
+
+    if (!playerId) {
+      res.status(400).json({ ok: false, error: 'Missing playerId' });
+      return;
+    }
+
+    const weekKey = getISOWeekKey(new Date());
+    const lbKey = leaderboardKey(weekKey);
+    const pfKey = profileKey(weekKey, playerId);
+    const score = computeScore({ difficulty, timeSeconds, livesLeft, errors });
+
+    const prevScoreRes = await redis(["ZSCORE", lbKey, playerId]);
+    const prevScore = Number(prevScoreRes?.result || 0);
+
+    if (score >= prevScore) {
+      await redis(["ZADD", lbKey, score, playerId]);
+      await redis([
+        "HSET",
+        pfKey,
+        "playerId", playerId,
+        "name", name,
+        "score", String(score),
+        "difficulty", difficulty,
+        "timeSeconds", String(timeSeconds),
+        "livesLeft", String(livesLeft),
+        "errors", String(errors),
+        "updatedAt", String(Date.now())
+      ]);
+    }
+
+    const rankRes = await redis(["ZREVRANK", lbKey, playerId]);
+    const rank = rankRes?.result == null ? 0 : Number(rankRes.result) + 1;
+
+    res.status(200).json({
+      ok: true,
+      weekKey,
+      score: Math.max(score, prevScore),
+      rank,
+      displayName: name
+    });
+  } catch (error) {
+    console.error('puzzle-score error', error);
+    res.status(500).json({
+      ok: false,
+      error: 'Internal error'
+    });
+  }
 }
