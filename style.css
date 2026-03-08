@@ -93,7 +93,7 @@ body{
 .btn-puzzle:hover{ filter:brightness(1.05) }
 
 .ghost{background:transparent; color:#fff; border:1px solid #fff3; padding:9px 12px}
-.actions-top{display:flex; gap:10px; justify-content:center; margin:10px auto}
+.actions-top{display:flex; gap:8px; justify-content:center; margin:10px auto}
 
 /* ==== cards (iOS Liquid Glass) ==== */
 .cards{
@@ -1164,7 +1164,7 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
   align-items: center;
   width: 100%;
   max-width: 100%;
-  margin: -56px auto -18px;
+  margin: -90px auto -42px;
   pointer-events: none;
 }
 
@@ -1197,7 +1197,7 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
 }
 
 .filters{
-  margin-top: 0px;
+  margin-top: -18px;
 }
 
 .actions-top{
