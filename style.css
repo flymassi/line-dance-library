@@ -1197,7 +1197,7 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
 }
 
 .filters{
-  margin-top: 0;
+  margin-top: -12px;
 }
 
 .actions-top{
