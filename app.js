@@ -889,6 +889,7 @@ function updateTopbarHeight(){
 
 /* --- avvio / UI puzzle --- */
 function startPuzzle(){
+  getPuzzlePlayerName();
   PZ.root?.classList.remove('hidden');
   updateTopbarHeight();
 
