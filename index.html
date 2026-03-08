@@ -13,7 +13,7 @@
   <link rel="manifest" href="./manifest.webmanifest" />
 
   <!-- Stili -->
-  <link rel="stylesheet" href="./style.css?v=41" />
+  <link rel="stylesheet" href="./style.css?v=42" />
 </head>
 <body>
 
@@ -41,8 +41,8 @@
 </a>
 
 <!-- Contatto sotto la targhetta -->
-<div class="splash-contact" style="margin-top:0; font-size:10px; text-align:center; opacity:.65;">
-  contacts: <a href="mailto:flymassi@hotmail.com" style="color:rgb(248, 252, 5); text-decoration:none;">flymassi@hotmail.com</a>
+<div class="splash-contact">
+  contacts: <a href="mailto:flymassi@hotmail.com" class="splash-contact-link">flymassi@hotmail.com</a>
 </div>
 
   <!-- Testo istruzioni -->
@@ -64,47 +64,18 @@
 
   <!-- Header -->
   <header class="hero" data-heat="true">
-
-<style>
-/* Elimina spazio del contenitore */
-.hero{
-  padding:0 !important;
-  margin:0 !important;
-  line-height:0 !important;
-}
-
-/* Banner attaccato sopra e sotto */
-.hero-sign-wrap{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  margin:-90x auto -70px !important;
-}
-
-/* Rimuove spazio fantasma sotto immagini */
-.hero-sign{
-  display:block;
-}
-
-/* Filtri subito sotto */
-.filters{
-  margin-top:-25px !important;
-}
-</style>
-
 <style>
 .hero{padding-top:6px;padding-bottom:6px}
 .actions, .buttons, .cta{margin-top:6px!important}
 </style>
-    <div class="hero-sign-wrap" style="display:flex;justify-content:center;align-items:center;margin:-60px auto 4px;max-width:100%;">
+    <div class="hero-sign-wrap">
       <img
         src="./western-spritz-sign-fixed.png"
         alt="Western Spritz — Line Dance Library"
         class="hero-sign"
-        style="display:block;width:min(92vw, 760px);height:auto;max-width:100%;object-fit:contain;filter:drop-shadow(0 10px 24px rgba(0,0,0,.35));"
       />
     </div>
-    <div id="count" class="count" style="display:none;"></div>
+    <div id="count" class="count count-hidden" aria-hidden="true"></div>
 
     <div class="filters">
       <input id="fDance" class="input" placeholder="Filtra per titolo del ballo…" />
@@ -133,10 +104,6 @@
 </button>
 </div>
 
-
-
-
-  </div>
 </header>
 
   <!-- Cards -->
