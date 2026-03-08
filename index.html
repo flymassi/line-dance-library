@@ -13,7 +13,7 @@
   <link rel="manifest" href="./manifest.webmanifest" />
 
   <!-- Stili -->
-  <link rel="stylesheet" href="./style.css?v=42" />
+  <link rel="stylesheet" href="./style.css?v=44" />
 </head>
 <body>
 
@@ -41,8 +41,8 @@
 </a>
 
 <!-- Contatto sotto la targhetta -->
-<div class="splash-contact">
-  contacts: <a href="mailto:flymassi@hotmail.com" class="splash-contact-link">flymassi@hotmail.com</a>
+<div class="splash-contact" style="margin-top:0; font-size:10px; text-align:center; opacity:.65;">
+  contacts: <a href="mailto:flymassi@hotmail.com" style="color:rgb(248, 252, 5); text-decoration:none;">flymassi@hotmail.com</a>
 </div>
 
   <!-- Testo istruzioni -->
@@ -64,18 +64,8 @@
 
   <!-- Header -->
   <header class="hero" data-heat="true">
-<style>
-.hero{padding-top:6px;padding-bottom:6px}
-.actions, .buttons, .cta{margin-top:6px!important}
-</style>
-    <div class="hero-sign-wrap">
-      <img
-        src="./western-spritz-sign-fixed.png"
-        alt="Western Spritz — Line Dance Library"
-        class="hero-sign"
-      />
-    </div>
-    <div id="count" class="count count-hidden" aria-hidden="true"></div>
+    <h1>Western Spritz — Line Dance Library</h1>
+    <div id="count" class="count">Brani trovati: 0</div>
 
     <div class="filters">
       <input id="fDance" class="input" placeholder="Filtra per titolo del ballo…" />
@@ -104,6 +94,10 @@
 </button>
 </div>
 
+
+
+
+  </div>
 </header>
 
   <!-- Cards -->
@@ -190,6 +184,7 @@
         <button class="chip-btn" data-diff="5">5×5</button>
       </div>
       <button id="pzNext" class="chip">📷 Nuova foto</button>
+      <button id="pzLeaderboard" class="chip">🏆 Classifica</button>
       <button id="pzClose" class="chip">✕</button>
     </div>
 
@@ -213,10 +208,25 @@
     <audio id="fxWhip" preload="auto"><source src="./assets/audio/frusta.mp3" type="audio/mpeg" /></audio>
     <audio id="fxVictory" preload="auto"><source src="./assets/audio/vittoria.mp3" type="audio/mpeg" /></audio>
     <audio id="bgPuzzle" loop preload="auto"><source src="./assets/audio/lo_chiamavano_trinita.mp3" type="audio/mpeg" /></audio>
+
   </div>
 
+  <!-- Overlay: LEADERBOARD PUZZLE -->
+  <div id="pzLbModal" class="overlay hidden" aria-hidden="true">
+    <div class="pl-card pz-lb-card">
+      <div class="pl-top">
+        <h3>🏆 Classifica settimanale</h3>
+        <button id="pzLbClose" class="btn ghost">Chiudi</button>
+      </div>
+      <div class="pz-lb-sub" id="pzLbWeek">Settimana corrente</div>
+      <div id="pzLbPlayer" class="pz-lb-player hidden"></div>
+      <div id="pzLbList" class="pz-lb-list">
+        <div class="card">Caricamento classifica…</div>
+      </div>
+    </div>
+
   <!-- Script -->
-    <script src="./app.js?v=43"></script>
+    <script src="./app.js?v=44"></script>
   <script>
     if ('serviceWorker' in navigator){
       addEventListener('load', () => {

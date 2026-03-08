@@ -1,5 +1,5 @@
 /* Western Spritz — app.js v40 */
-console.log('[WS] app v41');
+console.log('[WS] app v44');
 
 /*-- VERSIONE ORIGINALE */
 
@@ -196,7 +196,7 @@ function render(){
     (!qd || (s.danceTitle||'').toLowerCase().includes(qd)) &&
     (!qs || (s.songTitle||'').toLowerCase().includes(qs))
   );
-elCount.style.display = 'none';
+
 
   elCards.innerHTML = rows.map(s=>{
     const vid = getYouTubeId(s.songUrl || s.danceVideoUrl);
@@ -442,10 +442,16 @@ const PZ = {
   time:  $('#pzTime'),
   livesEl: $('#pzLives'),
   no:    $('#noImg'),
+  lbModal: $('#pzLbModal'),
+  lbList: $('#pzLbList'),
+  lbWeek: $('#pzLbWeek'),
+  lbPlayer: $('#pzLbPlayer'),
   size:  3,
   timer: null,
   t0: 0,
-  lives: 7
+  lives: 7,
+  errors: 0,
+  won: false
 };
 
 /* --- musica puzzle --- */
@@ -459,6 +465,157 @@ function stopBg(){
   if (!bg) return;
   try { bg.pause(); } catch {}
 }
+
+
+/* --- leaderboard puzzle V1 --- */
+function getPuzzleDifficultyLabel(){
+  return `${PZ.size}x${PZ.size}`;
+}
+function getPuzzleElapsedSeconds(){
+  return Math.max(1, Math.floor((Date.now() - PZ.t0) / 1000));
+}
+function getPuzzleBaseScore(size){
+  return ({ 3: 180, 4: 360, 5: 620 })[size] || 180;
+}
+function getPuzzlePreviewScore(){
+  const score = getPuzzleBaseScore(PZ.size) + (PZ.lives * 45) - (PZ.errors * 25) - (getPuzzleElapsedSeconds() * 2);
+  return Math.max(1, score);
+}
+function refreshPuzzleScore(){
+  if (PZ.score) PZ.score.textContent = String(getPuzzlePreviewScore());
+}
+function normalizePlayerName(name){
+  return String(name || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[^\p{L}\p{N}\s._-]/gu, '')
+    .slice(0, 18);
+}
+function getPuzzlePlayerName(){
+  const KEY = 'ws_puzzle_player_name';
+  let name = normalizePlayerName(localStorage.getItem(KEY) || '');
+  while (!name){
+    name = normalizePlayerName(window.prompt('Inserisci il tuo nome per la classifica settimanale') || '');
+    if (!name) alert('Serve un nome per entrare in classifica.');
+  }
+  localStorage.setItem(KEY, name);
+  return name;
+}
+function formatPuzzleTime(totalSeconds){
+  const s = Math.max(0, Number(totalSeconds) || 0);
+  const mm = String(Math.floor(s / 60)).padStart(2, '0');
+  const ss = String(s % 60).padStart(2, '0');
+  return `${mm}:${ss}`;
+}
+async function fetchPuzzleLeaderboard(){
+  const res = await fetch('/api/puzzle-leaderboard', { cache:'no-store' });
+  if (!res.ok) throw new Error('leaderboard fetch failed');
+  return await res.json();
+}
+function renderPuzzleLeaderboard(data){
+  if (PZ.lbWeek) PZ.lbWeek.textContent = `Settimana ${data?.weekKey || 'corrente'}`;
+
+  const me = normalizePlayerName(localStorage.getItem('ws_puzzle_player_name') || '');
+  if (PZ.lbPlayer){
+    const rank = Number(data?.myRank || 0);
+    const myBest = Number(data?.myBest || 0);
+    if (me && rank > 0){
+      PZ.lbPlayer.textContent = `${me} · posizione #${rank} · miglior punteggio ${myBest}`;
+      PZ.lbPlayer.classList.remove('hidden');
+    } else if (me && myBest > 0){
+      PZ.lbPlayer.textContent = `${me} · miglior punteggio ${myBest}`;
+      PZ.lbPlayer.classList.remove('hidden');
+    } else {
+      PZ.lbPlayer.classList.add('hidden');
+      PZ.lbPlayer.textContent = '';
+    }
+  }
+
+  if (!PZ.lbList) return;
+  const top = Array.isArray(data?.top) ? data.top : [];
+  if (!top.length){
+    PZ.lbList.innerHTML = '<div class="card">Nessun risultato questa settimana. Sii il primo a giocare!</div>';
+    return;
+  }
+
+  PZ.lbList.innerHTML = top.map((row, idx) => `
+    <div class="pz-lb-row">
+      <div class="pz-lb-rank">#${idx + 1}</div>
+      <div class="pz-lb-main">
+        <div class="pz-lb-name">${row.name || 'Giocatore'}</div>
+        <div class="pz-lb-meta">${row.difficulty || '-'} · ${formatPuzzleTime(row.timeSeconds)} · errori ${row.errors ?? 0} · vite ${row.livesLeft ?? 0}</div>
+      </div>
+      <div class="pz-lb-score">${row.score ?? 0}</div>
+    </div>
+  `).join('');
+}
+async function openPuzzleLeaderboard(){
+  PZ.lbModal?.classList.remove('hidden');
+  if (PZ.lbList) PZ.lbList.innerHTML = '<div class="card">Caricamento classifica…</div>';
+  try {
+    const me = normalizePlayerName(localStorage.getItem('ws_puzzle_player_name') || '');
+    const url = me ? `/api/puzzle-leaderboard?name=${encodeURIComponent(me)}` : '/api/puzzle-leaderboard';
+    const res = await fetch(url, { cache:'no-store' });
+    const data = await res.json();
+    renderPuzzleLeaderboard(data);
+  } catch (err){
+    console.error('Errore classifica puzzle', err);
+    if (PZ.lbList) PZ.lbList.innerHTML = '<div class="card">Classifica momentaneamente non disponibile.</div>';
+  }
+}
+async function submitPuzzleScore(){
+  const name = getPuzzlePlayerName();
+  const payload = {
+    name,
+    difficulty: getPuzzleDifficultyLabel(),
+    timeSeconds: getPuzzleElapsedSeconds(),
+    livesLeft: PZ.lives,
+    errors: PZ.errors
+  };
+  const res = await fetch('/api/puzzle-score', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error('score submit failed');
+  return await res.json();
+}
+async function showPuzzleVictoryCard(){
+  let result = null;
+  try {
+    result = await submitPuzzleScore();
+  } catch (err){
+    console.error('Errore salvataggio score puzzle', err);
+  }
+
+  const bravo = document.createElement('div');
+  bravo.className = 'bravo';
+
+  const time = formatPuzzleTime(getPuzzleElapsedSeconds());
+  const score = Number(result?.score || getPuzzlePreviewScore());
+  const rank = Number(result?.rank || 0);
+
+  bravo.innerHTML = `
+    <div class="bravo-card">
+      <div class="bravo-title">Bravo!</div>
+      <div class="bravo-lines">
+        Tempo: <b>${time}</b><br>
+        Difficoltà: <b>${getPuzzleDifficultyLabel()}</b><br>
+        Errori: <b>${PZ.errors}</b> · Vite rimaste: <b>${PZ.lives}</b><br>
+        Punteggio settimanale: <b>${score}</b>${rank ? `<br>Posizione attuale: <b>#${rank}</b>` : ''}
+      </div>
+      <div class="bravo-hint">Tocca per ricominciare · usa “🏆 Classifica” per confrontarti con tutti</div>
+    </div>
+  `;
+
+  const restart = ()=>{
+    bravo.remove();
+    startPuzzle(true);
+  };
+  bravo.addEventListener('click', restart, { once:true });
+  document.body.appendChild(bravo);
+}
+
 
 /* --- vite --- */
 function setLives(n){
@@ -569,17 +726,11 @@ function revealRandomTileAndCheckWin(){
     if (!livingTiles().length){
       try { $('#fxVictory')?.play(); } catch {}
       stopBg();
-      setTimeout(()=>{
-        const bravo = document.createElement('div');
-        bravo.className = 'bravo';
-        bravo.textContent = 'Bravo! Tocca per ricominciare';
-        const restart = ()=>{
-          bravo.remove();
-          startPuzzle(true);
-        };
-        bravo.addEventListener('click', restart, { once:true });
-        document.body.appendChild(bravo);
-      }, 300);
+      clearInterval(PZ.timer);
+      if (!PZ.won){
+        PZ.won = true;
+        setTimeout(()=>{ showPuzzleVictoryCard(); }, 300);
+      }
     }
   };
 
@@ -595,11 +746,13 @@ function revealRandomTileAndCheckWin(){
 function startTimer(){
   clearInterval(PZ.timer);
   PZ.t0 = Date.now();
+  refreshPuzzleScore();
   PZ.timer = setInterval(()=>{
     const s = Math.floor((Date.now()-PZ.t0)/1000);
     const m = `${Math.floor(s/60)}`.padStart(2,'0');
     const ss= `${s%60}`.padStart(2,'0');
     if (PZ.time) PZ.time.textContent = `${m}:${ss}`;
+    refreshPuzzleScore();
   }, 500);
 }
 
@@ -720,7 +873,9 @@ function onAnswer(val){
   if(no){ no.classList.remove('hidden'); no.classList.add('shake'); }
   setTimeout(()=>{
     if(no){ no.classList.add('hidden'); no.classList.remove('shake'); }
+    PZ.errors += 1;
     setLives(PZ.lives - 1);
+    refreshPuzzleScore();
     if(PZ.lives <= 0){ stopBg(); gameOver(); }
   }, 700);
 }
@@ -737,10 +892,13 @@ function startPuzzle(){
   PZ.root?.classList.remove('hidden');
   updateTopbarHeight();
 
+  PZ.won = false;
+  PZ.errors = 0;
   loadNewPuzzleImage();
   buildGrid(PZ.size);
   const max = PZ_CFG.livesByGrid[PZ.size] ?? 5;
   setLives(max);
+  refreshPuzzleScore();
 
   Quiz.reset();
   Quiz.next();
@@ -774,9 +932,11 @@ function startPuzzle(){
 
 /* --- bindings UI puzzle --- */
 $('#btnPuzzle')?.addEventListener('click', ()=> startPuzzle());
-$('#pzClose' )?.addEventListener('click', ()=>{ PZ.root?.classList.add('hidden'); stopBg(); });
-$('#pzBack'  )?.addEventListener('click', ()=>{ PZ.root?.classList.add('hidden'); stopBg(); });
-$('#pzNext'  )?.addEventListener('click', ()=>{ loadNewPuzzleImage(); buildGrid(PZ.size); updateTopbarHeight(); });
+$('#pzClose' )?.addEventListener('click', ()=>{ PZ.root?.classList.add('hidden'); PZ.lbModal?.classList.add('hidden'); clearInterval(PZ.timer); stopBg(); });
+$('#pzBack'  )?.addEventListener('click', ()=>{ PZ.root?.classList.add('hidden'); PZ.lbModal?.classList.add('hidden'); clearInterval(PZ.timer); stopBg(); });
+$('#pzNext'  )?.addEventListener('click', ()=>{ loadNewPuzzleImage(); buildGrid(PZ.size); updateTopbarHeight(); refreshPuzzleScore(); });
+$('#pzLeaderboard')?.addEventListener('click', ()=> openPuzzleLeaderboard());
+$('#pzLbClose')?.addEventListener('click', ()=> PZ.lbModal?.classList.add('hidden'));
 
 $$('.chip-btn').forEach(b=>{
   b.addEventListener('click', ()=>{
@@ -786,6 +946,7 @@ $$('.chip-btn').forEach(b=>{
     buildGrid(PZ.size);
     const max = PZ_CFG.livesByGrid[PZ.size] ?? 5;
     setLives(max);
+    refreshPuzzleScore();
   });
 });
 
