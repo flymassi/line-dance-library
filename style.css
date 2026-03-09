@@ -1368,3 +1368,152 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
   height:auto;
   filter: drop-shadow(0 8px 18px rgba(0,0,0,.45));
 }
+
+/* === Hero con polvere/deserto animata === */
+.hero{
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-dust{
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: .75;
+  background:
+    radial-gradient(ellipse at 18% 68%, rgba(210,160,90,.18) 0%, rgba(210,160,90,0) 38%),
+    radial-gradient(ellipse at 50% 74%, rgba(230,185,110,.16) 0%, rgba(230,185,110,0) 42%),
+    radial-gradient(ellipse at 80% 66%, rgba(185,125,70,.15) 0%, rgba(185,125,70,0) 36%),
+    linear-gradient(to top, rgba(120,72,28,.16) 0%, rgba(120,72,28,.08) 18%, rgba(120,72,28,0) 46%);
+  filter: blur(10px);
+}
+
+.hero-dust::before,
+.hero-dust::after{
+  content:"";
+  position:absolute;
+  inset:-8% -12%;
+  pointer-events:none;
+}
+
+.hero-dust::before{
+  background:
+    radial-gradient(circle at 10% 70%, rgba(236,196,120,.16) 0 2px, transparent 3px),
+    radial-gradient(circle at 24% 62%, rgba(220,174,104,.12) 0 2px, transparent 3px),
+    radial-gradient(circle at 38% 74%, rgba(245,210,140,.13) 0 1.5px, transparent 3px),
+    radial-gradient(circle at 52% 68%, rgba(230,188,118,.12) 0 2px, transparent 3px),
+    radial-gradient(circle at 66% 72%, rgba(210,160,95,.13) 0 2px, transparent 3px),
+    radial-gradient(circle at 82% 64%, rgba(235,196,126,.12) 0 1.5px, transparent 3px),
+    radial-gradient(circle at 92% 76%, rgba(215,170,104,.12) 0 2px, transparent 3px);
+  background-repeat: no-repeat;
+  filter: blur(1px);
+  animation: heroDustDriftA 18s linear infinite;
+}
+
+.hero-dust::after{
+  background:
+    radial-gradient(circle at 14% 78%, rgba(246,214,148,.10) 0 20px, transparent 34px),
+    radial-gradient(circle at 36% 70%, rgba(228,186,116,.11) 0 24px, transparent 42px),
+    radial-gradient(circle at 58% 80%, rgba(215,160,92,.10) 0 18px, transparent 34px),
+    radial-gradient(circle at 78% 72%, rgba(242,205,132,.10) 0 22px, transparent 40px);
+  background-repeat:no-repeat;
+  filter: blur(14px);
+  animation: heroDustDriftB 26s ease-in-out infinite alternate;
+}
+
+.hero-sign,
+.hero .filters,
+.hero .actions-top,
+.hero .count{
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes heroDustDriftA{
+  0%{
+    transform: translate3d(-2%, 1%, 0) scale(1);
+    opacity: .55;
+  }
+  50%{
+    transform: translate3d(2%, -1%, 0) scale(1.04);
+    opacity: .78;
+  }
+  100%{
+    transform: translate3d(5%, 0%, 0) scale(1.02);
+    opacity: .58;
+  }
+}
+
+@keyframes heroDustDriftB{
+  0%{
+    transform: translate3d(0%, 0%, 0) scale(1);
+    opacity: .38;
+  }
+  50%{
+    transform: translate3d(-3%, -2%, 0) scale(1.05);
+    opacity: .58;
+  }
+  100%{
+    transform: translate3d(3%, 1%, 0) scale(1.08);
+    opacity: .42;
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .hero-dust::before,
+  .hero-dust::after{
+    animation: none !important;
+  }
+}
+
+/* === Puzzle player profile modal === */
+.pz-profile-card{
+  width:min(92vw, 460px);
+}
+
+.pz-profile-body{
+  margin-top: 12px;
+}
+
+.pz-profile-note{
+  font-size: 13px;
+  opacity: .78;
+  margin-bottom: 12px;
+}
+
+.pz-lb-name{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.pz-lb-extra{
+  margin-top: 4px;
+  font-size: .84rem;
+  opacity: .74;
+}
+
+.pz-me-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:3px 8px;
+  border-radius:999px;
+  font-size:.74rem;
+  font-weight:900;
+  letter-spacing:.04em;
+  color:#3a2100;
+  background:linear-gradient(135deg,#ffe08a,#ffbe46);
+  box-shadow:
+    0 2px 8px rgba(0,0,0,.25),
+    inset 0 1px 0 rgba(255,255,255,.35);
+}
+
+.pz-lb-row.me{
+  outline: 2px solid rgba(255,210,80,.42);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.08) inset,
+    0 0 18px rgba(255,190,40,.16);
+}

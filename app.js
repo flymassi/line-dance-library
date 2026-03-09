@@ -467,7 +467,7 @@ function stopBg(){
 }
 
 
-/* --- leaderboard puzzle V2 PROFESSIONAL --- */
+/* --- leaderboard puzzle V2: profilo giocatore + classifica --- */
 function getPuzzleDifficultyLabel(){
   return `${PZ.size}x${PZ.size}`;
 }
@@ -493,44 +493,61 @@ function normalizePlayerName(name){
     .slice(0, 18);
 }
 
-function generatePuzzlePlayerId(){
-  try {
-    if (window.crypto?.randomUUID) return `ws_${crypto.randomUUID()}`;
-  } catch {}
-  return `ws_${Math.random().toString(36).slice(2,10)}${Date.now().toString(36)}`;
+function normalizePuzzleYear(value){
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[^\p{L}\p{N}\s._/-]/gu, '')
+    .slice(0, 12);
 }
 
-function getPuzzlePlayerId(){
-  const KEY = 'ws_puzzle_player_id';
-  let id = localStorage.getItem(KEY) || '';
-  if (!id) {
-    id = generatePuzzlePlayerId();
-    localStorage.setItem(KEY, id);
-  }
-  return id;
+function normalizeTeacherName(value){
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[^\p{L}\p{N}\s._'-]/gu, '')
+    .slice(0, 28);
 }
 
-function getPuzzlePlayerName(){
-  const KEY = 'ws_puzzle_player_name';
-  let name = normalizePlayerName(localStorage.getItem(KEY) || '');
-  while (!name){
-    name = normalizePlayerName(window.prompt('Inserisci il tuo nome per la classifica settimanale') || '');
-    if (!name) alert('Serve un nome per entrare in classifica.');
-  }
-  localStorage.setItem(KEY, name);
-  return name;
-}
-
-function getPuzzlePlayerProfile(){
+function getPuzzleProfile(){
   return {
-    playerId: getPuzzlePlayerId(),
-    name: getPuzzlePlayerName()
+    name: normalizePlayerName(localStorage.getItem('ws_puzzle_player_name') || ''),
+    year: normalizePuzzleYear(localStorage.getItem('ws_puzzle_player_year') || ''),
+    teacher: normalizeTeacherName(localStorage.getItem('ws_puzzle_player_teacher') || '')
   };
 }
 
-function shortPlayerSuffix(playerId){
-  const clean = String(playerId || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-  return clean.slice(-2) || 'XX';
+function savePuzzleProfile(profile){
+  localStorage.setItem('ws_puzzle_player_name', normalizePlayerName(profile?.name || ''));
+  localStorage.setItem('ws_puzzle_player_year', normalizePuzzleYear(profile?.year || ''));
+  localStorage.setItem('ws_puzzle_player_teacher', normalizeTeacherName(profile?.teacher || ''));
+}
+
+function fillPuzzleProfileForm(){
+  const p = getPuzzleProfile();
+  const nameEl = document.getElementById('pzPlayerName');
+  const yearEl = document.getElementById('pzPlayerYear');
+  const teacherEl = document.getElementById('pzPlayerTeacher');
+  if (nameEl) nameEl.value = p.name || '';
+  if (yearEl) yearEl.value = p.year || '';
+  if (teacherEl) teacherEl.value = p.teacher || '';
+}
+
+function openPuzzleProfileModal(){
+  fillPuzzleProfileForm();
+  document.getElementById('pzProfileError')?.classList.add('hidden');
+  document.getElementById('pzProfileModal')?.classList.remove('hidden');
+}
+
+function closePuzzleProfileModal(){
+  document.getElementById('pzProfileModal')?.classList.add('hidden');
+}
+
+function ensurePuzzleProfileBeforeStart(){
+  const p = getPuzzleProfile();
+  if (p.name) return true;
+  openPuzzleProfileModal();
+  return false;
 }
 
 function formatPuzzleTime(totalSeconds){
@@ -540,38 +557,23 @@ function formatPuzzleTime(totalSeconds){
   return `${mm}:${ss}`;
 }
 
-function decorateLeaderboardNames(top){
-  const counts = new Map();
-  top.forEach(row => {
-    const key = normalizePlayerName(row?.name || 'Giocatore') || 'Giocatore';
-    counts.set(key, (counts.get(key) || 0) + 1);
-  });
-
-  return top.map(row => {
-    const baseName = normalizePlayerName(row?.name || 'Giocatore') || 'Giocatore';
-    const duplicated = (counts.get(baseName) || 0) > 1;
-    return {
-      ...row,
-      displayName: duplicated ? `${baseName} · ${shortPlayerSuffix(row?.playerId)}` : baseName
-    };
-  });
-}
-
 function renderPuzzleLeaderboard(data){
   if (PZ.lbWeek) PZ.lbWeek.textContent = `Settimana ${data?.weekKey || 'corrente'}`;
 
-  const myPlayerId = getPuzzlePlayerId();
-  const myName = normalizePlayerName(localStorage.getItem('ws_puzzle_player_name') || '');
+  const me = normalizePlayerName(localStorage.getItem('ws_puzzle_player_name') || '');
+  const myYear = normalizePuzzleYear(localStorage.getItem('ws_puzzle_player_year') || '');
+  const myTeacher = normalizeTeacherName(localStorage.getItem('ws_puzzle_player_teacher') || '');
 
   if (PZ.lbPlayer){
     const rank = Number(data?.myRank || 0);
     const myBest = Number(data?.myBest || 0);
-    const myLabel = data?.myDisplayName || myName || 'Tu';
-    if (rank > 0){
-      PZ.lbPlayer.textContent = `TU · ${myLabel} · posizione #${rank} · miglior punteggio ${myBest}`;
+    const extra = [myYear, myTeacher].filter(Boolean).join(' · ');
+
+    if (me && rank > 0){
+      PZ.lbPlayer.innerHTML = `TU · <b>${me}</b>${extra ? ` · ${extra}` : ''} · posizione <b>#${rank}</b> · miglior punteggio <b>${myBest}</b>`;
       PZ.lbPlayer.classList.remove('hidden');
-    } else if (myBest > 0){
-      PZ.lbPlayer.textContent = `TU · ${myLabel} · miglior punteggio ${myBest}`;
+    } else if (me && myBest > 0){
+      PZ.lbPlayer.innerHTML = `TU · <b>${me}</b>${extra ? ` · ${extra}` : ''} · miglior punteggio <b>${myBest}</b>`;
       PZ.lbPlayer.classList.remove('hidden');
     } else {
       PZ.lbPlayer.classList.add('hidden');
@@ -580,9 +582,7 @@ function renderPuzzleLeaderboard(data){
   }
 
   if (!PZ.lbList) return;
-  const topRaw = Array.isArray(data?.top) ? data.top : [];
-  const top = decorateLeaderboardNames(topRaw);
-
+  const top = Array.isArray(data?.top) ? data.top : [];
   if (!top.length){
     PZ.lbList.innerHTML = '<div class="card">Nessun risultato questa settimana. Sii il primo a giocare!</div>';
     return;
@@ -590,7 +590,8 @@ function renderPuzzleLeaderboard(data){
 
   PZ.lbList.innerHTML = top.map((row, idx) => {
     const pos = idx + 1;
-    const isMe = String(row.playerId || '') === String(myPlayerId || '');
+    const isMe = normalizePlayerName(row.name) === me;
+
     const medal =
       pos === 1 ? '🥇' :
       pos === 2 ? '🥈' :
@@ -604,13 +605,18 @@ function renderPuzzleLeaderboard(data){
     const meClass = isMe ? ' me' : '';
     const meBadge = isMe ? '<span class="pz-me-badge">TU</span>' : '';
 
+    const extraParts = [];
+    if (row.year) extraParts.push(row.year);
+    if (row.teacher) extraParts.push(row.teacher);
+
     return `
       <div class="pz-lb-row${topClass}${meClass}">
         <div class="pz-lb-rank">
           ${medal ? `<span class="pz-medal" aria-hidden="true">${medal}</span>` : `#${pos}`}
         </div>
         <div class="pz-lb-main">
-          <div class="pz-lb-name">${meBadge}${row.displayName || row.name || 'Giocatore'}</div>
+          <div class="pz-lb-name">${meBadge}${row.name || 'Giocatore'}</div>
+          ${extraParts.length ? `<div class="pz-lb-extra">${extraParts.join(' · ')}</div>` : ''}
           <div class="pz-lb-meta">${row.difficulty || '-'} · ${formatPuzzleTime(row.timeSeconds)} · errori ${row.errors ?? 0} · vite ${row.livesLeft ?? 0}</div>
         </div>
         <div class="pz-lb-score">${row.score ?? 0}</div>
@@ -623,8 +629,8 @@ async function openPuzzleLeaderboard(){
   PZ.lbModal?.classList.remove('hidden');
   if (PZ.lbList) PZ.lbList.innerHTML = '<div class="card">Caricamento classifica…</div>';
   try {
-    const playerId = getPuzzlePlayerId();
-    const url = playerId ? `/api/puzzle-leaderboard?playerId=${encodeURIComponent(playerId)}` : '/api/puzzle-leaderboard';
+    const me = normalizePlayerName(localStorage.getItem('ws_puzzle_player_name') || '');
+    const url = me ? `/api/puzzle-leaderboard?name=${encodeURIComponent(me)}` : '/api/puzzle-leaderboard';
     const res = await fetch(url, { cache:'no-store' });
     const data = await res.json();
     renderPuzzleLeaderboard(data);
@@ -635,16 +641,16 @@ async function openPuzzleLeaderboard(){
 }
 
 async function submitPuzzleScore(){
-  const player = getPuzzlePlayerProfile();
+  const profile = getPuzzleProfile();
   const payload = {
-    playerId: player.playerId,
-    name: player.name,
+    name: profile.name,
+    year: profile.year,
+    teacher: profile.teacher,
     difficulty: getPuzzleDifficultyLabel(),
     timeSeconds: getPuzzleElapsedSeconds(),
     livesLeft: PZ.lives,
     errors: PZ.errors
   };
-
   const res = await fetch('/api/puzzle-score', {
     method:'POST',
     headers:{ 'Content-Type':'application/json' },
@@ -662,19 +668,21 @@ async function showPuzzleVictoryCard(){
     console.error('Errore salvataggio score puzzle', err);
   }
 
+  const profile = getPuzzleProfile();
   const bravo = document.createElement('div');
   bravo.className = 'bravo';
 
   const time = formatPuzzleTime(getPuzzleElapsedSeconds());
   const score = Number(result?.score || getPuzzlePreviewScore());
   const rank = Number(result?.rank || 0);
-  const myLabel = result?.displayName || getPuzzlePlayerName();
 
   bravo.innerHTML = `
     <div class="bravo-card">
       <div class="bravo-title">Bravo!</div>
       <div class="bravo-lines">
-        Giocatore: <b>${myLabel}</b><br>
+        Giocatore: <b>${profile.name || 'Giocatore'}</b><br>
+        ${profile.year ? `Anno: <b>${profile.year}</b><br>` : ''}
+        ${profile.teacher ? `Maestra/Maestro: <b>${profile.teacher}</b><br>` : ''}
         Tempo: <b>${time}</b><br>
         Difficoltà: <b>${getPuzzleDifficultyLabel()}</b><br>
         Errori: <b>${PZ.errors}</b> · Vite rimaste: <b>${PZ.lives}</b><br>
@@ -686,7 +694,7 @@ async function showPuzzleVictoryCard(){
 
   const restart = ()=>{
     bravo.remove();
-    startPuzzle(true);
+    startPuzzle();
   };
   bravo.addEventListener('click', restart, { once:true });
   document.body.appendChild(bravo);
@@ -965,8 +973,9 @@ function updateTopbarHeight(){
 
 /* --- avvio / UI puzzle --- */
 function startPuzzle(){
-  getPuzzlePlayerName();
+  if (!ensurePuzzleProfileBeforeStart()) return;
   PZ.root?.classList.remove('hidden');
+  
   updateTopbarHeight();
 
   PZ.won = false;
@@ -1014,6 +1023,28 @@ $('#pzBack'  )?.addEventListener('click', ()=>{ PZ.root?.classList.add('hidden')
 $('#pzNext'  )?.addEventListener('click', ()=>{ loadNewPuzzleImage(); buildGrid(PZ.size); updateTopbarHeight(); refreshPuzzleScore(); });
 $('#pzLeaderboard')?.addEventListener('click', ()=> openPuzzleLeaderboard());
 $('#pzLbClose')?.addEventListener('click', ()=> PZ.lbModal?.classList.add('hidden'));
+
+$('#pzProfileClose')?.addEventListener('click', ()=> closePuzzleProfileModal());
+
+$('#pzProfileForm')?.addEventListener('submit', (e)=>{
+  e.preventDefault();
+
+  const name = normalizePlayerName(document.getElementById('pzPlayerName')?.value || '');
+  const year = normalizePuzzleYear(document.getElementById('pzPlayerYear')?.value || '');
+  const teacher = normalizeTeacherName(document.getElementById('pzPlayerTeacher')?.value || '');
+  const err = document.getElementById('pzProfileError');
+
+  if (!name){
+    err?.classList.remove('hidden');
+    return;
+  }
+
+  savePuzzleProfile({ name, year, teacher });
+  err?.classList.add('hidden');
+  closePuzzleProfileModal();
+  startPuzzle();
+});
+
 
 $$('.chip-btn').forEach(b=>{
   b.addEventListener('click', ()=>{

@@ -13,7 +13,7 @@
   <link rel="manifest" href="./manifest.webmanifest" />
 
   <!-- Stili -->
-  <link rel="stylesheet" href="./style.css?v=44" />
+  <link rel="stylesheet" href="./style.css?v=45" />
 </head>
 <body>
 
@@ -64,6 +64,7 @@
 
   <!-- Header -->
   <header class="hero" data-heat="true">
+    <div class="hero-dust" aria-hidden="true"></div>
     <img src="./assets/images/western-sign.png" alt="Western Spritz" class="hero-sign">
     <div id="count" class="count">Brani trovati: 0</div>
 
@@ -169,7 +170,46 @@
     </div>
   </div>
 
+<!-- Overlay: PROFILO GIOCATORE PUZZLE -->
+<div id="pzProfileModal" class="overlay hidden" aria-hidden="true">
+  <div class="pl-card pz-profile-card">
+    <div class="pl-top">
+      <h3>🎯 Profilo giocatore</h3>
+      <button id="pzProfileClose" class="btn ghost">Chiudi</button>
+    </div>
 
+    <div class="pz-profile-body">
+      <div class="pz-profile-note">
+        Inserisci i dati del giocatore prima di iniziare il puzzle.
+      </div>
+
+      <form id="pzProfileForm" class="saggio-form">
+        <label>
+          Nome giocatore
+          <input id="pzPlayerName" type="text" class="input" maxlength="18" autocomplete="off" />
+        </label>
+
+        <label>
+          Anno
+          <input id="pzPlayerYear" type="text" class="input" maxlength="12" autocomplete="off" placeholder="Es. 3A oppure 2025" />
+        </label>
+
+        <label>
+          Nome maestra / maestro
+          <input id="pzPlayerTeacher" type="text" class="input" maxlength="28" autocomplete="off" placeholder="Es. Maestra Laura" />
+        </label>
+
+        <p id="pzProfileError" class="saggio-error hidden">
+          Compila almeno il nome del giocatore.
+        </p>
+
+        <div class="actions" style="justify-content:flex-end;">
+          <button type="submit" class="btn btn-primary">Salva e gioca</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
   <!-- Overlay: PUZZLE -->
   <div id="pzOverlay" class="overlay hidden" aria-hidden="true">

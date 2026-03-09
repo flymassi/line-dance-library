@@ -3,7 +3,23 @@ function normalizeName(value) {
     .trim()
     .replace(/\s+/g, ' ')
     .replace(/[^\p{L}\p{N}\s._-]/gu, '')
-    .slice(0, 18) || 'Cowboy';
+    .slice(0, 18) || 'Giocatore';
+}
+
+function normalizeYear(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[^\p{L}\p{N}\s._/-]/gu, '')
+    .slice(0, 12);
+}
+
+function normalizeTeacher(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[^\p{L}\p{N}\s._'-]/gu, '')
+    .slice(0, 28);
 }
 
 function normalizeDifficulty(value) {
@@ -35,7 +51,7 @@ async function redis(command) {
   const response = await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(command)
@@ -48,12 +64,12 @@ async function redis(command) {
   return await response.json();
 }
 
-function profileKey(weekKey, playerId) {
-  return `ws:puzzle:profile:${weekKey}:${playerId}`;
-}
-
 function leaderboardKey(weekKey) {
   return `ws:puzzle:leaderboard:${weekKey}`;
+}
+
+function profileKey(weekKey, name) {
+  return `ws:puzzle:profile:${weekKey}:${name.toLowerCase()}`;
 }
 
 export default async function handler(req, res) {
@@ -63,44 +79,52 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-    const playerId = String(body.playerId || '').trim();
+    const body =
+      typeof req.body === 'string'
+        ? JSON.parse(req.body || '{}')
+        : (req.body || {});
+
     const name = normalizeName(body.name || '');
+    const year = normalizeYear(body.year || '');
+    const teacher = normalizeTeacher(body.teacher || '');
     const difficulty = normalizeDifficulty(body.difficulty);
     const timeSeconds = Math.max(1, Number(body.timeSeconds) || 1);
     const livesLeft = Math.max(0, Number(body.livesLeft) || 0);
     const errors = Math.max(0, Number(body.errors) || 0);
 
-    if (!playerId) {
-      res.status(400).json({ ok: false, error: 'Missing playerId' });
-      return;
-    }
-
     const weekKey = getISOWeekKey(new Date());
     const lbKey = leaderboardKey(weekKey);
-    const pfKey = profileKey(weekKey, playerId);
-    const score = computeScore({ difficulty, timeSeconds, livesLeft, errors });
+    const pfKey = profileKey(weekKey, name);
 
-    const prevScoreRes = await redis(["ZSCORE", lbKey, playerId]);
+    const score = computeScore({
+      difficulty,
+      timeSeconds,
+      livesLeft,
+      errors
+    });
+
+    const prevScoreRes = await redis(['ZSCORE', lbKey, name]);
     const prevScore = Number(prevScoreRes?.result || 0);
 
     if (score >= prevScore) {
-      await redis(["ZADD", lbKey, score, playerId]);
+      await redis(['ZADD', lbKey, score, name]);
+
       await redis([
-        "HSET",
+        'HSET',
         pfKey,
-        "playerId", playerId,
-        "name", name,
-        "score", String(score),
-        "difficulty", difficulty,
-        "timeSeconds", String(timeSeconds),
-        "livesLeft", String(livesLeft),
-        "errors", String(errors),
-        "updatedAt", String(Date.now())
+        'name', name,
+        'year', year,
+        'teacher', teacher,
+        'score', String(score),
+        'difficulty', difficulty,
+        'timeSeconds', String(timeSeconds),
+        'livesLeft', String(livesLeft),
+        'errors', String(errors),
+        'updatedAt', String(Date.now())
       ]);
     }
 
-    const rankRes = await redis(["ZREVRANK", lbKey, playerId]);
+    const rankRes = await redis(['ZREVRANK', lbKey, name]);
     const rank = rankRes?.result == null ? 0 : Number(rankRes.result) + 1;
 
     res.status(200).json({
@@ -108,7 +132,9 @@ export default async function handler(req, res) {
       weekKey,
       score: Math.max(score, prevScore),
       rank,
-      displayName: name
+      name,
+      year,
+      teacher
     });
   } catch (error) {
     console.error('puzzle-score error', error);

@@ -7,6 +7,14 @@ function getISOWeekKey(date) {
   return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
 }
 
+function normalizeName(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[^\p{L}\p{N}\s._-]/gu, '')
+    .slice(0, 18) || 'Giocatore';
+}
+
 async function redis(command) {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -18,7 +26,7 @@ async function redis(command) {
   const response = await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(command)
@@ -31,44 +39,21 @@ async function redis(command) {
   return await response.json();
 }
 
-function profileKey(weekKey, playerId) {
-  return `ws:puzzle:profile:${weekKey}:${playerId}`;
-}
-
 function leaderboardKey(weekKey) {
   return `ws:puzzle:leaderboard:${weekKey}`;
 }
 
-function shortPlayerSuffix(playerId) {
-  return String(playerId || '')
-    .replace(/[^a-zA-Z0-9]/g, '')
-    .toUpperCase()
-    .slice(-2) || 'XX';
+function profileKey(weekKey, name) {
+  return `ws:puzzle:profile:${weekKey}:${name.toLowerCase()}`;
 }
 
-function normalizeName(value) {
-  return String(value || '')
-    .trim()
-    .replace(/\s+/g, ' ')
-    .replace(/[^\p{L}\p{N}\s._-]/gu, '')
-    .slice(0, 18) || 'Giocatore';
-}
-
-function decorateNames(rows) {
-  const counts = new Map();
-  rows.forEach(row => {
-    const base = normalizeName(row.name);
-    counts.set(base, (counts.get(base) || 0) + 1);
-  });
-
-  return rows.map(row => {
-    const base = normalizeName(row.name);
-    const duplicated = (counts.get(base) || 0) > 1;
-    return {
-      ...row,
-      displayName: duplicated ? `${base} · ${shortPlayerSuffix(row.playerId)}` : base
-    };
-  });
+function arrayToObject(arr) {
+  const obj = {};
+  if (!Array.isArray(arr)) return obj;
+  for (let i = 0; i < arr.length; i += 2) {
+    obj[arr[i]] = arr[i + 1];
+  }
+  return obj;
 }
 
 export default async function handler(req, res) {
@@ -80,59 +65,41 @@ export default async function handler(req, res) {
   try {
     const weekKey = getISOWeekKey(new Date());
     const lbKey = leaderboardKey(weekKey);
-    const myPlayerId = String(req.query?.playerId || '').trim();
+    const me = normalizeName(req.query?.name || '');
 
-    const zrangeRes = await redis(["ZREVRANGE", lbKey, 0, 9, "WITHSCORES"]);
+    const zrangeRes = await redis(['ZREVRANGE', lbKey, 0, 9, 'WITHSCORES']);
     const raw = Array.isArray(zrangeRes?.result) ? zrangeRes.result : [];
 
     const top = [];
-    for (let i = 0; i < raw.length; i += 2) {
-      const playerId = String(raw[i] || '');
-      const score = Number(raw[i + 1] || 0);
-      const profileRes = await redis(["HGETALL", profileKey(weekKey, playerId)]);
-      const arr = Array.isArray(profileRes?.result) ? profileRes.result : [];
 
-      const obj = {};
-      for (let j = 0; j < arr.length; j += 2) {
-        obj[arr[j]] = arr[j + 1];
-      }
+    for (let i = 0; i < raw.length; i += 2) {
+      const name = normalizeName(raw[i] || '');
+      const score = Number(raw[i + 1] || 0);
+
+      const profileRes = await redis(['HGETALL', profileKey(weekKey, name)]);
+      const profile = arrayToObject(profileRes?.result);
 
       top.push({
-        playerId,
-        name: normalizeName(obj.name || 'Giocatore'),
+        name,
+        year: profile.year || '',
+        teacher: profile.teacher || '',
         score,
-        difficulty: obj.difficulty || '-',
-        timeSeconds: Number(obj.timeSeconds || 0),
-        errors: Number(obj.errors || 0),
-        livesLeft: Number(obj.livesLeft || 0)
+        difficulty: profile.difficulty || '-',
+        timeSeconds: Number(profile.timeSeconds || 0),
+        errors: Number(profile.errors || 0),
+        livesLeft: Number(profile.livesLeft || 0)
       });
     }
 
-    const decoratedTop = decorateNames(top);
-
     let myRank = 0;
     let myBest = 0;
-    let myDisplayName = '';
 
-    if (myPlayerId) {
-      const rankRes = await redis(["ZREVRANK", lbKey, myPlayerId]);
+    if (me && me !== 'Giocatore') {
+      const rankRes = await redis(['ZREVRANK', lbKey, me]);
       myRank = rankRes?.result == null ? 0 : Number(rankRes.result) + 1;
 
-      const scoreRes = await redis(["ZSCORE", lbKey, myPlayerId]);
+      const scoreRes = await redis(['ZSCORE', lbKey, me]);
       myBest = Number(scoreRes?.result || 0);
-
-      const profileRes = await redis(["HGETALL", profileKey(weekKey, myPlayerId)]);
-      const arr = Array.isArray(profileRes?.result) ? profileRes.result : [];
-      const obj = {};
-      for (let j = 0; j < arr.length; j += 2) {
-        obj[arr[j]] = arr[j + 1];
-      }
-
-      const myName = normalizeName(obj.name || '');
-      if (myName) {
-        const duplicated = decoratedTop.filter(row => normalizeName(row.name) === myName).length > 1;
-        myDisplayName = duplicated ? `${myName} · ${shortPlayerSuffix(myPlayerId)}` : myName;
-      }
     }
 
     res.status(200).json({
@@ -140,8 +107,7 @@ export default async function handler(req, res) {
       weekKey,
       myRank,
       myBest,
-      myDisplayName,
-      top: decoratedTop
+      top
     });
   } catch (error) {
     console.error('puzzle-leaderboard error', error);
