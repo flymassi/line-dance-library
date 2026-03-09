@@ -1363,7 +1363,7 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
 /* === Western Hero Sign === */
 .hero-sign{
   display:block;
-  margin: -50px auto -50px auto;
+  margin: -80px auto -80px auto;
   max-width: min(92vw, 900px);
   height:auto;
   filter: drop-shadow(0 8px 18px rgba(0,0,0,.45));
