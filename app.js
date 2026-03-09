@@ -543,6 +543,24 @@ function closePuzzleProfileModal(){
   document.getElementById('pzProfileModal')?.classList.add('hidden');
 }
 
+function showPassedToast(name){
+  if (!name) return;
+  const old = document.querySelector('.pz-pass-toast');
+  if (old) old.remove();
+
+  const toast = document.createElement('div');
+  toast.className = 'pz-pass-toast';
+  toast.textContent = `🔥 Hai superato ${name}!`;
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.transition = 'opacity .35s ease, transform .35s ease';
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(-8px)';
+    setTimeout(() => toast.remove(), 400);
+  }, 2200);
+}
+
 function ensurePuzzleProfileBeforeStart(){
   const p = getPuzzleProfile();
   if (p.name) return true;
@@ -641,7 +659,7 @@ async function openPuzzleLeaderboard(){
 }
 
 async function submitPuzzleScore(){
-  const profile = getPuzzlePlayerProfile();
+  const profile = getPuzzleProfile();
 
   const payload = {
     name: profile.name,
@@ -667,6 +685,7 @@ async function showPuzzleVictoryCard(){
   let result = null;
   try {
     result = await submitPuzzleScore();
+    if (result?.passedPlayer) showPassedToast(result.passedPlayer);
   } catch (err){
     console.error('Errore salvataggio score puzzle', err);
   }
@@ -1026,6 +1045,7 @@ $('#pzBack'  )?.addEventListener('click', ()=>{ PZ.root?.classList.add('hidden')
 $('#pzNext'  )?.addEventListener('click', ()=>{ loadNewPuzzleImage(); buildGrid(PZ.size); updateTopbarHeight(); refreshPuzzleScore(); });
 $('#pzLeaderboard')?.addEventListener('click', ()=> openPuzzleLeaderboard());
 $('#pzLbClose')?.addEventListener('click', ()=> PZ.lbModal?.classList.add('hidden'));
+$('#pzProfileBtn')?.addEventListener('click', ()=> openPuzzleProfileModal());
 
 $('#pzProfileClose')?.addEventListener('click', ()=> closePuzzleProfileModal());
 
@@ -1160,69 +1180,3 @@ $('#btnUpdate')?.addEventListener('click', () => {
     setTimeout(styleCards, 0);
   }
 })();
-
-/* ===== PROFILO GIOCATORE PUZZLE (aggiunta semplice) ===== */
-
-function ws_norm(v,max=20){
-  return String(v||'').trim().replace(/\s+/g,' ').slice(0,max);
-}
-
-function ws_getProfile(){
-  let name = ws_norm(localStorage.getItem('ws_puzzle_player_name'),18);
-  let year = ws_norm(localStorage.getItem('ws_puzzle_player_year'),12);
-  let teacher = ws_norm(localStorage.getItem('ws_puzzle_player_teacher'),28);
-
-  if(!name){
-    while(!name){
-      name = ws_norm(prompt('Nome giocatore:'),18);
-      if(!name) alert('Il nome è obbligatorio.');
-    }
-    localStorage.setItem('ws_puzzle_player_name', name);
-  }
-
-  if(!year){
-    year = ws_norm(prompt('Di che anno è? (es. 3A)'),12);
-    localStorage.setItem('ws_puzzle_player_year', year);
-  }
-
-  if(!teacher){
-    teacher = ws_norm(prompt('Nome maestra/maestro:'),28);
-    localStorage.setItem('ws_puzzle_player_teacher', teacher);
-  }
-
-  return {name, year, teacher};
-}
-
-/* intercetta avvio puzzle */
-const _oldStartPuzzle = startPuzzle;
-startPuzzle = function(){
-  ws_getProfile();
-  return _oldStartPuzzle.apply(this, arguments);
-};
-
-/* aggiunge dati extra alla classifica (se esiste) */
-function ws_enrichLeaderboard(){
-  const rows = document.querySelectorAll('.pz-lb-row');
-  if(!rows.length) return;
-
-  const year = localStorage.getItem('ws_puzzle_player_year')||'';
-  const teacher = localStorage.getItem('ws_puzzle_player_teacher')||'';
-
-  rows.forEach(r=>{
-    const nameEl = r.querySelector('.pz-lb-name');
-    if(!nameEl) return;
-    if(nameEl.dataset.extra) return;
-
-    const extra = document.createElement('div');
-    extra.className='pz-lb-extra';
-    extra.textContent = [year,teacher].filter(Boolean).join(' · ');
-    nameEl.after(extra);
-    nameEl.dataset.extra = '1';
-  });
-}
-
-/* quando apri classifica */
-document.addEventListener('click', e=>{
-  if(e.target.closest('#btnPuzzle')) setTimeout(ws_enrichLeaderboard,1500);
-  if(e.target.closest('#pzLbClose')) setTimeout(ws_enrichLeaderboard,800);
-});

@@ -127,6 +127,15 @@ export default async function handler(req, res) {
     const rankRes = await redis(['ZREVRANK', lbKey, name]);
     const rank = rankRes?.result == null ? 0 : Number(rankRes.result) + 1;
 
+    let passedPlayer = '';
+    try {
+      if (rank > 1) {
+        const aheadRes = await redis(['ZREVRANGE', lbKey, rank - 2, rank - 2]);
+        const aheadName = Array.isArray(aheadRes?.result) ? aheadRes.result[0] : '';
+        if (aheadName && aheadName !== name) passedPlayer = aheadName;
+      }
+    } catch {}
+
     res.status(200).json({
       ok: true,
       weekKey,
@@ -134,7 +143,8 @@ export default async function handler(req, res) {
       rank,
       name,
       year,
-      teacher
+      teacher,
+      passedPlayer
     });
   } catch (error) {
     console.error('puzzle-score error', error);

@@ -215,6 +215,7 @@
   <div id="pzOverlay" class="overlay hidden" aria-hidden="true">
     <div class="pz-topbar">
       <button id="pzBack" class="chip">◀︎ Indietro</button>
+      <button id="pzProfileBtn" class="chip">👤 Profilo</button>
       <div class="chip"><span>⏱️</span><span id="pzTime">00:00</span></div>
       <div class="chip"><span>❤️</span><span id="pzLives">3</span></div>
       <div class="chip"><span>⭐</span><span id="pzScore">0</span></div>
@@ -264,6 +265,46 @@
         <div class="card">Caricamento classifica…</div>
       </div>
     </div>
+
+<!-- Overlay: PROFILO PUZZLE -->
+<div id="pzProfileModal" class="overlay hidden" aria-hidden="true">
+  <div class="pl-card pz-profile-card">
+    <div class="pl-top">
+      <h3>👤 Profilo giocatore</h3>
+      <button id="pzProfileClose" class="btn ghost">Chiudi</button>
+    </div>
+
+    <div class="pz-profile-body">
+      <div class="pz-profile-note">
+        Modifica i dati del giocatore per puzzle e classifica.
+      </div>
+
+      <form id="pzProfileForm" class="saggio-form">
+        <label>
+          Nome giocatore
+          <input id="pzProfileName" type="text" class="input" maxlength="18" autocomplete="off" />
+        </label>
+
+        <label>
+          Anno
+          <input id="pzProfileYear" type="text" class="input" maxlength="12" autocomplete="off" placeholder="Es. 3A" />
+        </label>
+
+        <label>
+          Maestra / Maestro
+          <input id="pzProfileTeacher" type="text" class="input" maxlength="28" autocomplete="off" placeholder="Es. Maestra Laura" />
+        </label>
+
+        <p id="pzProfileError" class="saggio-error hidden">Il nome è obbligatorio.</p>
+
+        <div class="actions" style="justify-content:flex-end;">
+          <button type="submit" class="btn btn-primary">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 
   <!-- Script -->
     <script src="./app.js?v=44"></script>
