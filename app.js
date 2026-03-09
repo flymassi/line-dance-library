@@ -641,7 +641,8 @@ async function openPuzzleLeaderboard(){
 }
 
 async function submitPuzzleScore(){
-  const profile = getPuzzleProfile();
+  const profile = getPuzzlePlayerProfile();
+
   const payload = {
     name: profile.name,
     year: profile.year,
@@ -651,11 +652,13 @@ async function submitPuzzleScore(){
     livesLeft: PZ.lives,
     errors: PZ.errors
   };
+
   const res = await fetch('/api/puzzle-score', {
     method:'POST',
     headers:{ 'Content-Type':'application/json' },
     body: JSON.stringify(payload)
   });
+
   if (!res.ok) throw new Error('score submit failed');
   return await res.json();
 }
@@ -1158,4 +1161,68 @@ $('#btnUpdate')?.addEventListener('click', () => {
   }
 })();
 
+/* ===== PROFILO GIOCATORE PUZZLE (aggiunta semplice) ===== */
 
+function ws_norm(v,max=20){
+  return String(v||'').trim().replace(/\s+/g,' ').slice(0,max);
+}
+
+function ws_getProfile(){
+  let name = ws_norm(localStorage.getItem('ws_puzzle_player_name'),18);
+  let year = ws_norm(localStorage.getItem('ws_puzzle_player_year'),12);
+  let teacher = ws_norm(localStorage.getItem('ws_puzzle_player_teacher'),28);
+
+  if(!name){
+    while(!name){
+      name = ws_norm(prompt('Nome giocatore:'),18);
+      if(!name) alert('Il nome è obbligatorio.');
+    }
+    localStorage.setItem('ws_puzzle_player_name', name);
+  }
+
+  if(!year){
+    year = ws_norm(prompt('Di che anno è? (es. 3A)'),12);
+    localStorage.setItem('ws_puzzle_player_year', year);
+  }
+
+  if(!teacher){
+    teacher = ws_norm(prompt('Nome maestra/maestro:'),28);
+    localStorage.setItem('ws_puzzle_player_teacher', teacher);
+  }
+
+  return {name, year, teacher};
+}
+
+/* intercetta avvio puzzle */
+const _oldStartPuzzle = startPuzzle;
+startPuzzle = function(){
+  ws_getProfile();
+  return _oldStartPuzzle.apply(this, arguments);
+};
+
+/* aggiunge dati extra alla classifica (se esiste) */
+function ws_enrichLeaderboard(){
+  const rows = document.querySelectorAll('.pz-lb-row');
+  if(!rows.length) return;
+
+  const year = localStorage.getItem('ws_puzzle_player_year')||'';
+  const teacher = localStorage.getItem('ws_puzzle_player_teacher')||'';
+
+  rows.forEach(r=>{
+    const nameEl = r.querySelector('.pz-lb-name');
+    if(!nameEl) return;
+    if(nameEl.dataset.extra) return;
+
+    const extra = document.createElement('div');
+    extra.className='pz-lb-extra';
+    extra.textContent = [year,teacher].filter(Boolean).join(' · ');
+    nameEl.after(extra);
+    nameEl.dataset.extra = '1';
+  });
+}
+
+/* quando apri classifica */
+document.addEventListener('click', e=>{
+  if(e.target.closest('#btnPuzzle')) setTimeout(ws_enrichLeaderboard,1500);
+  if(e.target.closest('#pzLbClose')) setTimeout(ws_enrichLeaderboard,800);
+});

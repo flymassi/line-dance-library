@@ -1517,3 +1517,9 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
     0 0 0 1px rgba(255,255,255,.08) inset,
     0 0 18px rgba(255,190,40,.16);
 }
+
+.pz-lb-extra{
+  margin-top: 4px;
+  font-size: .84rem;
+  opacity: .74;
+}
