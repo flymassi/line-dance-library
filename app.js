@@ -187,7 +187,7 @@ function promoteFeaturedSong(list){
 
 /* ====== RENDER CARDS ====== */
 function render(){
-  if (!elCards || !elCount) return;
+  if (!elCards) return;
 
   const qd = FILTER.dance.toLowerCase();
   const qs = FILTER.song.toLowerCase();
