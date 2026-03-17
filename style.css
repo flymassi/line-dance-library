@@ -1228,3 +1228,62 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
   width:min(92vw, 520px);
   height:auto;
 }
+
+/* ===== EVENT BAR sotto banner ===== */
+.hero-sub{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  margin-top:-6px;
+  margin-bottom:6px;
+  flex-wrap:wrap;
+}
+
+/* logo piccolo */
+.event-logo{
+  height:42px;
+  width:auto;
+  object-fit:contain;
+  opacity:.95;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.5));
+}
+
+/* contatore stile festival */
+.event-counter{
+  display:flex;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:12px;
+
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(6px);
+
+  border:1px solid rgba(255,255,255,.15);
+}
+
+.ec-block{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-width:42px;
+}
+
+.ec-block span{
+  font-family:'Rye', serif;
+  font-size:18px;
+  font-weight:900;
+  color:#ffcc66;
+  line-height:1;
+}
+
+.ec-block small{
+  font-size:9px;
+  opacity:.7;
+}
+
+/* mobile ancora più compatto */
+@media (max-width:420px){
+  .event-logo{ height:34px }
+  .ec-block span{ font-size:16px }
+}

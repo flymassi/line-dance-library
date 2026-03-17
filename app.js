@@ -1180,3 +1180,37 @@ $('#btnUpdate')?.addEventListener('click', () => {
     setTimeout(styleCards, 0);
   }
 })();
+
+/* ===== COUNTDOWN EVENTO ===== */
+(function(){
+
+  // 👉 imposta data evento (MODIFICA QUI)
+  const eventDate = new Date("2026-06-12T15:00:00"); 
+
+  function updateCountdown(){
+    const now = new Date();
+    const diff = eventDate - now;
+
+    if (diff <= 0){
+      document.getElementById('ec-days').textContent = '0';
+      document.getElementById('ec-hours').textContent = '0';
+      document.getElementById('ec-min').textContent = '0';
+      document.getElementById('ec-sec').textContent = '0';
+      return;
+    }
+
+    const d = Math.floor(diff / (1000*60*60*24));
+    const h = Math.floor((diff / (1000*60*60)) % 24);
+    const m = Math.floor((diff / (1000*60)) % 60);
+    const s = Math.floor((diff / 1000) % 60);
+
+    document.getElementById('ec-days').textContent = d;
+    document.getElementById('ec-hours').textContent = h;
+    document.getElementById('ec-min').textContent = m;
+    document.getElementById('ec-sec').textContent = s;
+  }
+
+  setInterval(updateCountdown, 1000);
+  updateCountdown();
+
+})();
