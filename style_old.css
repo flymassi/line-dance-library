@@ -79,8 +79,21 @@ body{
 /* ==== UI ==== */
 .hero{padding:16px 12px 8px; text-align:center; backdrop-filter:blur(6px)}
 .count{opacity:.85; margin-bottom:8px}
-.filters{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
-.input{padding:10px 12px; border-radius:10px; border:0}
+.filters{
+  display:flex;
+  gap:4px;
+  justify-content:center;
+  flex-wrap:nowrap;       /* 🔥 niente a capo */
+  align-items:center;
+}
+.input{
+  padding:6px 10px;          /* ↓ più compatto */
+  border-radius:10px;
+  border:0;
+  font-size:14px;            /* ↓ leggermente più piccolo */
+  height:36px;               /* ↓ altezza fissa compatta */
+}
+
 .btn{border:0; border-radius:12px; padding:10px 14px; font-weight:700; cursor:pointer}
 .btn-primary{background:var(--brand); color:#fff}
 
@@ -1212,78 +1225,173 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
 .actions-top{ margin:6px auto; }
 
 .hero{
-  position:relative;
-  overflow:hidden;
-  padding:4px 12px 0px;
-  margin-top:-10px;
-  text-align:center;
-  backdrop-filter:blur(6px);
+  position: relative;
+  overflow: hidden;
+  padding: 2px 12px 0;
+  margin-top: -34px;
+  text-align: center;
+  backdrop-filter: blur(6px);
 }
 
 .hero-sign{
-  position:relative;
-  z-index:1;
-  display:block;
-  margin:-6px auto -14px auto;
-  width:min(92vw, 520px);
-  height:auto;
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: min(95vw, 820px);
+  max-width: 100%;
+  height: auto;
+  margin: -30px auto -18px; /* più vicino a Sweat & Dust */
 }
 
-/* ===== EVENT BAR sotto banner ===== */
-.hero-sub{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:12px;
-  margin-top:-6px;
-  margin-bottom:6px;
-  flex-wrap:wrap;
+.hero-sub-vertical{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;                  /* azzera lo spazio tra logo e blocco sotto */
+  margin: 0 auto 6px;
 }
 
-/* logo piccolo */
 .event-logo{
-  height:42px;
-  width:auto;
-  object-fit:contain;
-  opacity:.95;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,.5));
+  display: block;
+  height: 140px;
+  width: auto;
+  max-width: min(72vw, 320px);
+  object-fit: contain;
+  opacity: .98;
+  margin-top: -8px;        /* tira su Sweat & Dust */
+  cursor: pointer;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,.45));
+  transition: transform .2s ease, filter .2s ease;
 }
 
-/* contatore stile festival */
+.event-logo:hover{
+  transform: scale(1.05);
+  filter: drop-shadow(0 6px 14px rgba(0,0,0,.6));
+}
+
 .event-counter{
-  display:flex;
-  gap:6px;
-  padding:6px 10px;
-  border-radius:12px;
-
-  background: rgba(0,0,0,.45);
-  backdrop-filter: blur(6px);
-
-  border:1px solid rgba(255,255,255,.15);
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 16px;
+  background: rgba(0,0,0,.42);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 8px 18px rgba(0,0,0,.22);
 }
 
 .ec-block{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  min-width:42px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 56px;
 }
 
 .ec-block span{
-  font-family:'Rye', serif;
-  font-size:18px;
-  font-weight:900;
-  color:#ffcc66;
-  line-height:1;
+  font-family: 'Rye', serif;
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1;
+  color: #ffcc66;
+  text-shadow: 0 1px 0 #3a1e00, 0 3px 8px rgba(0,0,0,.35);
 }
 
 .ec-block small{
-  font-size:9px;
-  opacity:.7;
+  font-size: 11px;
+  opacity: .78;
+  letter-spacing: .04em;
 }
 
-/* mobile ancora più compatto */
-@media (max-width:420px){
-  .event-logo{ height:34px }
-  .ec-block span{ font-size:16px }
+.filters{
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+
+.filters .input{
+  padding: 6px 8px;
+  border-radius: 10px;
+  font-size: 13px;
+  min-height: 34px;
+  height: 34px;
+  line-height: 1.1;
+}
+
+.filters #fDance,
+.filters #fSong{
+  width: 28vw;
+  max-width: 200px;
+}
+
+.filters #clearFilters{
+  padding: 6px 10px;
+  height: 34px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px){
+  .hero{
+    padding-top: 2px;
+  }
+
+  .hero-sign{
+    margin: -30px auto -18px;
+    width: min(96vw, 900px);
+  }
+
+  .hero-sub-vertical{
+    gap: 0;
+    margin-bottom: 8px;
+  }
+
+  .event-logo{
+    height: 110px;
+    margin-top: -8px;
+    max-width: min(78vw, 300px);
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,.6));
+  }
+
+  .event-counter{
+    gap: 6px;
+    padding: 7px 10px;
+  }
+
+  .ec-block{
+    min-width: 48px;
+  }
+
+  .ec-block span{
+    font-size: 22px;
+  }
+
+  .ec-block small{
+    font-size: 10px;
+  }
+
+  .filters{
+    gap: 4px;
+  }
+
+  .filters .input{
+    padding: 4px 8px;
+    min-height: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+
+  .filters #fDance,
+  .filters #fSong{
+    width: 30vw;
+    max-width: 160px;
+  }
+
+  .filters #clearFilters{
+    height: 32px;
+    padding: 4px 8px;
+    font-size: 12px;
+  }
 }
