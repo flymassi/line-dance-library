@@ -1237,7 +1237,7 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
   position: relative;
   z-index: 1;
   display: block;
-  width: min(92vw, 720px);
+  width: min(95vw, 820px);
   max-width: 100%;
   height: auto;
 
