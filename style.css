@@ -1340,7 +1340,7 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
 
   .hero-sign{
     margin: -30px auto -18px;
-    width: min(94vw, 700px);
+    width: min(96vw, 900px);
   }
 
   .hero-sub-vertical{
