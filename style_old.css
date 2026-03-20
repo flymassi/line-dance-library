@@ -80,15 +80,7 @@ body{
 .hero{padding:16px 12px 8px; text-align:center; backdrop-filter:blur(6px)}
 .count{opacity:.85; margin-bottom:8px}
 .filters{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
-
-.input{
-  padding:6px 10px;          /* ↓ più compatto */
-  border-radius:10px;
-  border:0;
-  font-size:14px;            /* ↓ leggermente più piccolo */
-  height:36px;               /* ↓ altezza fissa compatta */
-}
-
+.input{padding:10px 12px; border-radius:10px; border:0}
 .btn{border:0; border-radius:12px; padding:10px 14px; font-weight:700; cursor:pointer}
 .btn-primary{background:var(--brand); color:#fff}
 
@@ -1237,174 +1229,61 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
   height:auto;
 }
 
-/* ===== Header festival layout refinement ===== */
-.hero{
-  padding-top: 4px;
-}
-
-.hero-sign{
-  display:block;
-  width:min(92vw, 760px);
-  max-width:100%;
-  height:auto;
-  margin:-18px auto 4px;
-}
-
-.hero-sub-vertical{
+/* ===== EVENT BAR sotto banner ===== */
+.hero-sub{
   display:flex;
-  flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:10px;
-  margin:0 auto 10px;
+  gap:12px;
+  margin-top:-6px;
+  margin-bottom:6px;
+  flex-wrap:wrap;
 }
 
+/* logo piccolo */
 .event-logo{
-  display:block;
-  height:96px;
+  height:42px;
   width:auto;
-  max-width:min(72vw, 320px);
   object-fit:contain;
-  opacity:.98;
-  filter:drop-shadow(0 4px 10px rgba(0,0,0,.45));
+  opacity:.95;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.5));
 }
 
+/* contatore stile festival */
 .event-counter{
   display:flex;
-  gap:8px;
-  padding:8px 12px;
-  border-radius:16px;
-  background:rgba(0,0,0,.42);
-  backdrop-filter:blur(8px);
-  -webkit-backdrop-filter:blur(8px);
-  border:1px solid rgba(255,255,255,.14);
-  box-shadow:0 8px 18px rgba(0,0,0,.22);
+  gap:6px;
+  padding:6px 10px;
+  border-radius:12px;
+
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(6px);
+
+  border:1px solid rgba(255,255,255,.15);
 }
 
 .ec-block{
   display:flex;
   flex-direction:column;
   align-items:center;
-  min-width:56px;
+  min-width:42px;
 }
 
 .ec-block span{
   font-family:'Rye', serif;
-  font-size:clamp(24px, 3vw, 34px);
-  line-height:1;
+  font-size:18px;
+  font-weight:900;
   color:#ffcc66;
-  text-shadow:0 1px 0 #3a1e00, 0 3px 8px rgba(0,0,0,.35);
+  line-height:1;
 }
 
 .ec-block small{
-  font-size:11px;
-  opacity:.78;
-  letter-spacing:.04em;
+  font-size:9px;
+  opacity:.7;
 }
 
-.filters{
-  gap:8px;
-}
-
-.filters .input{
-  padding:8px 10px;
-  border-radius:10px;
-  font-size:15px;
-  min-height:42px;
-}
-
-.filters #fDance,
-.filters #fSong{
-  width:min(34vw, 320px);
-}
-
-.filters clearFilters{
-  padding:6px 10px;
-  height:36px;
-  font-size:14px;
-}
-
-@media (max-width:600px){
-  .hero{
-    padding-top:2px;
-  }
-
-  .hero-sign{
-    margin:-10px auto 2px;
-    width:min(94vw, 700px);
-  }
-
-  .hero-sub-vertical{
-    gap:8px;
-    margin-bottom:8px;
-  }
-
-  .event-logo{
-    height:82px;
-    max-width:min(78vw, 300px);
-  }
-
-  .event-counter{
-    gap:6px;
-    padding:7px 10px;
-  }
-
-  .ec-block{
-    min-width:48px;
-  }
-
-  .ec-block span{
-    font-size:22px;
-  }
-
-  .ec-block small{
-    font-size:10px;
-  }
-
-  .filters{
-    gap:6px;
-  }
-
-  .filters .input{
-    padding:7px 10px;
-    min-height:40px;
-    font-size:14px;
-  }
-
-  .filters #fDance,
-  .filters #fSong{
-    width:min(40vw, 280px);
-  }
-
-  .filters #clearFilters{
-    padding:7px 11px;
-    min-height:40px;
-  }
-}
-
-.event-logo{
-  cursor:pointer;
-  transition: transform .2s ease, filter .2s ease;
-}
-
-.event-logo:hover{
-  transform: scale(1.05);
-  filter: drop-shadow(0 6px 14px rgba(0,0,0,.6));
-}
-
-#fDance,
-#fSong{
-  width: min(30vw, 240px);   /* ↓ più stretti */
-}
-
-@media (max-width: 480px){
-  #fDance,
-  #fSong{
-    width: 42vw;   /* così stanno affiancati */
-  }
-
-  .input{
-    height:34px;
-    font-size:13px;
-  }
+/* mobile ancora più compatto */
+@media (max-width:420px){
+  .event-logo{ height:34px }
+  .ec-block span{ font-size:16px }
 }
