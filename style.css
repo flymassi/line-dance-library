@@ -79,8 +79,13 @@ body{
 /* ==== UI ==== */
 .hero{padding:16px 12px 8px; text-align:center; backdrop-filter:blur(6px)}
 .count{opacity:.85; margin-bottom:8px}
-.filters{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
-
+.filters{
+  display:flex;
+  gap:4px;
+  justify-content:center;
+  flex-wrap:nowrap;       /* 🔥 niente a capo */
+  align-items:center;
+}
 .input{
   padding:6px 10px;          /* ↓ più compatto */
   border-radius:10px;
@@ -1377,9 +1382,11 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
   }
 
   .filters #clearFilters{
-    padding:7px 11px;
-    min-height:40px;
-  }
+    height:34px;
+  padding:6px 10px;
+  font-size:13px;
+  white-space:nowrap;     /* evita che si spezzi */
+}
 }
 
 .event-logo{
@@ -1400,11 +1407,22 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
 @media (max-width: 480px){
   #fDance,
   #fSong{
-    width: 42vw;   /* così stanno affiancati */
+    width: 30vw;   /* così stanno affiancati */
   }
 
   .input{
     height:34px;
     font-size:13px;
   }
+}
+#fDance,
+#fSong{
+  width: 28vw;            /* 🔥 più stretti */
+  max-width: 200px;
+}
+
+.input{
+  padding:6px 8px;
+  height:34px;
+  font-size:13px;
 }
