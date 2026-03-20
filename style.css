@@ -1225,34 +1225,33 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
 .actions-top{ margin:6px auto; }
 
 .hero{
-  position:relative;
-  overflow:hidden;
-  padding:4px 12px 0px;
-  margin-top:-10px;
-  text-align:center;
-  backdrop-filter:blur(6px);
+  position: relative;
+  overflow: hidden;
+  padding: 2px 12px 0;
+  margin-top: -28px;   /* 🔥 alza tutto il blocco */
+  text-align: center;
+  backdrop-filter: blur(6px);
 }
 
 .hero-sign{
-  position:relative;
-  z-index:1;
-  display:block;
-  margin:-6px auto -14px auto;
-  width:min(92vw, 520px);
-  height:auto;
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: min(92vw, 720px);
+  max-width: 100%;
+  height: auto;
+
+  margin: -28px auto -6px;   /* 🔥 super compatto */
 }
 
-/* ===== Header festival layout refinement ===== */
-.hero{
-  padding-top: 4px;
-}
+.hero-sub-vertical{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 
-.hero-sign{
-  display:block;
-  width:min(92vw, 760px);
-  max-width:100%;
-  height:auto;
-  margin:-18px auto 4px;
+  gap: 6px;                 /* 🔥 meno spazio tra logo e countdown */
+  margin: 0 auto 6px;       /* 🔥 compatto sotto */
 }
 
 .hero-sub-vertical{
@@ -1266,7 +1265,7 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
 
 .event-logo{
   display:block;
-  height:96px;
+  height:140px;
   width:auto;
   max-width:min(72vw, 320px);
   object-fit:contain;
@@ -1345,8 +1344,8 @@ article.card.vintage.ws-in{ transition-delay: var(--ws-stagger, 0ms); }
   }
 
   .event-logo{
-    height:82px;
-    max-width:min(78vw, 300px);
+    height:140px;
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,.6));
   }
 
   .event-counter{
