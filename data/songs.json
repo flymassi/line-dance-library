@@ -1,6 +1,15 @@
 [
  {
     "year": 3,
+    "songNumber": 72,
+    "danceTitle": "CASANOVA COWBOY",
+    "danceVideoUrl": "https://youtu.be/ss9qGlJKLoc?si=468A_P9xV-_da3_B",
+    "singerName": "Carrie Underwood",
+    "songTitle": "Cowboy Casanova",
+    "songUrl": "https://youtu.be/oM7NQQ0Lfu4?si=2bT6aSsurIedLVex"
+  },
+  {
+    "year": 3,
     "songNumber": 71,
     "danceTitle": "OVER1325 Sweat and Dust 2026",
     "danceVideoUrl": "https://youtu.be/hBphtMFU2gY?si=RT7FLwmgVJP6hOth",
