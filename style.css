@@ -341,7 +341,7 @@ body{
 
 .hero-sign{
   display: block !important;
-  width: min(52vw, 460px) !important;
+  width: min(58vw, 520px) !important;
   max-width: 100% !important;
   height: auto !important;
 
