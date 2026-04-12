@@ -1273,3 +1273,19 @@ if ('ResizeObserver' in window) {
   window.addEventListener('load', updateHeroShrink);
   updateHeroShrink();
 })();
+
+const hero = document.querySelector('.hero-sticky');
+
+let lastScroll = 0;
+
+window.addEventListener('scroll', () => {
+  const currentScroll = window.scrollY;
+
+  if (currentScroll > 10) {
+    hero.classList.add('is-shrunk');
+  } else {
+    hero.classList.remove('is-shrunk');
+  }
+
+  lastScroll = currentScroll;
+});

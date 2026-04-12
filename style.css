@@ -341,7 +341,7 @@ body{
 
 .hero-sign{
   display: block !important;
-  width: min(58vw, 520px) !important;
+  width: min(60vw, 540px) !important;
   max-width: 100% !important;
   height: auto !important;
 
@@ -353,14 +353,18 @@ body{
   opacity: 1;
 
   transition:
-    transform .22s ease,
-    filter .22s ease,
-    opacity .22s ease;
+    transform .28s ease,
+    width .28s ease,
+    filter .28s ease,
+    opacity .28s ease;
 }
 
 .hero-sticky.is-shrunk .hero-sign{
-  transform: scale(.82);
+  transform: scale(.78);
+  width: min(48vw, 420px) !important;
+
   margin: -26px auto 0 !important;
+
   filter: drop-shadow(0 8px 18px rgba(0,0,0,.24));
   opacity: .96;
 }
