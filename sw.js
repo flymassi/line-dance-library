@@ -1,21 +1,18 @@
-// sw.js - versione "sempre fresco"
+const VERSION = 'ws-v41';
 
 self.addEventListener('install', event => {
-  // salta subito alla nuova versione
   self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
-  // prendi il controllo di tutte le pagine aperte
   event.waitUntil(self.clients.claim());
 });
 
-// NIENTE CACHE: ogni richiesta va direttamente alla rete
 self.addEventListener('fetch', event => {
-  // per sicurezza, usiamo no-store sugli asset
-  const req = new Request(event.request, { cache: 'no-store' });
+  if (event.request.method !== 'GET') return;
 
-  event.respondWith(
-    fetch(req).catch(() => fetch(event.request)) // piccola fallback
-  );
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
+
+  event.respondWith(fetch(event.request, { cache: 'no-store' }));
 });

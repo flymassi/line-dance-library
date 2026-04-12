@@ -1,4 +1,4 @@
-// api/visits.js
+import crypto from "crypto";
 import { kv } from "@vercel/kv";
 
 const WINDOW_HOURS = 6;
@@ -6,10 +6,12 @@ const WINDOW_MS = WINDOW_HOURS * 60 * 60 * 1000;
 
 function getClientIp(req) {
   const xff = req.headers["x-forwarded-for"];
-  if (typeof xff === "string" && xff.length > 0) {
-    return xff.split(",")[0].trim();
-  }
+  if (typeof xff === "string" && xff.length > 0) return xff.split(",")[0].trim();
   return req.socket?.remoteAddress || "unknown";
+}
+
+function hashIp(ip) {
+  return crypto.createHash("sha256").update(ip).digest("hex");
 }
 
 export default async function handler(req, res) {
@@ -19,44 +21,28 @@ export default async function handler(req, res) {
   }
 
   try {
-    const ip = getClientIp(req);
-
+    const ipHash = hashIp(getClientIp(req));
     const globalKey = "ws_visits";
-    const lastKey   = `ws_ip_last:${ip}`;
-    const countKey  = `ws_ip_visits:${ip}`;
-
+    const lastKey = `ws_ip_last:${ipHash}`;
+    const countKey = `ws_ip_visits:${ipHash}`;
     const now = Date.now();
 
-    const lastTsRaw = await kv.get(lastKey);
-    const lastTs    = lastTsRaw ? Number(lastTsRaw) : 0;
-
+    const lastTs = Number(await kv.get(lastKey) || 0);
     let counted = false;
-    let globalValue;
-    let perIpValue;
+    let globalValue = 0;
+    let perIpValue = 0;
 
-    // Se mai visto o sono passate > 6 ore → conteggia
     if (!lastTs || (now - lastTs) > WINDOW_MS) {
-      globalValue = await kv.incr(globalKey);       // contatore globale
-      perIpValue  = await kv.incr(countKey);        // contatore di questo IP
-
-      // salviamo l'istante dell'ultima visita conteggiata (TTL opzionale per pulizia)
-      await kv.set(lastKey, now, { ex: WINDOW_HOURS * 2 * 60 * 60 }); // ~12 ore
-
+      globalValue = Number(await kv.incr(globalKey));
+      perIpValue = Number(await kv.incr(countKey));
+      await kv.set(lastKey, now, { ex: WINDOW_HOURS * 2 * 60 * 60 });
       counted = true;
     } else {
-      // entro 6 ore → NON incrementiamo, leggiamo solo i valori attuali
-      const g = await kv.get(globalKey);
-      const p = await kv.get(countKey);
-      globalValue = Number(g || 0);
-      perIpValue  = Number(p || 1);
+      globalValue = Number(await kv.get(globalKey) || 0);
+      perIpValue = Number(await kv.get(countKey) || 1);
     }
 
-    return res.status(200).json({
-      value: globalValue,   // usato dal frontend per lo splash
-      byIp: perIpValue,     // quante "visite valide" ha fatto questo IP
-      counted,              // true se questa chiamata ha incrementato il contatore
-    });
-
+    return res.status(200).json({ value: globalValue, byIp: perIpValue, counted });
   } catch (err) {
     console.error("KV error", err);
     return res.status(500).json({ error: "KV error" });

@@ -1,24 +1,8 @@
-/* Western Spritz — app.js v40 */
-console.log('[WS] app v44');
+/* Western Spritz — app.js v45 */
+console.log('[WS] app v47');
 
-/*-- VERSIONE ORIGINALE */
-
-// Pulizia vecchi service worker / cache dalle versioni precedenti
-(async () => {
-  try {
-    if ('serviceWorker' in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map(r => r.unregister().catch(() => {})));
-    }
-    if (window.caches) {
-      const keys = await caches.keys();
-      await Promise.all(keys.map(k => caches.delete(k).catch(() => {})));
-    }
-    console.log('[WS] pulizia vecchie cache completata');
-  } catch (err) {
-    console.error('[WS] errore pulizia cache', err);
-  }
-})();
+/*-- VERSIONE OTTIMIZZATA */
+const S_KEY = 'ws_saggio_token';
 
 
 /* ====== BACKGROUND RANDOM ====== */
@@ -38,6 +22,7 @@ console.log('[WS] app v44');
 
   // --- 1️⃣ Chiude lo splash e avvia musica
   const hideSplash = ()=>{
+    if (!splash || splash.classList.contains('hidden')) return;
     try {
       if (music){
         music.muted = false;
@@ -46,9 +31,19 @@ console.log('[WS] app v44');
         if (p?.catch) p.catch(()=>{});
       }
     } catch {}
-    splash?.classList.add('hidden');
+    splash.classList.add('hidden');
+    document.body.classList.add('ws-started');
   };
-  start?.addEventListener('click', hideSplash, { once:true });
+
+  if (start) {
+    start.addEventListener('click', hideSplash, { once:true });
+    start.addEventListener('pointerup', hideSplash, { once:true });
+    start.addEventListener('touchend', hideSplash, { once:true, passive:true });
+    start.onclick = hideSplash;
+  }
+
+  splash?.addEventListener('dblclick', hideSplash);
+
   window.addEventListener('keydown', (e)=>{
     if (e.key==='Enter' || e.key===' ') hideSplash();
   }, { once:true });
@@ -148,6 +143,13 @@ const getYouTubeId = url => {
   const m = url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{6,})/i);
   return m ? m[1] : null;
 };
+const debounce = (fn, delay = 120) => {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), delay);
+  };
+};
 
 /* ====== DATA (brani) ====== */
 let SONGS = [];
@@ -189,30 +191,29 @@ function promoteFeaturedSong(list){
 function render(){
   if (!elCards) return;
 
-  const qd = FILTER.dance.toLowerCase();
-  const qs = FILTER.song.toLowerCase();
+  const qd = FILTER.dance.toLowerCase().trim();
+  const qs = FILTER.song.toLowerCase().trim();
+  const playlistKeys = new Set(PLAYLIST.map(p => `${p.year}-${p.songNumber}`));
 
   const rows = SONGS.filter(s =>
     (!qd || (s.danceTitle||'').toLowerCase().includes(qd)) &&
     (!qs || (s.songTitle||'').toLowerCase().includes(qs))
   );
 
-
   elCards.innerHTML = rows.map(s=>{
     const vid = getYouTubeId(s.songUrl || s.danceVideoUrl);
     const cover = vid ? `https://img.youtube.com/vi/${vid}/0.jpg` : './assets/images/icon.png';
-    const inPl  = PLAYLIST.some(p=>p.songNumber===s.songNumber && p.year===s.year);
+    const inPl  = playlistKeys.has(`${s.year}-${s.songNumber}`);
     const featured = isFeaturedSong(s);
 
     if (featured){
-      // 🎯 CARD SPECIALE "FUN WITH ASIA"
       return `
       <article class="card card-asia-special">
         <div class="asia-top">
           <a class="asia-btn asia-btn-left"
              href="https://www.youtube.com/@funwithasia"
              target="_blank" rel="noopener">
-            Fun with ASIA</span>
+            Fun with ASIA
           </a>
           <div class="asia-follow">FOLLOW&nbsp;US!</div>
           <a class="asia-btn asia-btn-right"
@@ -223,46 +224,31 @@ function render(){
         </div>
 
         <div class="asia-main">
+          <div class="asia-side">
+            <a href="https://www.youtube.com/@funwithasia" target="_blank" rel="noopener">
+              <img src="./assets/images/fun-asia-logo.png" alt="Fun with Asia" class="asia-circle">
+            </a>
+          </div>
 
-  <!-- LEFT SIDE -->
-  <div class="asia-side">
-    <a href="https://www.youtube.com/@funwithasia" target="_blank" rel="noopener">
-      <img src="./assets/images/fun-asia-logo.png"
-           alt="Fun with Asia"
-           class="asia-circle">
-    </a>
-  </div>
+          <div class="asia-center">
+            <img src="./assets/images/fun-asia-photo.png" alt="Fun with Asia Family" class="asia-photo">
+            <div class="asia-subtext">SUBSCRIBE!!!</div>
+          </div>
 
-  <!-- CENTER PHOTO -->
-  <div class="asia-center">
-  <img src="./assets/images/fun-asia-photo.png"
-       alt="Fun with Asia Family"
-       class="asia-photo">
-
-  <div class="asia-subtext">SUBSCRIBE!!!</div>
-</div>
-
-
-  <!-- RIGHT SIDE -->
-  <div class="asia-side">
-    <a href="https://www.youtube.com/@funfamilytravelvlog" target="_blank" rel="noopener">
-      <img src="./assets/images/fun-family-logo.png"
-           alt="Fun Family Travel Vlog"
-           class="asia-circle">
-    </a>
-  </div>
-
-</div>
-
+          <div class="asia-side">
+            <a href="https://www.youtube.com/@funfamilytravelvlog" target="_blank" rel="noopener">
+              <img src="./assets/images/fun-family-logo.png" alt="Fun Family Travel Vlog" class="asia-circle">
+            </a>
+          </div>
+        </div>
       </article>
       `;
     }
 
-    // CARD NORMALE
     return `
       <article class="card">
         <div class="card-row">
-          <img class="cover" src="${cover}" alt="cover" />
+          <img class="cover" src="${cover}" alt="cover" loading="lazy" />
           <div style="flex:1; min-width:0">
             <div class="title">${(s.danceTitle||'').toUpperCase()}</div>
             <div class="meta">${s.singerName||''} — ${s.songTitle||''}</div>
@@ -362,7 +348,7 @@ $('#plNext')?.addEventListener('click', ()=>{
 
 function isSaggioAuth(){
   try {
-    return sessionStorage.getItem(S_KEY) === 'saggio-2026-ok';
+    return !!sessionStorage.getItem(S_KEY);
   } catch {
     return false;
   }
@@ -877,14 +863,12 @@ const Quiz = (function(){
   }
 
   function buildPool(){
-    // Costruisci l’elenco delle possibili domande dal database
-    pool = SONGS.flatMap(s=>{
+    pool = SONGS.filter(s => !isFeaturedSong(s) && s?.songTitle && s?.danceTitle && s?.singerName).flatMap(s=>{
       const keys = [];
-      if (s?.singerName && s?.songTitle) keys.push({ type:'SINGER', year:s.year, num:s.songNumber });
-      if (s?.danceTitle  && s?.songTitle) keys.push({ type:'DANCE',  year:s.year, num:s.songNumber });
+      keys.push({ type:'SINGER', year:s.year, num:s.songNumber });
+      keys.push({ type:'DANCE',  year:s.year, num:s.songNumber });
       return keys;
     });
-    // Prepara un mazzo iniziale già mescolato
     deck = shuffle([...pool]);
   }
 
@@ -996,24 +980,29 @@ function updateTopbarHeight(){
 /* --- avvio / UI puzzle --- */
 function startPuzzle(){
   if (!ensurePuzzleProfileBeforeStart()) return;
-  PZ.root?.classList.remove('hidden');
-  
-  updateTopbarHeight();
 
-  PZ.won = false;
+  if (PZ.root){
+    PZ.root.style.display = '';
+    PZ.root.classList.remove('hidden');
+    PZ.root.setAttribute('aria-hidden','false');
+  }
+
+  PZ.time = 0;
+  PZ.lives = 3;
   PZ.errors = 0;
-  loadNewPuzzleImage();
-  buildGrid(PZ.size);
-  const max = PZ_CFG.livesByGrid[PZ.size] ?? 5;
-  setLives(max);
-  refreshPuzzleScore();
 
-  Quiz.reset();
-  Quiz.next();
-  renderQuestion();
+  PZ.timeEl.textContent = '0';
+  PZ.livesEl.textContent = '3';
+  PZ.scoreEl.textContent = '0';
 
-  startTimer();
-  playBg();
+  clearInterval(PZ.timer);
+  PZ.timer = setInterval(()=>{
+    PZ.time++;
+    PZ.timeEl.textContent = PZ.time;
+  },1000);
+
+  buildTiles();
+  startBg();
 }
 
 // Effetto "liquid light" che segue il dito/mouse
@@ -1085,8 +1074,8 @@ addEventListener('resize', updateTopbarHeight);
 addEventListener('orientationchange', updateTopbarHeight);
 
 /* ====== FILTRI ====== */
-$('#fDance')?.addEventListener('input', e=>{ FILTER.dance = e.target.value; render(); });
-$('#fSong' )?.addEventListener('input', e=>{ FILTER.song  = e.target.value; render(); });
+$('#fDance')?.addEventListener('input', debounce(e=>{ FILTER.dance = e.target.value; render(); }));
+$('#fSong' )?.addEventListener('input', debounce(e=>{ FILTER.song  = e.target.value; render(); }));
 $('#clearFilters')?.addEventListener('click', ()=>{
   FILTER={dance:'',song:''};
   const fd = $('#fDance'), fs = $('#fSong');
@@ -1096,17 +1085,38 @@ $('#clearFilters')?.addEventListener('click', ()=>{
 });
 
 /* ====== DATA LOAD ====== */
+function normalizeSongRow(row){
+  return {
+    ...row,
+    year: Number.isFinite(Number(row?.year)) ? Number(row.year) : 0,
+    songNumber: Number.isFinite(Number(row?.songNumber)) ? Number(row.songNumber) : 0,
+    danceTitle: String(row?.danceTitle || '').trim(),
+    singerName: String(row?.singerName || '').trim(),
+    songTitle: String(row?.songTitle || '').trim(),
+    danceVideoUrl: String(row?.danceVideoUrl || '').trim(),
+    songUrl: String(row?.songUrl || '').trim()
+  };
+}
+
 async function load(){
+  const candidates = ['./data/songs.json', './songs.json'];
   try{
-    const res = await fetch('./data/songs.json', { cache:'no-store' });
-    SONGS = await res.json();
-    SONGS.sort((a,b)=> (b.songNumber||0) - (a.songNumber||0)); // ordine inverso
+    let data = null;
+    for (const path of candidates){
+      try {
+        const res = await fetch(path, { cache:'no-store' });
+        if (!res.ok) continue;
+        data = await res.json();
+        break;
+      } catch {}
+    }
 
-    // spinge "FUN WITH ASIA" in cima
+    if (!Array.isArray(data)) throw new Error('songs.json non valido');
+
+    SONGS = data.map(normalizeSongRow);
+    SONGS.sort((a,b)=> (b.songNumber||0) - (a.songNumber||0));
     promoteFeaturedSong(SONGS);
-
-    Quiz.init();   // prepara pool domande
-
+    Quiz.init();
     render();
   }catch(e){
     if (elCards) elCards.innerHTML = `<div class="card">Errore nel caricamento dati.</div>`;
@@ -1116,13 +1126,37 @@ async function load(){
 load();
 
 /* ====== Aggiorna app (semplice reload pulito) ====== */
-$('#btnUpdate')?.addEventListener('click', () => {
-  // forziamo una nuova richiesta ignorando ogni cache
+$('#btnUpdate')?.addEventListener('click', async () => {
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister().catch(() => {})));
+    }
+    if (window.caches) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k).catch(() => {})));
+    }
+  } catch (err) {
+    console.error('[WS] errore pulizia cache manuale', err);
+  }
+
   const url = new URL(window.location.href);
   url.searchParams.set('refresh', Date.now().toString());
   window.location.replace(url.toString());
 });
 
+
+function syncHeroHeight(){
+  const hero = document.querySelector('.hero');
+  if (!hero) return;
+  document.documentElement.style.setProperty('--hero-h', `${hero.offsetHeight}px`);
+}
+window.addEventListener('load', syncHeroHeight);
+window.addEventListener('resize', syncHeroHeight);
+if ('ResizeObserver' in window) {
+  const hero = document.querySelector('.hero');
+  if (hero) new ResizeObserver(syncHeroHeight).observe(hero);
+}
 
 /* === WS v41.2 Cinematic Pack hooks === */
 (function(){
@@ -1213,4 +1247,29 @@ $('#btnUpdate')?.addEventListener('click', () => {
   setInterval(updateCountdown, 1000);
   updateCountdown();
 
+})();
+
+/* ===== HERO PREMIUM ON SCROLL ===== */
+(function () {
+  const heroSticky = document.querySelector('.hero-sticky');
+  if (!heroSticky) return;
+
+  let ticking = false;
+
+  function updateHeroShrink() {
+    const y = window.scrollY || window.pageYOffset || 0;
+    heroSticky.classList.toggle('is-shrunk', y > 20);
+    ticking = false;
+  }
+
+  function onScroll() {
+    if (!ticking) {
+      window.requestAnimationFrame(updateHeroShrink);
+      ticking = true;
+    }
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('load', updateHeroShrink);
+  updateHeroShrink();
 })();
