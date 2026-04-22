@@ -1092,3 +1092,36 @@ article.card:hover{
   .pz-tile::after{ animation:none; }
   .pz-tile.hit{ animation:none; opacity:0; }
 }
+
+.card-secret-special{
+  border: 1px solid rgba(255,255,255,.28);
+}
+
+.action-secret{
+  cursor: pointer;
+}
+
+.ws-secret-no{
+  position: fixed;
+  left: 50%;
+  top: 52%;
+  transform: translate(-50%, -50%);
+  width: min(34vw, 220px);
+  z-index: 1200;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 24px rgba(0,0,0,.35));
+}
+
+.shake-no{
+  animation: wsNoShake .9s ease;
+}
+
+@keyframes wsNoShake{
+  0%   { transform: translate(-50%, -50%) rotate(0deg); }
+  15%  { transform: translate(-50%, -50%) rotate(-10deg); }
+  30%  { transform: translate(-50%, -50%) rotate(10deg); }
+  45%  { transform: translate(-50%, -50%) rotate(-8deg); }
+  60%  { transform: translate(-50%, -50%) rotate(8deg); }
+  75%  { transform: translate(-50%, -50%) rotate(-4deg); }
+  100% { transform: translate(-50%, -50%) rotate(0deg); }
+}

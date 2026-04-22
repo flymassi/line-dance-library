@@ -173,6 +173,15 @@ const elCount = $('#count');
 /* === Canzone in evidenza: FUN WITH ASIA sempre in cima === */
 const FEATURED_KEY = 'FUN WITH ASIA';
 
+const SECRET_KEY = 'VALCENO 2026';
+
+function isSecretSong(s){
+  const up = v => (v || '').toUpperCase().trim();
+  return up(s.danceTitle) === SECRET_KEY || up(s.songTitle) === SECRET_KEY;
+}
+
+
+
 function isFeaturedSong(s){
   const up = v => (v || '').toUpperCase().trim();
   return up(s.danceTitle) === FEATURED_KEY || up(s.songTitle) === FEATURED_KEY;
@@ -205,6 +214,7 @@ function render(){
     const cover = vid ? `https://img.youtube.com/vi/${vid}/0.jpg` : './assets/images/icon.png';
     const inPl  = playlistKeys.has(`${s.year}-${s.songNumber}`);
     const featured = isFeaturedSong(s);
+    const secret = isSecretSong(s);
 
     if (featured){
       return `
@@ -245,6 +255,33 @@ function render(){
       `;
     }
 
+if (secret){
+  return `
+    <article class="card card-secret-special">
+      <div class="card-row">
+        <img class="cover" src="./assets/images/valceno.png" alt="cover segreta" loading="lazy" />
+        <div style="flex:1; min-width:0">
+          <div class="title">${(s.danceTitle||'').toUpperCase()}</div>
+          <div class="meta">${s.singerName||''} — ${s.songTitle||''}</div>
+        </div>
+        <div class="badges">
+          <span class="badge">#${s.songNumber}</span>
+          <span class="badge year">ANNO&nbsp;<b>${s.year}</b></span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <a class="action action-secret" data-secret="dance" data-n="${s.songNumber}" data-y="${s.year}">Apri Ballo</a>
+        <a class="action action-secret" data-secret="song" data-n="${s.songNumber}" data-y="${s.year}">Apri Canzone</a>
+        <button class="action ${inPl?'play-added':''}" data-addpl data-n="${s.songNumber}" data-y="${s.year}">
+          ${inPl?'✓ In playlist':'+ Playlist'}
+        </button>
+      </div>
+    </article>
+  `;
+}
+
+
     return `
       <article class="card">
         <div class="card-row">
@@ -269,6 +306,50 @@ function render(){
     `;
   }).join('');
 }
+
+/* ====== SECRET CARD PRANK ====== */
+(function(){
+  function showSecretNo(){
+    let prank = document.getElementById('wsSecretNo');
+    if (!prank){
+      prank = document.createElement('img');
+      prank.id = 'wsSecretNo';
+      prank.src = './assets/images/alessia.png';
+      prank.alt = 'No';
+      prank.className = 'ws-secret-no hidden';
+      document.body.appendChild(prank);
+    }
+
+    prank.classList.remove('hidden');
+    prank.classList.remove('shake-no');
+    void prank.offsetWidth;
+    prank.classList.add('shake-no');
+
+  try {
+  const noNoNo = document.getElementById('fxSecretNo');
+  if (noNoNo){
+    noNoNo.currentTime = 0;
+    noNoNo.play().catch(err => console.log('fxSecretNo blocked:', err));
+  }
+} catch (err) {
+  console.log('Errore audio prank:', err);
+}
+    
+    setTimeout(()=>{
+      prank.classList.add('hidden');
+      prank.classList.remove('shake-no');
+    }, 1400);
+  }
+
+  document.addEventListener('click', e=>{
+    const a = e.target.closest('[data-secret]');
+    if (!a) return;
+    e.preventDefault();
+    e.stopPropagation();
+    showSecretNo();
+  });
+})();
+
 
 /* ====== OPEN LINKS (frusta) ====== */
 (function(){
@@ -1028,7 +1109,7 @@ function startPuzzle(){
 
 
 /* --- bindings UI puzzle --- */
-$('#btnPuzzle')?.addEventListener('click', ()=> startPuzzle());
+//$('#btnPuzzle')?.addEventListener('click', ()=> startPuzzle());
 $('#pzClose' )?.addEventListener('click', ()=>{ PZ.root?.classList.add('hidden'); PZ.lbModal?.classList.add('hidden'); clearInterval(PZ.timer); stopBg(); });
 $('#pzBack'  )?.addEventListener('click', ()=>{ PZ.root?.classList.add('hidden'); PZ.lbModal?.classList.add('hidden'); clearInterval(PZ.timer); stopBg(); });
 $('#pzNext'  )?.addEventListener('click', ()=>{ loadNewPuzzleImage(); buildGrid(PZ.size); updateTopbarHeight(); refreshPuzzleScore(); });
