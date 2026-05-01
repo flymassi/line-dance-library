@@ -360,13 +360,14 @@ body{
 }
 
 .hero-sticky.is-shrunk .hero-sign{
-  transform: scale(.78);
+  transform: scale(.70) translateY(-120%);
   width: min(48vw, 420px) !important;
 
   margin: -26px auto 0 !important;
 
   filter: drop-shadow(0 8px 18px rgba(0,0,0,.24));
-  opacity: .96;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .hero-sub-vertical{
@@ -1012,15 +1013,32 @@ article.card:hover{
   padding:24px;
 }
 
-/* ===== responsive ===== */
-.hero-sign{
-  width: min(68vw, 360px) !important;
-  margin: -18px auto 0 !important;
+@media (max-width: 700px){
+  .btn-glass,
+  #startApp,
+  .event-counter,
+  article.card{
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+  }
+
+  article.card::after{
+    opacity:.32;
+    filter:none;
+  }
 }
 
-.hero-sticky.is-shrunk .hero-sign{
-  transform: scale(.88);
-  margin: -18px auto 0 !important;
+/* ===== responsive ===== */
+@media (max-width: 700px){
+  .hero-sign{
+    width: min(68vw, 360px) !important;
+    margin: -18px auto 0 !important;
+  }
+
+  .hero-sticky.is-shrunk .hero-sign{
+    transform: scale(.88);
+    margin: -18px auto 0 !important;
+  }
 
   .hero{
     padding: 132px 12px 10px !important;

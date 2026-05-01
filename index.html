@@ -5,13 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Western Spritz — Line Dance Library</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rye&display=swap" rel="stylesheet">
 
   <link rel="icon" href="./assets/images/icon.png" />
   <link rel="apple-touch-icon" href="./assets/images/icon.png" />
   <link rel="manifest" href="./manifest.webmanifest" />
 
-  <link rel="stylesheet" href="./style.css?v=42" />
+  <link rel="stylesheet" href="./style.css?v=52" />
 </head>
 <body>
 
@@ -21,12 +23,12 @@
   <!-- SPLASH -->
   <div id="splash" class="splash">
 
-    <img src="./assets/images/gruppo.png" class="splash-img" alt="Western Spritz" />
+    <img src="./assets/images/gruppo.png" class="splash-img" alt="Western Spritz" fetchpriority="high" decoding="async" />
 
     <a href="https://www.facebook.com/Massimiliano.Volpi.68" target="_blank" class="splash-author-link">
       <div class="splash-author">
         <div class="splash-author-inner">
-          <img src="./assets/images/logo_max_credit.png" alt="Logo Western Spritz" class="splash-author-logo" />
+          <img src="./assets/images/logo_max_credit.png" alt="Logo Western Spritz" class="splash-author-logo" decoding="async" />
           <div class="splash-author-text">
             <span class="splash-author-label">Powered by</span>
             <span class="splash-author-name">Max</span>
@@ -54,7 +56,7 @@
     </audio>
   </div>
 
-<audio id="fxSecretNo" preload="auto">
+<audio id="fxSecretNo" preload="metadata">
   <source src="./assets/audio/no_no_no.mp3" type="audio/mpeg" />
 </audio>
 
@@ -62,7 +64,7 @@
 
   <!-- HEADER -->
   <div class="hero-sticky">
-    <img src="./assets/images/western-sign.png" alt="Western Spritz" class="hero-sign" />
+    <img src="./assets/images/western-sign.png" alt="Western Spritz" class="hero-sign" fetchpriority="high" decoding="async" />
   </div>
 
   <header class="hero" data-heat="true">
@@ -70,7 +72,7 @@
 
     <div class="hero-sub hero-sub-vertical">
       <a href="https://sweatanddust.com/" target="_blank" rel="noopener">
-        <img src="./assets/images/sweat-dust.png" class="event-logo" alt="Sweat and Dust" />
+        <img src="./assets/images/sweat-dust.png" class="event-logo" alt="Sweat and Dust" loading="lazy" decoding="async" />
       </a>
 
       <div class="event-counter">
@@ -282,12 +284,12 @@
       <div id="pzAnswers" class="qa-answers"></div>
     </div>
 
-    <audio id="fxOk" preload="auto"><source src="./assets/audio/correct.mp3" type="audio/mpeg" /></audio>
-    <audio id="fxWrong" preload="auto"><source src="./assets/audio/wrong.mp3" type="audio/mpeg" /></audio>
-    <audio id="fxGun" preload="auto"><source src="./assets/audio/gun_shot.mp3" type="audio/mpeg" /></audio>
-    <audio id="fxWhip" preload="auto"><source src="./assets/audio/frusta.mp3" type="audio/mpeg" /></audio>
-    <audio id="fxVictory" preload="auto"><source src="./assets/audio/vittoria.mp3" type="audio/mpeg" /></audio>
-    <audio id="bgPuzzle" loop preload="auto"><source src="./assets/audio/lo_chiamavano_trinita.mp3" type="audio/mpeg" /></audio>
+    <audio id="fxOk" preload="metadata"><source src="./assets/audio/correct.mp3" type="audio/mpeg" /></audio>
+    <audio id="fxWrong" preload="metadata"><source src="./assets/audio/wrong.mp3" type="audio/mpeg" /></audio>
+    <audio id="fxGun" preload="metadata"><source src="./assets/audio/gun_shot.mp3" type="audio/mpeg" /></audio>
+    <audio id="fxWhip" preload="metadata"><source src="./assets/audio/frusta.mp3" type="audio/mpeg" /></audio>
+    <audio id="fxVictory" preload="metadata"><source src="./assets/audio/vittoria.mp3" type="audio/mpeg" /></audio>
+    <audio id="bgPuzzle" loop preload="none"><source src="./assets/audio/lo_chiamavano_trinita.mp3" type="audio/mpeg" /></audio>
   </div>
 
   <!-- LEADERBOARD PUZZLE -->
@@ -311,7 +313,7 @@
     });
   </script>
 
-  <script src="./app.js"></script>
+  <script src="./app.js?v=49" defer></script>
   <script>
     if ('serviceWorker' in navigator){
       addEventListener('load', () => {
