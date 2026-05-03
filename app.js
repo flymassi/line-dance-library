@@ -233,24 +233,33 @@ function render(){
           </a>
         </div>
 
-        <div class="asia-main">
-          <div class="asia-side">
-            <a href="https://www.youtube.com/@funwithasia" target="_blank" rel="noopener">
-              <img src="./assets/images/fun-asia-logo.png" alt="Fun with Asia" class="asia-circle">
-            </a>
-          </div>
+<div class="asia-main">
+  <div class="asia-side">
+    <a href="https://www.youtube.com/@funwithasia" target="_blank" rel="noopener">
+      <img src="./assets/images/fun-asia-logo.png" alt="Fun with Asia" class="asia-circle">
+    </a>
+  </div>
 
-          <div class="asia-center">
-            <img src="./assets/images/fun-asia-photo.png" alt="Fun with Asia Family" class="asia-photo">
-            <div class="asia-subtext">SUBSCRIBE!!!</div>
-          </div>
+  <div class="asia-center">
+    <img src="./assets/images/fun-asia-photo.png" alt="Fun with Asia Family" class="asia-photo">
+  </div>
 
-          <div class="asia-side">
-            <a href="https://www.youtube.com/@funfamilytravelvlog" target="_blank" rel="noopener">
-              <img src="./assets/images/fun-family-logo.png" alt="Fun Family Travel Vlog" class="asia-circle">
-            </a>
-          </div>
-        </div>
+  <div class="asia-side">
+    <a href="https://www.youtube.com/@funfamilytravelvlog" target="_blank" rel="noopener">
+      <img src="./assets/images/fun-family-logo.png" alt="Fun Family Travel Vlog" class="asia-circle">
+    </a>
+  </div>
+</div>
+
+<div class="asia-subtext">
+  ATTENZIONE!!! ATTENZIONE!!!!<br>
+  se non fai SUBSCRIBE ai nostri due canali<br>
+  andrai incontro a RESTART e TAG ERRATI tutto l'anno!!!
+</div>
+
+
+
+
       </article>
       `;
     }

@@ -648,11 +648,12 @@ article.card:hover{
 }
 
 .asia-top{
-  display:flex;
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
   align-items:center;
-  justify-content:space-between;
-  gap:8px;
-  margin-bottom:6px;
+  justify-items:center;
+  gap:10px;
+  margin-bottom:10px;
 }
 
 .asia-btn{
@@ -693,6 +694,15 @@ article.card:hover{
   transform:translateY(0) scale(.97);
 }
 
+.asia-btn-left{
+  justify-self:center;
+}
+
+.asia-btn-right{
+  justify-self:center;
+}
+
+
 .asia-follow{
   flex:0 0 auto;
   padding:3px 10px;
@@ -703,15 +713,21 @@ article.card:hover{
   background:linear-gradient(135deg,#ff4b6a,#ff9a2b);
   box-shadow:0 2px 6px rgba(0,0,0,.5);
   text-shadow:0 1px 1px rgba(0,0,0,.7);
+  justify-self:center;
+  text-align:center;
+  line-height:1.15;
+  white-space:normal;
+  max-width:120px;
 }
 
 .asia-main{
   display:grid;
   grid-template-columns:1fr 1fr 1fr;
-  align-items:flex-start;
+  align-items:center;
   justify-items:center;
   gap:10px;
 }
+
 .asia-side{
   display:flex;
   flex-direction:column;
@@ -758,14 +774,15 @@ article.card:hover{
 }
 
 .asia-subtext{
-  margin-top:4px;
-  font-size:14px;
-  font-weight:700;
+  margin-top:10px;
+  font-size:18px;
+  font-weight:800;
+  line-height:1.25;
   letter-spacing:.1px;
   color:#fff;
-  text-shadow:0 1px 2px rgba(252,1,1,.7);
+  text-shadow:0 1px 2px rgba(252,1,1,.85);
   text-align:center;
-  white-space:nowrap;
+  white-space:normal;
 }
 
 /* ===== overlays / modal ===== */
