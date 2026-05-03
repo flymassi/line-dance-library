@@ -607,20 +607,14 @@ article.card:hover{
 /* ===== Fun with Asia card ===== */
 .card-asia-special{
   position:relative;
-  padding:0 10px 1px;
-  border-radius:18px;
-  transform:scale(.68);
+  padding:16px;
+  border-radius:20px;
+  transform:none;
   transform-origin:center;
-  max-width:92%;
-  margin:4px auto 6px;
-  background:
-    radial-gradient(120% 180% at 50% 0%, rgba(0,0,0,.55), transparent 60%),
-    linear-gradient(135deg, rgba(15,10,5,.92), rgba(40,20,8,.95));
-  border:1px solid rgba(255,220,140,.45);
-  box-shadow:0 4px 14px rgba(0,0,0,.55), 0 0 14px rgba(0,0,0,.35);
+  width:70%;
+  max-width:900px;
+  margin:4px auto 10px;
 }
-.card-asia-special::before,
-.card-asia-special::after{ display:none; }
 
 .asia-top{
   display:flex;
@@ -1090,12 +1084,7 @@ article.card:hover{
     text-shadow:0 0 6px rgba(255,130,5,.915);
   }
 
-  .card-asia-special{
-    transform:scale(.63);
-    margin:2px auto 4px;
-  }
-  .asia-top{ margin-bottom:2px; }
-  .asia-main{ gap:6px; }
+  
 }
 
 @media (max-width: 420px){
