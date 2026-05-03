@@ -75,6 +75,87 @@ const S_KEY = 'ws_saggio_token';
   }
 })();
 
+/* ====== CONTATORE VISITE ====== */
+(function(){
+  function animateVisitCount(el, to){
+    const prevStored = Number(localStorage.getItem('ws_last_visits') || 0);
+    const from = Number.isFinite(prevStored) && prevStored > 0
+      ? prevStored
+      : Number(String(el.textContent || '').replace(/\D/g,'') || 0);
+
+    const target = Number(to);
+
+    if (!Number.isFinite(target)) {
+      el.textContent = '—';
+      return;
+    }
+
+    const dur = 800;
+    const t0 = performance.now();
+
+    function step(t){
+      const p = Math.min(1, (t - t0) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const val = Math.round(from + (target - from) * eased);
+
+      el.textContent = val.toLocaleString('it-IT');
+
+      if (p < 1) requestAnimationFrame(step);
+    }
+
+    requestAnimationFrame(step);
+
+    el.classList.remove('count-pulse','count-shine');
+    void el.offsetWidth;
+    el.classList.add('count-pulse','count-shine');
+
+    localStorage.setItem('ws_last_visits', String(target));
+  }
+
+  function initVisitCounter(){
+    const el = document.getElementById('visitCounter');
+    if (!el) return;
+
+    const devHosts = ['', 'localhost', '127.0.0.1'];
+    const isDev = devHosts.includes(location.hostname);
+
+    if (isDev) {
+      el.textContent = 'DEV';
+      console.log('[WS] contatore visite disattivato in sviluppo:', location.hostname);
+      return;
+    }
+
+    fetch('/api/visits', {
+      cache: 'no-store',
+      credentials: 'omit'
+    })
+      .then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(d => {
+        console.log('[WS] visits response:', d);
+
+        const n = Number(d?.value || 0);
+
+        if (Number.isFinite(n) && n > 0) {
+          animateVisitCount(el, n);
+        } else {
+          el.textContent = '—';
+        }
+      })
+      .catch(err => {
+        console.error('[WS] errore contatore visite:', err);
+        el.textContent = '—';
+      });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initVisitCounter);
+  } else {
+    initVisitCounter();
+  }
+})();
 
 /* ====== UTIL ====== */
 const $  = sel => document.querySelector(sel);
