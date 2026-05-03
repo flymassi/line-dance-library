@@ -1,5 +1,5 @@
 /* Western Spritz — app.js v45 */
-console.log('[WS] app v49-clean');
+console.log('[WS] app v47');
 
 /*-- VERSIONE OTTIMIZZATA */
 const S_KEY = 'ws_saggio_token';
@@ -16,146 +16,124 @@ const S_KEY = 'ws_saggio_token';
 
 /* ====== SPLASH (robusto) ====== */
 (function(){
-  function initSplash(){
-    const splash = document.getElementById('splash');
-    const start  = document.getElementById('startApp');
-    const music  = document.getElementById('introMusic');
+  const splash  = document.getElementById('splash');
+  const start   = document.getElementById('startApp');
+  const music   = document.getElementById('introMusic');
 
-    if (!splash || !start) {
-      console.warn('[WS] Splash o pulsante Avvia non trovati');
-      return;
-    }
-
-    function hideSplash(ev){
-      if (ev) ev.preventDefault();
-      if (splash.classList.contains('hidden')) return;
-
-      try {
-        if (music){
-          music.muted = false;
-          music.volume = 1;
-          music.currentTime = 0;
-          const p = music.play();
-          if (p && typeof p.catch === 'function') p.catch(()=>{});
-        }
-      } catch (err) {
-        console.warn('[WS] Musica splash non avviata:', err);
-      }
-
-      splash.classList.add('hidden');
-      splash.setAttribute('aria-hidden', 'true');
-      document.body.classList.add('ws-started');
-      console.log('[WS] Splash chiuso');
-    }
-
-    start.addEventListener('click', hideSplash);
-    start.addEventListener('pointerup', hideSplash);
-    start.onclick = hideSplash;
-
-    splash.addEventListener('dblclick', hideSplash);
-
-    window.addEventListener('keydown', function(e){
-      if (e.key === 'Enter' || e.key === ' ') hideSplash(e);
-    });
-
+  // --- 1️⃣ Chiude lo splash e avvia musica
+  const hideSplash = ()=>{
+    if (!splash || splash.classList.contains('hidden')) return;
     try {
       if (music){
-        music.muted = true;
-        music.volume = 1;
+        music.muted = false;
+        music.currentTime = 0;
         const p = music.play();
-        if (p && typeof p.catch === 'function') p.catch(()=>{});
+        if (p?.catch) p.catch(()=>{});
       }
     } catch {}
+    splash.classList.add('hidden');
+    document.body.classList.add('ws-started');
+  };
+
+  if (start) {
+    start.addEventListener('click', hideSplash, { once:true });
+    start.addEventListener('pointerup', hideSplash, { once:true });
+    start.addEventListener('touchend', hideSplash, { once:true, passive:true });
+    start.onclick = hideSplash;
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initSplash);
-  } else {
-    initSplash();
-  }
-})();
+  splash?.addEventListener('dblclick', hideSplash);
 
-/* ====== CONTATORE VISITE ====== */
-(function(){
-  function animateVisitCount(el, to){
+  window.addEventListener('keydown', (e)=>{
+    if (e.key==='Enter' || e.key===' ') hideSplash();
+  }, { once:true });
+
+  // --- 2️⃣ Avvio silenzioso dell’audio (per sbloccare autoplay)
+  try {
+    if (music){
+      music.muted = true;
+      music.volume = 1;
+      music.play().catch(()=>{});
+    }
+  } catch {}
+
+  // --- 3️⃣ Helper: animazione western del contatore
+  function animateCount(el, to) {
     const prevStored = Number(localStorage.getItem('ws_last_visits') || 0);
     const from = Number.isFinite(prevStored) && prevStored > 0
       ? prevStored
-      : Number(String(el.textContent || '').replace(/\D/g,'') || 0);
+      : Number(el.textContent.replace(/\D/g,'') || 0);
 
     const target = Number(to);
-
     if (!Number.isFinite(target)) {
       el.textContent = '—';
       return;
     }
 
-    const dur = 800;
+    const dur = 800; // durata animazione ms
     const t0 = performance.now();
 
     function step(t){
       const p = Math.min(1, (t - t0) / dur);
-      const eased = 1 - Math.pow(1 - p, 3);
+      const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
       const val = Math.round(from + (target - from) * eased);
-
       el.textContent = val.toLocaleString('it-IT');
-
       if (p < 1) requestAnimationFrame(step);
     }
-
     requestAnimationFrame(step);
 
+    // Effetto “puff” western
     el.classList.remove('count-pulse','count-shine');
-    void el.offsetWidth;
+    void el.offsetWidth; // forza reflow per riavviare animazione
     el.classList.add('count-pulse','count-shine');
 
+    // Memorizza ultimo valore locale
     localStorage.setItem('ws_last_visits', String(target));
   }
 
-  function initVisitCounter(){
+   // --- 4️⃣ Contatore visite: Upstash via Vercel
+  try {
     const el = document.getElementById('visitCounter');
-    if (!el) return;
+    if (el) {
+      // host considerati "sviluppo"
+      const devHosts = ['', 'localhost', '127.0.0.1'];
 
-    const devHosts = ['', 'localhost', '127.0.0.1'];
-    const isDev = devHosts.includes(location.hostname);
+      const isDev = devHosts.includes(location.hostname);
 
-    if (isDev) {
-      el.textContent = 'DEV';
-      console.log('[WS] contatore visite disattivato in sviluppo:', location.hostname);
-      return;
+      // 👉 In sviluppo: NON chiamiamo l'API, mostriamo solo "DEV"
+      if (isDev) {
+        el.textContent = 'DEV';
+        console.log('[WS] contatore disattivato in dev (host:', location.hostname, ')');
+      } else {
+        // 👉 Online (qualsiasi dominio reale): usa sempre /api/visits
+        const URL = '/api/visits';
+        console.log('[WS] visits endpoint:', URL, 'host:', location.hostname);
+
+        fetch(URL, { cache: 'no-store', credentials: 'omit' })
+          .then(r => r.json())
+          .then(d => {
+            console.log('[WS] visits response:', d);
+            const n = Number(d?.value || 0);
+            if (Number.isFinite(n)) {
+              animateCount(el, n);
+            } else {
+              el.textContent = '—';
+            }
+          })
+          .catch((err) => {
+            console.error('[WS] errore contatore visite', err);
+            el.textContent = '—';
+          });
+      }
     }
-
-    fetch('/api/visits', {
-      cache: 'no-store',
-      credentials: 'omit'
-    })
-      .then(r => {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      })
-      .then(d => {
-        console.log('[WS] visits response:', d);
-
-        const n = Number(d?.value || 0);
-
-        if (Number.isFinite(n) && n > 0) {
-          animateVisitCount(el, n);
-        } else {
-          el.textContent = '—';
-        }
-      })
-      .catch(err => {
-        console.error('[WS] errore contatore visite:', err);
-        el.textContent = '—';
-      });
+  } catch (err) {
+    console.error('[WS] errore inizializzazione contatore', err);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initVisitCounter);
-  } else {
-    initVisitCounter();
-  }
-})();
+})(); // ✅ CHIUSURA DELL'IIFE SPLASH
+
+
+
 
 /* ====== UTIL ====== */
 const $  = sel => document.querySelector(sel);
@@ -165,13 +143,6 @@ const getYouTubeId = url => {
   const m = url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{6,})/i);
   return m ? m[1] : null;
 };
-const songKey = s => `${s?.year || 0}-${s?.songNumber || 0}`;
-const toSearch = v => String(v || '').toLowerCase().trim();
-const getCoverUrl = s => {
-  const vid = getYouTubeId(s?.songUrl || s?.danceVideoUrl);
-  return vid ? `https://img.youtube.com/vi/${vid}/mqdefault.jpg` : './assets/images/icon.png';
-};
-
 const debounce = (fn, delay = 120) => {
   let t;
   return (...args) => {
@@ -229,18 +200,19 @@ function promoteFeaturedSong(list){
 function render(){
   if (!elCards) return;
 
-  const qd = toSearch(FILTER.dance);
-  const qs = toSearch(FILTER.song);
-  const playlistKeys = new Set(PLAYLIST.map(songKey));
+  const qd = FILTER.dance.toLowerCase().trim();
+  const qs = FILTER.song.toLowerCase().trim();
+  const playlistKeys = new Set(PLAYLIST.map(p => `${p.year}-${p.songNumber}`));
 
   const rows = SONGS.filter(s =>
-    (!qd || s._danceSearch.includes(qd)) &&
-    (!qs || s._songSearch.includes(qs))
+    (!qd || (s.danceTitle||'').toLowerCase().includes(qd)) &&
+    (!qs || (s.songTitle||'').toLowerCase().includes(qs))
   );
 
   elCards.innerHTML = rows.map(s=>{
-    const cover = s._cover || './assets/images/icon.png';
-    const inPl  = playlistKeys.has(s._key);
+    const vid = getYouTubeId(s.songUrl || s.danceVideoUrl);
+    const cover = vid ? `https://img.youtube.com/vi/${vid}/0.jpg` : './assets/images/icon.png';
+    const inPl  = playlistKeys.has(`${s.year}-${s.songNumber}`);
     const featured = isFeaturedSong(s);
     const secret = isSecretSong(s);
 
@@ -333,7 +305,63 @@ if (secret){
       </article>
     `;
   }).join('');
+
+  initAsiaBoom();
 }
+
+/* ===== FUN WITH ASIA: BOOM ON SCROLL EXIT ===== */
+let asiaBoomDone = false;
+let asiaBoomTicking = false;
+
+function initAsiaBoom(){
+  // La card viene ricreata dal render(): resettiamo stato e visibility sul nuovo nodo.
+  const card = document.querySelector('.card-asia-special');
+  if (!card) return;
+
+  card.classList.remove('asia-boom');
+  card.style.visibility = '';
+  asiaBoomDone = false;
+  checkAsiaBoom();
+}
+
+function checkAsiaBoom(){
+  asiaBoomTicking = false;
+
+  const card = document.querySelector('.card-asia-special');
+  if (!card) return;
+
+  const rect = card.getBoundingClientRect();
+  const goingOutTop = rect.bottom < 120;
+  const visibleAgain = rect.top > 20 && rect.top < window.innerHeight;
+
+  if (goingOutTop && !asiaBoomDone){
+    asiaBoomDone = true;
+
+    card.style.visibility = '';
+    card.classList.remove('asia-boom');
+    void card.offsetWidth; // riavvia animazione
+    card.classList.add('asia-boom');
+
+    setTimeout(()=>{
+      if (asiaBoomDone) card.style.visibility = 'hidden';
+    }, 650);
+  }
+
+  if (visibleAgain){
+    asiaBoomDone = false;
+    card.classList.remove('asia-boom');
+    card.style.visibility = '';
+  }
+}
+
+function requestAsiaBoomCheck(){
+  if (asiaBoomTicking) return;
+  asiaBoomTicking = true;
+  requestAnimationFrame(checkAsiaBoom);
+}
+
+window.addEventListener('scroll', requestAsiaBoomCheck, { passive:true });
+window.addEventListener('resize', requestAsiaBoomCheck);
 
 /* ====== SECRET CARD PRANK ====== */
 (function(){
@@ -1195,7 +1223,7 @@ $('#clearFilters')?.addEventListener('click', ()=>{
 
 /* ====== DATA LOAD ====== */
 function normalizeSongRow(row){
-  const item = {
+  return {
     ...row,
     year: Number.isFinite(Number(row?.year)) ? Number(row.year) : 0,
     songNumber: Number.isFinite(Number(row?.songNumber)) ? Number(row.songNumber) : 0,
@@ -1205,21 +1233,15 @@ function normalizeSongRow(row){
     danceVideoUrl: String(row?.danceVideoUrl || '').trim(),
     songUrl: String(row?.songUrl || '').trim()
   };
-
-  item._key = songKey(item);
-  item._danceSearch = toSearch(item.danceTitle);
-  item._songSearch = toSearch(item.songTitle);
-  item._cover = getCoverUrl(item);
-  return item;
 }
 
 async function load(){
-  const candidates = ['./songs.json', './data/songs.json'];
+  const candidates = ['./data/songs.json', './songs.json'];
   try{
     let data = null;
     for (const path of candidates){
       try {
-        const res = await fetch(path, { cache:'no-cache' });
+        const res = await fetch(path, { cache:'no-store' });
         if (!res.ok) continue;
         data = await res.json();
         break;
@@ -1297,27 +1319,25 @@ if ('ResizeObserver' in window) {
       c.classList.remove('vintage');     // ← via il frame vintage
       c.classList.add('ws-reveal');      // keep reveal
       c.style.setProperty('--ws-stagger', Math.min(i*30, 450)+'ms');
+      // bind liquid follow
+      if (!c.__liquidBound){
+        c.__liquidBound = true;
+        const move = (e)=>{
+          const r = c.getBoundingClientRect();
+          const x = ((e.clientX - r.left) / r.width) * 100;
+          const y = ((e.clientY - r.top) / r.height) * 100;
+          c.style.setProperty('--mx', x.toFixed(1) + '%');
+          c.style.setProperty('--my', y.toFixed(1) + '%');
+        };
+        c.addEventListener('pointermove', move);
+        c.addEventListener('pointerleave', ()=>{
+          c.style.setProperty('--mx','50%');
+          c.style.setProperty('--my','30%');
+        });
+      }
       i++;
     });
     observeAll();
-  }
-
-  // Un solo listener delegato: evita un pointermove per ogni card renderizzata.
-  if (!REDUCED && window.matchMedia('(pointer:fine)').matches){
-    document.addEventListener('pointermove', e=>{
-      const c = e.target.closest?.('article.card');
-      if (!c) return;
-      const r = c.getBoundingClientRect();
-      c.style.setProperty('--mx', (((e.clientX - r.left) / r.width) * 100).toFixed(1) + '%');
-      c.style.setProperty('--my', (((e.clientY - r.top) / r.height) * 100).toFixed(1) + '%');
-    }, { passive:true });
-
-    document.addEventListener('pointerleave', e=>{
-      const c = e.target.closest?.('article.card');
-      if (!c) return;
-      c.style.setProperty('--mx','50%');
-      c.style.setProperty('--my','30%');
-    }, true);
   }
   // Hook into render() if exists, else run on DOM ready
   try{
@@ -1375,7 +1395,7 @@ if ('ResizeObserver' in window) {
 
   function updateHeroShrink() {
     const y = window.scrollY || window.pageYOffset || 0;
-    heroSticky.classList.toggle('is-shrunk', y > 120);
+    heroSticky.classList.toggle('is-shrunk', y > 20);
     ticking = false;
   }
 
@@ -1391,3 +1411,18 @@ if ('ResizeObserver' in window) {
   updateHeroShrink();
 })();
 
+const hero = document.querySelector('.hero-sticky');
+
+let lastScroll = 0;
+
+window.addEventListener('scroll', () => {
+  const currentScroll = window.scrollY;
+
+  if (currentScroll > 10) {
+    hero.classList.add('is-shrunk');
+  } else {
+    hero.classList.remove('is-shrunk');
+  }
+
+  lastScroll = currentScroll;
+});

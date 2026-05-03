@@ -204,15 +204,8 @@ body{
   gap:10px;
   padding:8px 14px;
   border-radius:999px;
-
-  background-color:#3a210b;
-  background-image:
-    url('./assets/images/wood1.png'),
-    linear-gradient(135deg, rgba(90,50,15,.92), rgba(28,13,4,.96));
-    
-  background-position:center;
-  background-size:cover;
-
+  background:url('./assets/images/wood1.png') center/cover,
+             linear-gradient(135deg, rgba(60,35,10,.95), rgba(25,12,4,.95));
   box-shadow:0 4px 12px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.08);
   opacity:0;
   transform:translateY(8px);
@@ -367,14 +360,13 @@ body{
 }
 
 .hero-sticky.is-shrunk .hero-sign{
-  transform: scale(.70) translateY(-120%);
+  transform: scale(.78);
   width: min(48vw, 420px) !important;
 
   margin: -26px auto 0 !important;
 
   filter: drop-shadow(0 8px 18px rgba(0,0,0,.24));
-  opacity: 0;
-  pointer-events: none;
+  opacity: .96;
 }
 
 .hero-sub-vertical{
@@ -611,9 +603,48 @@ article.card:hover{
   border-radius:20px;
   transform:none;
   transform-origin:center;
-  width:70%;
+  width:88%;
   max-width:900px;
+  justify-self:center;
   margin:4px auto 10px;
+  background:
+    radial-gradient(120% 180% at 50% 0%, rgba(0,0,0,.55), transparent 60%),
+    linear-gradient(135deg, rgba(15,10,5,.92), rgba(40,20,8,.95));
+  border:1px solid rgba(255,220,140,.45);
+  box-shadow:0 4px 14px rgba(0,0,0,.55), 0 0 14px rgba(0,0,0,.35);
+}
+.card-asia-special::before,
+.card-asia-special::after{ display:none; }
+
+/* ===== Fun with Asia exit boom ===== */
+.card-asia-special.asia-boom{
+  animation:asiaBoomOut .62s ease-out forwards;
+  pointer-events:none;
+}
+
+.card-asia-special.asia-boom::after{
+  content:"💥";
+  display:block;
+  position:absolute;
+  left:50%;
+  top:50%;
+  z-index:20;
+  transform:translate(-50%, -50%);
+  font-size:clamp(42px, 10vw, 110px);
+  animation:asiaExplosion .62s ease-out forwards;
+  pointer-events:none;
+}
+
+@keyframes asiaBoomOut{
+  0%{ opacity:1; transform:scale(1) rotate(0deg); filter:brightness(1); }
+  35%{ opacity:1; transform:scale(1.08) rotate(-1deg); filter:brightness(1.8); }
+  100%{ opacity:0; transform:scale(.25) rotate(8deg) translateY(-40px); filter:brightness(2.4) blur(6px); }
+}
+
+@keyframes asiaExplosion{
+  0%{ opacity:0; transform:translate(-50%, -50%) scale(.3) rotate(0deg); }
+  30%{ opacity:1; transform:translate(-50%, -50%) scale(1.25) rotate(-8deg); }
+  100%{ opacity:0; transform:translate(-50%, -50%) scale(1.9) rotate(14deg); }
 }
 
 .asia-top{
@@ -1014,32 +1045,15 @@ article.card:hover{
   padding:24px;
 }
 
-@media (max-width: 700px){
-  .btn-glass,
-  #startApp,
-  .event-counter,
-  article.card{
-    backdrop-filter:none;
-    -webkit-backdrop-filter:none;
-  }
-
-  article.card::after{
-    opacity:.32;
-    filter:none;
-  }
+/* ===== responsive ===== */
+.hero-sign{
+  width: min(68vw, 360px) !important;
+  margin: -18px auto 0 !important;
 }
 
-/* ===== responsive ===== */
-@media (max-width: 700px){
-  .hero-sign{
-    width: min(68vw, 360px) !important;
-    margin: -18px auto 0 !important;
-  }
-
-  .hero-sticky.is-shrunk .hero-sign{
-    transform: scale(.88);
-    margin: -18px auto 0 !important;
-  }
+.hero-sticky.is-shrunk .hero-sign{
+  transform: scale(.88);
+  margin: -18px auto 0 !important;
 
   .hero{
     padding: 132px 12px 10px !important;
@@ -1084,7 +1098,12 @@ article.card:hover{
     text-shadow:0 0 6px rgba(255,130,5,.915);
   }
 
-  
+  .card-asia-special{
+    width:92%;
+    margin:2px auto 8px;
+  }
+  .asia-top{ margin-bottom:2px; }
+  .asia-main{ gap:6px; }
 }
 
 @media (max-width: 420px){
