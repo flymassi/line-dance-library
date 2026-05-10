@@ -181,6 +181,17 @@ function isSecretSong(s){
   return up(s.danceTitle) === SECRET_KEY || up(s.songTitle) === SECRET_KEY;
 }
 
+function hasSweatDustBg(s){
+  const up = v => (v || '').toUpperCase().trim();
+  const title = up(s.danceTitle);
+
+  return (
+    title === 'UNITED COUNTRIES 2026' ||
+    title === 'VALCENO 2026' ||
+    title === 'OVER1325 SWEAT AND DUST 2026'
+  );
+}
+
 function isDisasterSong(s){
   const up = v => (v || '').toUpperCase().trim();
   return up(s.danceTitle) === DISASTER_KEY || up(s.songTitle) === DISASTER_KEY;
@@ -218,7 +229,8 @@ function render(){
     const cover = vid ? `https://img.youtube.com/vi/${vid}/0.jpg` : './assets/images/icon.png';
     const inPl  = playlistKeys.has(`${s.year}-${s.songNumber}`);
     const featured = isFeaturedSong(s);
-    const secret = isSecretSong(s);
+const secret = isSecretSong(s);
+const sweatBg = hasSweatDustBg(s);
     const disaster = isDisasterSong(s);
 
     if (featured){
@@ -271,10 +283,8 @@ function render(){
 
 if (disaster){
   return `
-    /* <article class="card card-luca-special"> */
-    
-   <article class="card card-luca-special card-united-special">
-     <div class="card-row">
+    <article class="card card-luca-special card-sweat-bg">
+        <div class="card-row">
         <img class="cover" src="./assets/images/logo_united_countries.png" alt="United Countries 2026" loading="lazy" />
         <div style="flex:1; min-width:0">
           <div class="title">${(s.danceTitle||'').toUpperCase()}</div>
@@ -300,7 +310,7 @@ if (disaster){
 
 if (secret){
   return `
-    <article class="card card-secret-special">
+    <article class="card card-secret-special card-sweat-bg">
       <div class="card-row">
         <img class="cover" src="./assets/images/valceno.png" alt="cover segreta" loading="lazy" />
         <div style="flex:1; min-width:0">
@@ -326,7 +336,7 @@ if (secret){
 
 
     return `
-      <article class="card">
+     <article class="card ${sweatBg ? 'card-sweat-bg' : ''}">
         <div class="card-row">
           <img class="cover" src="${cover}" alt="cover" loading="lazy" />
           <div style="flex:1; min-width:0">
