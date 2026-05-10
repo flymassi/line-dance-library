@@ -188,7 +188,10 @@ function hasSweatDustBg(s){
   return (
     title === 'UNITED COUNTRIES 2026' ||
     title === 'VALCENO 2026' ||
-    title === 'OVER1325 SWEAT AND DUST 2026'
+    title === 'OVER1325 SWEAT AND DUST 2026' ||
+    title === 'MARSHALL COUNTY MAN (VALCENO 2025)' ||
+    title === 'SECOND TIME (OVER 1008 - 2025)' ||
+    title === 'ONE (OVER 1000 - 2025)'
   );
 }
 
