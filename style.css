@@ -1175,3 +1175,111 @@ article.card:hover{
   75%  { transform: translate(-50%, -50%) rotate(-4deg); }
   100% { transform: translate(-50%, -50%) rotate(0deg); }
 }
+
+/* ===== Luca Disastro card/prank ===== */
+.card-luca-special{
+  border-color:rgba(255,90,60,.45);
+  box-shadow:
+    0 8px 28px rgba(0,0,0,.28),
+    0 0 22px rgba(255,70,35,.20),
+    inset 0 1px 0 rgba(255,255,255,.10);
+}
+
+.action-luca{
+  border-color:#ff4b2b;
+  color:#ff4b2b;
+}
+
+.action-luca:hover{
+  background:#ff4b2b;
+  color:#fff;
+}
+
+.luca-disaster-overlay{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  display:grid;
+  place-items:center;
+  background:rgba(0,0,0,.62);
+  backdrop-filter:blur(5px);
+  -webkit-backdrop-filter:blur(5px);
+}
+
+.luca-disaster-overlay.hidden{
+  display:none !important;
+}
+
+.luca-disaster-img{
+  width:min(72vw, 520px);
+  max-height:82vh;
+  object-fit:contain;
+  border-radius:22px;
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.65),
+    0 0 0 3px rgba(255,255,255,.18);
+  transform:scale(.04) rotate(-8deg);
+  opacity:0;
+}
+
+.luca-disaster-overlay.show .luca-disaster-img{
+  animation:lucaDisasterZoom .75s cubic-bezier(.18,.95,.22,1.25) forwards;
+}
+
+@keyframes lucaDisasterZoom{
+  0%{
+    transform:scale(.04) rotate(-12deg);
+    opacity:0;
+    filter:brightness(1.8) blur(8px);
+  }
+  45%{
+    transform:scale(1.12) rotate(3deg);
+    opacity:1;
+    filter:brightness(1.25) blur(0);
+  }
+  70%{
+    transform:scale(.96) rotate(-1deg);
+  }
+  100%{
+    transform:scale(1) rotate(0deg);
+    opacity:1;
+    filter:brightness(1) blur(0);
+  }
+}
+
+/* ===== United Countries 2026 card background ===== */
+.card-united-special{
+  overflow:hidden;
+  background:
+    linear-gradient(90deg, rgba(20,10,5,.88), rgba(20,10,5,.55)),
+    url('./assets/images/logo_united_countries.png') center/cover no-repeat !important;
+  border-color:rgba(255,210,120,.55);
+  box-shadow:
+    0 8px 28px rgba(0,0,0,.32),
+    0 0 26px rgba(255,190,90,.22),
+    inset 0 1px 0 rgba(255,255,255,.14);
+}
+
+.card-united-special::before{
+  background:
+    radial-gradient(60% 45% at var(--mx) var(--my), rgba(255,255,255,.16), transparent 55%),
+    linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.18));
+}
+
+.card-united-special .title,
+.card-united-special .meta,
+.card-united-special .badge{
+  position:relative;
+  z-index:2;
+}
+
+.card-united-special .title{
+  color:#fff7d6;
+  text-shadow:0 2px 4px rgba(0,0,0,.9);
+}
+
+.card-united-special .meta{
+  color:#fff;
+  opacity:.95;
+  text-shadow:0 2px 4px rgba(0,0,0,.9);
+}

@@ -172,15 +172,19 @@ const elCount = $('#count');
 
 /* === Canzone in evidenza: FUN WITH ASIA sempre in cima === */
 const FEATURED_KEY = 'FUN WITH ASIA';
-
 const SECRET_KEY = 'VALCENO 2026';
+const DISASTER_KEY = 'UNITED COUNTRIES 2026';
+
 
 function isSecretSong(s){
   const up = v => (v || '').toUpperCase().trim();
   return up(s.danceTitle) === SECRET_KEY || up(s.songTitle) === SECRET_KEY;
 }
 
-
+function isDisasterSong(s){
+  const up = v => (v || '').toUpperCase().trim();
+  return up(s.danceTitle) === DISASTER_KEY || up(s.songTitle) === DISASTER_KEY;
+}
 
 function isFeaturedSong(s){
   const up = v => (v || '').toUpperCase().trim();
@@ -215,6 +219,7 @@ function render(){
     const inPl  = playlistKeys.has(`${s.year}-${s.songNumber}`);
     const featured = isFeaturedSong(s);
     const secret = isSecretSong(s);
+    const disaster = isDisasterSong(s);
 
     if (featured){
       return `
@@ -263,6 +268,35 @@ function render(){
       </article>
       `;
     }
+
+if (disaster){
+  return `
+    /* <article class="card card-luca-special"> */
+    
+   <article class="card card-luca-special card-united-special">
+     <div class="card-row">
+        <img class="cover" src="./assets/images/logo_united_countries.png" alt="United Countries 2026" loading="lazy" />
+        <div style="flex:1; min-width:0">
+          <div class="title">${(s.danceTitle||'').toUpperCase()}</div>
+          <div class="meta">${s.singerName||''} — ${s.songTitle||''}</div>
+        </div>
+        <div class="badges">
+          <span class="badge">#${s.songNumber}</span>
+          <span class="badge year">ANNO&nbsp;<b>${s.year}</b></span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <a class="action action-luca" data-luca-disaster="dance" data-n="${s.songNumber}" data-y="${s.year}">Apri Ballo</a>
+        <a class="action action-luca" data-luca-disaster="song" data-n="${s.songNumber}" data-y="${s.year}">Apri Canzone</a>
+        <button class="action ${inPl?'play-added':''}" data-addpl data-n="${s.songNumber}" data-y="${s.year}">
+          ${inPl?'✓ In playlist':'+ Playlist'}
+        </button>
+      </div>
+    </article>
+  `;
+}
+
 
 if (secret){
   return `
@@ -429,6 +463,74 @@ window.addEventListener('resize', requestAsiaBoomCheck);
     setTimeout(()=> window.open(url, '_blank'), 120);
   });
 })();
+
+/* ====== LUCA DISASTRO PRANK ====== */
+(function(){
+  let lucaAudio = null;
+
+  function playLucaSound(){
+    try {
+      if (!lucaAudio) {
+        lucaAudio = new Audio('./assets/audio/man_angry_loud.mp3');
+        lucaAudio.preload = 'auto';
+      }
+
+      lucaAudio.currentTime = 0;
+      lucaAudio.play().catch(err => console.log('man_angry_loud blocked:', err));
+    } catch (err) {
+      console.log('Errore audio Luca Disastro:', err);
+    }
+  }
+
+  function showLucaDisaster(){
+    let overlay = document.getElementById('lucaDisasterOverlay');
+
+    if (!overlay){
+      overlay = document.createElement('div');
+      overlay.id = 'lucaDisasterOverlay';
+      overlay.className = 'luca-disaster-overlay hidden';
+
+      overlay.innerHTML = `
+        <img
+          src="./assets/images/luca_disastro.png"
+          alt="Luca Disastro"
+          class="luca-disaster-img"
+        />
+      `;
+
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener('click', ()=>{
+        overlay.classList.add('hidden');
+        overlay.classList.remove('show');
+      });
+    }
+
+    overlay.classList.remove('hidden');
+    overlay.classList.remove('show');
+
+    void overlay.offsetWidth;
+
+    overlay.classList.add('show');
+    playLucaSound();
+
+    setTimeout(()=>{
+      overlay.classList.add('hidden');
+      overlay.classList.remove('show');
+    }, 2200);
+  }
+
+  document.addEventListener('click', e=>{
+    const a = e.target.closest?.('[data-luca-disaster]');
+    if (!a) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    showLucaDisaster();
+  });
+})();
+
 
 /* ====== PLAYLIST ====== */
 function updatePlaylistButton(btn, inPlaylist){
