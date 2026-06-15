@@ -531,6 +531,53 @@ article.card:hover{
   border-color:rgba(255,255,255,.28);
 }
 
+/* ===== Sweat & Dust background for selected cards ===== */
+.card-sweat-bg{
+  overflow:hidden;
+  background:
+    linear-gradient(0deg, rgba(110,68,28,.45), rgba(110,68,28,.45)),
+    linear-gradient(90deg, rgba(24,14,8,.78), rgba(24,14,8,.42)),
+    url('./assets/images/sweat-dust.png') center/52% no-repeat,
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06)) !important;
+
+  background-blend-mode:multiply, normal, normal, normal;
+
+  border-color:rgba(255,210,120,.55);
+  box-shadow:
+    0 8px 28px rgba(0,0,0,.32),
+    0 0 26px rgba(255,190,90,.22),
+    inset 0 1px 0 rgba(255,255,255,.14);
+}
+
+.card-sweat-bg::before{
+  background:
+    radial-gradient(60% 45% at var(--mx) var(--my), rgba(255,255,255,.14), transparent 55%),
+    linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.22));
+}
+
+.card-sweat-bg .card-row,
+.card-sweat-bg .actions{
+  position:relative;
+  z-index:2;
+}
+
+.card-sweat-bg .title{
+  color:#fff7d6;
+  text-shadow:0 2px 4px rgba(0,0,0,.95);
+}
+
+.card-sweat-bg .meta{
+  color:#fff;
+  opacity:.96;
+  text-shadow:0 2px 4px rgba(0,0,0,.95);
+}
+
+.card-sweat-bg .badge{
+  background:rgba(0,0,0,.58);
+}
+
+
+
 .card-row{
   display:flex;
   gap:12px;
@@ -599,12 +646,14 @@ article.card:hover{
 /* ===== Fun with Asia card ===== */
 .card-asia-special{
   position:relative;
-  padding:0 10px 1px;
-  border-radius:18px;
-  transform:scale(.68);
+  padding:16px;
+  border-radius:20px;
+  transform:none;
   transform-origin:center;
-  max-width:92%;
-  margin:4px auto 6px;
+  width:88%;
+  max-width:900px;
+  justify-self:center;
+  margin:4px auto 10px;
   background:
     radial-gradient(120% 180% at 50% 0%, rgba(0,0,0,.55), transparent 60%),
     linear-gradient(135deg, rgba(15,10,5,.92), rgba(40,20,8,.95));
@@ -614,12 +663,44 @@ article.card:hover{
 .card-asia-special::before,
 .card-asia-special::after{ display:none; }
 
+/* ===== Fun with Asia exit boom ===== */
+.card-asia-special.asia-boom{
+  animation:asiaBoomOut .62s ease-out forwards;
+  pointer-events:none;
+}
+
+.card-asia-special.asia-boom::after{
+  content:"💥";
+  display:block;
+  position:absolute;
+  left:50%;
+  top:50%;
+  z-index:20;
+  transform:translate(-50%, -50%);
+  font-size:clamp(42px, 10vw, 110px);
+  animation:asiaExplosion .62s ease-out forwards;
+  pointer-events:none;
+}
+
+@keyframes asiaBoomOut{
+  0%{ opacity:1; transform:scale(1) rotate(0deg); filter:brightness(1); }
+  35%{ opacity:1; transform:scale(1.08) rotate(-1deg); filter:brightness(1.8); }
+  100%{ opacity:0; transform:scale(.25) rotate(8deg) translateY(-40px); filter:brightness(2.4) blur(6px); }
+}
+
+@keyframes asiaExplosion{
+  0%{ opacity:0; transform:translate(-50%, -50%) scale(.3) rotate(0deg); }
+  30%{ opacity:1; transform:translate(-50%, -50%) scale(1.25) rotate(-8deg); }
+  100%{ opacity:0; transform:translate(-50%, -50%) scale(1.9) rotate(14deg); }
+}
+
 .asia-top{
-  display:flex;
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
   align-items:center;
-  justify-content:space-between;
-  gap:8px;
-  margin-bottom:6px;
+  justify-items:center;
+  gap:10px;
+  margin-bottom:10px;
 }
 
 .asia-btn{
@@ -660,6 +741,15 @@ article.card:hover{
   transform:translateY(0) scale(.97);
 }
 
+.asia-btn-left{
+  justify-self:center;
+}
+
+.asia-btn-right{
+  justify-self:center;
+}
+
+
 .asia-follow{
   flex:0 0 auto;
   padding:3px 10px;
@@ -670,15 +760,21 @@ article.card:hover{
   background:linear-gradient(135deg,#ff4b6a,#ff9a2b);
   box-shadow:0 2px 6px rgba(0,0,0,.5);
   text-shadow:0 1px 1px rgba(0,0,0,.7);
+  justify-self:center;
+  text-align:center;
+  line-height:1.15;
+  white-space:normal;
+  max-width:120px;
 }
 
 .asia-main{
   display:grid;
   grid-template-columns:1fr 1fr 1fr;
-  align-items:flex-start;
+  align-items:center;
   justify-items:center;
   gap:10px;
 }
+
 .asia-side{
   display:flex;
   flex-direction:column;
@@ -725,14 +821,15 @@ article.card:hover{
 }
 
 .asia-subtext{
-  margin-top:4px;
-  font-size:14px;
-  font-weight:700;
+  margin-top:10px;
+  font-size:18px;
+  font-weight:800;
+  line-height:1.25;
   letter-spacing:.1px;
   color:#fff;
-  text-shadow:0 1px 2px rgba(252,1,1,.7);
+  text-shadow:0 1px 2px rgba(252,1,1,.85);
   text-align:center;
-  white-space:nowrap;
+  white-space:normal;
 }
 
 /* ===== overlays / modal ===== */
@@ -1066,8 +1163,8 @@ article.card:hover{
   }
 
   .card-asia-special{
-    transform:scale(.63);
-    margin:2px auto 4px;
+    width:92%;
+    margin:2px auto 8px;
   }
   .asia-top{ margin-bottom:2px; }
   .asia-main{ gap:6px; }
@@ -1124,4 +1221,91 @@ article.card:hover{
   60%  { transform: translate(-50%, -50%) rotate(8deg); }
   75%  { transform: translate(-50%, -50%) rotate(-4deg); }
   100% { transform: translate(-50%, -50%) rotate(0deg); }
+}
+
+/* ===== Luca Disastro card/prank ===== */
+.card-luca-special{
+  border-color:rgba(255,90,60,.45);
+  box-shadow:
+    0 8px 28px rgba(0,0,0,.28),
+    0 0 22px rgba(255,70,35,.20),
+    inset 0 1px 0 rgba(255,255,255,.10);
+}
+
+.action-luca{
+  border-color:#ff4b2b;
+  color:#ff4b2b;
+}
+
+.action-luca:hover{
+  background:#ff4b2b;
+  color:#fff;
+}
+
+.luca-disaster-overlay{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  display:grid;
+  place-items:center;
+  background:rgba(0,0,0,.62);
+  backdrop-filter:blur(5px);
+  -webkit-backdrop-filter:blur(5px);
+}
+
+.luca-disaster-overlay.hidden{
+  display:none !important;
+}
+
+.luca-disaster-img{
+  width:min(72vw, 520px);
+  max-height:82vh;
+  object-fit:contain;
+  border-radius:22px;
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.65),
+    0 0 0 3px rgba(255,255,255,.18);
+  transform:scale(.04) rotate(-8deg);
+  opacity:0;
+}
+
+.luca-disaster-overlay.show .luca-disaster-img{
+  animation:lucaDisasterZoom .75s cubic-bezier(.18,.95,.22,1.25) forwards;
+}
+
+@keyframes lucaDisasterZoom{
+  0%{
+    transform:scale(.04) rotate(-12deg);
+    opacity:0;
+    filter:brightness(1.8) blur(8px);
+  }
+  45%{
+    transform:scale(1.12) rotate(3deg);
+    opacity:1;
+    filter:brightness(1.25) blur(0);
+  }
+  70%{
+    transform:scale(.96) rotate(-1deg);
+  }
+  100%{
+    transform:scale(1) rotate(0deg);
+    opacity:1;
+    filter:brightness(1) blur(0);
+  }
+}
+
+.card-united-special .badge{
+  position:relative;
+  z-index:2;
+}
+
+.card-united-special .title{
+  color:#fff7d6;
+  text-shadow:0 2px 4px rgba(0,0,0,.9);
+}
+
+.card-united-special .meta{
+  color:#fff;
+  opacity:.95;
+  text-shadow:0 2px 4px rgba(0,0,0,.9);
 }

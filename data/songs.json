@@ -2,6 +2,7 @@
 {
   "year": 3,
   "songNumber": 76,
+<<<<<<< HEAD
   "danceTitle": "UNITED COUNTRIES 2026 - TIME KILLER",
   "danceVideoUrl": "https://youtu.be/SWtrI3gPDWA?si=z36HaVo-fxYmlK7A",
   "singerName": "Clark Hill",
@@ -17,6 +18,32 @@
   "songTitle": "Kingdom of fear",
   "songUrl": "https://youtu.be/YZ2WXl3VXLU?si=KDh6GDTMytgFTGo6"
 },
+=======
+  "danceTitle": "IT'S A FIRE",
+  "danceVideoUrl": "https://youtu.be/7x01Mb1bSD4?si=prYvUeA22UCxglV_",
+  "singerName": "Castrol Brothers",
+  "songTitle": "The First Ride of Year Three",
+  "songUrl": "https://youtu.be/g8euimQUOG0?si=ScGvhesWLAmJP6K7"
+},
+  {
+  "year": 3,
+  "songNumber": 76,
+  "danceTitle": "UNITED COUNTRIES 2026",
+  "danceVideoUrl": "",
+  "singerName": "Ace L. Sulia",
+  "songTitle": "The First Ride of Year Three",
+  "songUrl": ""
+},
+  {
+    "year": 3,
+    "songNumber": 74,
+    "danceTitle": "VALCENO 2026",
+    "danceVideoUrl": "",
+    "singerName": "Vance “Slim” Palomisto",
+    "songTitle": "Pat Dallas Peita",
+    "songUrl": ""
+  },
+>>>>>>> e35864488f4d3bcd37f4378d200c16421e2c905c
   {
   "year": 3,
   "songNumber": 74,

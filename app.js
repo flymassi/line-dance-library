@@ -172,15 +172,33 @@ const elCount = $('#count');
 
 /* === Canzone in evidenza: FUN WITH ASIA sempre in cima === */
 const FEATURED_KEY = 'FUN WITH ASIA';
-
 const SECRET_KEY = 'VALCENO 2026';
+const DISASTER_KEY = 'UNITED COUNTRIES 2026';
+
 
 function isSecretSong(s){
   const up = v => (v || '').toUpperCase().trim();
   return up(s.danceTitle) === SECRET_KEY || up(s.songTitle) === SECRET_KEY;
 }
 
+function hasSweatDustBg(s){
+  const up = v => (v || '').toUpperCase().trim();
+  const title = up(s.danceTitle);
 
+  return (
+    title === 'UNITED COUNTRIES 2026' ||
+    title === 'VALCENO 2026' ||
+    title === 'OVER1325 SWEAT AND DUST 2026' ||
+    title === 'MARSHALL COUNTY MAN (VALCENO 2025)' ||
+    title === 'SECOND TIME (OVER 1008 - 2025)' ||
+    title === 'ONE (OVER 1000 - 2025)'
+  );
+}
+
+function isDisasterSong(s){
+  const up = v => (v || '').toUpperCase().trim();
+  return up(s.danceTitle) === DISASTER_KEY || up(s.songTitle) === DISASTER_KEY;
+}
 
 function isFeaturedSong(s){
   const up = v => (v || '').toUpperCase().trim();
@@ -214,7 +232,9 @@ function render(){
     const cover = vid ? `https://img.youtube.com/vi/${vid}/0.jpg` : './assets/images/icon.png';
     const inPl  = playlistKeys.has(`${s.year}-${s.songNumber}`);
     const featured = isFeaturedSong(s);
-    const secret = isSecretSong(s);
+const secret = isSecretSong(s);
+const sweatBg = hasSweatDustBg(s);
+    const disaster = isDisasterSong(s);
 
     if (featured){
       return `
@@ -233,31 +253,67 @@ function render(){
           </a>
         </div>
 
-        <div class="asia-main">
-          <div class="asia-side">
-            <a href="https://www.youtube.com/@funwithasia" target="_blank" rel="noopener">
-              <img src="./assets/images/fun-asia-logo.png" alt="Fun with Asia" class="asia-circle">
-            </a>
-          </div>
+<div class="asia-main">
+  <div class="asia-side">
+    <a href="https://www.youtube.com/@funwithasia" target="_blank" rel="noopener">
+      <img src="./assets/images/fun-asia-logo.png" alt="Fun with Asia" class="asia-circle">
+    </a>
+  </div>
 
-          <div class="asia-center">
-            <img src="./assets/images/fun-asia-photo.png" alt="Fun with Asia Family" class="asia-photo">
-            <div class="asia-subtext">SUBSCRIBE!!!</div>
-          </div>
+  <div class="asia-center">
+    <img src="./assets/images/fun-asia-photo.png" alt="Fun with Asia Family" class="asia-photo">
+  </div>
 
-          <div class="asia-side">
-            <a href="https://www.youtube.com/@funfamilytravelvlog" target="_blank" rel="noopener">
-              <img src="./assets/images/fun-family-logo.png" alt="Fun Family Travel Vlog" class="asia-circle">
-            </a>
-          </div>
-        </div>
+  <div class="asia-side">
+    <a href="https://www.youtube.com/@funfamilytravelvlog" target="_blank" rel="noopener">
+      <img src="./assets/images/fun-family-logo.png" alt="Fun Family Travel Vlog" class="asia-circle">
+    </a>
+  </div>
+</div>
+
+<div class="asia-subtext">
+  ATTENZIONE!!! ATTENZIONE!!!!<br>
+  se non fai SUBSCRIBE ai nostri due canali<br>
+  andrai incontro a RESTART e TAG ERRATI tutto l'anno!!!
+</div>
+
+
+
+
       </article>
       `;
     }
 
+if (disaster){
+  return `
+    <article class="card card-luca-special card-sweat-bg">
+        <div class="card-row">
+        <img class="cover" src="./assets/images/logo_united_countries.png" alt="United Countries 2026" loading="lazy" />
+        <div style="flex:1; min-width:0">
+          <div class="title">${(s.danceTitle||'').toUpperCase()}</div>
+          <div class="meta">${s.singerName||''} — ${s.songTitle||''}</div>
+        </div>
+        <div class="badges">
+          <span class="badge">#${s.songNumber}</span>
+          <span class="badge year">ANNO&nbsp;<b>${s.year}</b></span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <a class="action action-luca" data-luca-disaster="dance" data-n="${s.songNumber}" data-y="${s.year}">Apri Ballo</a>
+        <a class="action action-luca" data-luca-disaster="song" data-n="${s.songNumber}" data-y="${s.year}">Apri Canzone</a>
+        <button class="action ${inPl?'play-added':''}" data-addpl data-n="${s.songNumber}" data-y="${s.year}">
+          ${inPl?'✓ In playlist':'+ Playlist'}
+        </button>
+      </div>
+    </article>
+  `;
+}
+
+
 if (secret){
   return `
-    <article class="card card-secret-special">
+    <article class="card card-secret-special card-sweat-bg">
       <div class="card-row">
         <img class="cover" src="./assets/images/valceno.png" alt="cover segreta" loading="lazy" />
         <div style="flex:1; min-width:0">
@@ -283,7 +339,7 @@ if (secret){
 
 
     return `
-      <article class="card">
+     <article class="card ${sweatBg ? 'card-sweat-bg' : ''}">
         <div class="card-row">
           <img class="cover" src="${cover}" alt="cover" loading="lazy" />
           <div style="flex:1; min-width:0">
@@ -305,7 +361,63 @@ if (secret){
       </article>
     `;
   }).join('');
+
+  initAsiaBoom();
 }
+
+/* ===== FUN WITH ASIA: BOOM ON SCROLL EXIT ===== */
+let asiaBoomDone = false;
+let asiaBoomTicking = false;
+
+function initAsiaBoom(){
+  // La card viene ricreata dal render(): resettiamo stato e visibility sul nuovo nodo.
+  const card = document.querySelector('.card-asia-special');
+  if (!card) return;
+
+  card.classList.remove('asia-boom');
+  card.style.visibility = '';
+  asiaBoomDone = false;
+  checkAsiaBoom();
+}
+
+function checkAsiaBoom(){
+  asiaBoomTicking = false;
+
+  const card = document.querySelector('.card-asia-special');
+  if (!card) return;
+
+  const rect = card.getBoundingClientRect();
+  const goingOutTop = rect.bottom < 120;
+  const visibleAgain = rect.top > 20 && rect.top < window.innerHeight;
+
+  if (goingOutTop && !asiaBoomDone){
+    asiaBoomDone = true;
+
+    card.style.visibility = '';
+    card.classList.remove('asia-boom');
+    void card.offsetWidth; // riavvia animazione
+    card.classList.add('asia-boom');
+
+    setTimeout(()=>{
+      if (asiaBoomDone) card.style.visibility = 'hidden';
+    }, 650);
+  }
+
+  if (visibleAgain){
+    asiaBoomDone = false;
+    card.classList.remove('asia-boom');
+    card.style.visibility = '';
+  }
+}
+
+function requestAsiaBoomCheck(){
+  if (asiaBoomTicking) return;
+  asiaBoomTicking = true;
+  requestAnimationFrame(checkAsiaBoom);
+}
+
+window.addEventListener('scroll', requestAsiaBoomCheck, { passive:true });
+window.addEventListener('resize', requestAsiaBoomCheck);
 
 /* ====== SECRET CARD PRANK ====== */
 (function(){
@@ -364,6 +476,74 @@ if (secret){
     setTimeout(()=> window.open(url, '_blank'), 120);
   });
 })();
+
+/* ====== LUCA DISASTRO PRANK ====== */
+(function(){
+  let lucaAudio = null;
+
+  function playLucaSound(){
+    try {
+      if (!lucaAudio) {
+        lucaAudio = new Audio('./assets/audio/man_angry_loud.mp3');
+        lucaAudio.preload = 'auto';
+      }
+
+      lucaAudio.currentTime = 0;
+      lucaAudio.play().catch(err => console.log('man_angry_loud blocked:', err));
+    } catch (err) {
+      console.log('Errore audio Luca Disastro:', err);
+    }
+  }
+
+  function showLucaDisaster(){
+    let overlay = document.getElementById('lucaDisasterOverlay');
+
+    if (!overlay){
+      overlay = document.createElement('div');
+      overlay.id = 'lucaDisasterOverlay';
+      overlay.className = 'luca-disaster-overlay hidden';
+
+      overlay.innerHTML = `
+        <img
+          src="./assets/images/luca_disastro.png"
+          alt="Luca Disastro"
+          class="luca-disaster-img"
+        />
+      `;
+
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener('click', ()=>{
+        overlay.classList.add('hidden');
+        overlay.classList.remove('show');
+      });
+    }
+
+    overlay.classList.remove('hidden');
+    overlay.classList.remove('show');
+
+    void overlay.offsetWidth;
+
+    overlay.classList.add('show');
+    playLucaSound();
+
+    setTimeout(()=>{
+      overlay.classList.add('hidden');
+      overlay.classList.remove('show');
+    }, 2200);
+  }
+
+  document.addEventListener('click', e=>{
+    const a = e.target.closest?.('[data-luca-disaster]');
+    if (!a) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    showLucaDisaster();
+  });
+})();
+
 
 /* ====== PLAYLIST ====== */
 function updatePlaylistButton(btn, inPlaylist){
