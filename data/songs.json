@@ -18,13 +18,22 @@
   "songUrl": "https://youtu.be/YZ2WXl3VXLU?si=KDh6GDTMytgFTGo6"
 },
   {
+  "year": 3,
+  "songNumber": 74,
+  "danceTitle": "IT'S A FIRE",
+  "danceVideoUrl": "https://youtu.be/7x01Mb1bSD4?si=prYvUeA22UCxglV_",
+  "singerName": "Castrol Brothers",
+  "songTitle": "The First Ride of Year Three",
+  "songUrl": "https://youtu.be/g8euimQUOG0?si=ScGvhesWLAmJP6K7"
+},
+    {
     "year": 3,
     "songNumber": 73,
     "danceTitle": "MAGIC MOMENT",
     "danceVideoUrl": "https://youtu.be/89pNLfb3Dgk?si=zqhuSyhavRTlJXGb",
     "singerName": "Casey Barnes",
     "songTitle": "Just Like Magic",
-    "songUrl": "https://youtu.be/p-1S5AhF4DA?si=_CUReubCh-bwiM_d"
+    "songUrl": "https://youtu.be/mLgPBzSyNGA?si=l_tBsMi1XLUwDUSi"
   },
   {
     "year": 3,
@@ -526,7 +535,7 @@
   {
     "year": 1,
     "songNumber": 19,
-    "danceTitle": "ONE  (Over 1000 - 2025)",
+    "danceTitle": "ONE (Over 1000 - 2025)",
     "danceVideoUrl": "https://www.youtube.com/watch?v=ZXuEKtWPAv8",
     "singerName": "James Johnston",
     "songTitle": "Keepin' It Country",
