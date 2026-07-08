@@ -1,7 +1,25 @@
 [
 {
   "year": 3,
-  "songNumber": 75,
+  "songNumber": 78,
+  "danceTitle": "ONE MORE",
+  "danceVideoUrl": "https://youtu.be/u4biz3TAE9c?si=ZLeJcVsrOv34V86U",
+  "singerName": "Ceol",
+  "songTitle": "One More for the Road",
+  "songUrl": "https://youtu.be/6K4cBWmJuBs?si=k1g9ZUvPm6b7PEjX"
+},
+{
+  "year": 3,
+  "songNumber": 77,
+  "danceTitle": "YELLOWSTONE",
+  "danceVideoUrl": "https://youtu.be/vhKbnyGwLSY?si=AgzhFjbXpjpe2QVP",
+  "singerName": "Curtis Grimes",
+  "songTitle": "Right About Now",
+  "songUrl": "https://youtu.be/JPOAONHZP-A?si=CQY4BXRgaG-9Go6z"
+},
+  {
+  "year": 3,
+  "songNumber": 76,
   "danceTitle": "UNITED COUNTRIES 2026 - TIME KILLER",
   "danceVideoUrl": "https://youtu.be/SWtrI3gPDWA?si=z36HaVo-fxYmlK7A",
   "singerName": "Clark Hill",
@@ -10,7 +28,7 @@
 },
 {
   "year": 3,
-  "songNumber": 74,
+  "songNumber": 75,
   "danceTitle": "VALCENO 2026 - JUST ANOTHER DAY",
   "danceVideoUrl": "https://youtu.be/zst5NdJb_9c?si=ipkeunjw4rtvQkID",
   "singerName": "Cameron Whitcomb",
