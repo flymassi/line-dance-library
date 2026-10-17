@@ -1,9 +1,75 @@
-/* Western Spritz — app.js v45 */
-console.log('[WS] app v47');
+/* Western Spritz — app.js v51 · Halloween 2026 */
+console.log('[WS] app v51 · Halloween 2026');
 
 /*-- VERSIONE OTTIMIZZATA */
 const S_KEY = 'ws_saggio_token';
 
+
+/* ====== HALLOWEEN 2026 · 17 ottobre → 2 novembre ====== */
+function isHalloweenPeriod(date = new Date()){
+  const start = new Date(2026, 9, 17, 0, 0, 0, 0); // 17 ottobre, ora locale
+  const end   = new Date(2026, 10, 3, 0, 0, 0, 0); // 3 novembre escluso
+  return date >= start && date < end;
+}
+
+const WS_HALLOWEEN_ACTIVE = isHalloweenPeriod();
+
+if (WS_HALLOWEEN_ACTIVE){
+  document.body.classList.add('halloween-mode');
+
+  const intro = document.getElementById('introMusic');
+  const introSource = intro?.querySelector('source');
+  if (intro && introSource){
+    introSource.src = './assets/audio/disturbing-halloween.mp3';
+    introSource.type = 'audio/mpeg';
+    intro.load();
+  }
+
+  const tip = document.querySelector('.splash-tip');
+  if (tip) tip.textContent = '🎃🎃 Tocca “Avvia”… se hai coraggio 🎃🎃';
+
+  const startBtn = document.getElementById('startApp');
+  if (startBtn) startBtn.textContent = '🎃 Avvia';
+
+  // Decorazioni leggere e non interattive: pipistrelli e teschi vaganti.
+  // Vengono create solo durante il periodo Halloween.
+  const scenery = document.querySelector('.ws-scenery');
+  if (scenery && !scenery.dataset.halloweenFloaters){
+    scenery.dataset.halloweenFloaters = '1';
+
+    const specs = [
+      ...Array.from({ length: 9 }, (_, i) => ({ icon:'🦇', kind:'bat', i })),
+      ...Array.from({ length: 5 }, (_, i) => ({ icon:'💀', kind:'skull', i }))
+    ];
+
+    specs.forEach((item, idx)=>{
+      const el = document.createElement('span');
+      el.className = `halloween-floater halloween-${item.kind}`;
+      el.textContent = item.icon;
+      el.setAttribute('aria-hidden', 'true');
+
+      // Valori deterministici: effetto vario senza dipendere da timer o librerie esterne.
+      const top = 8 + ((idx * 17 + (item.kind === 'skull' ? 9 : 0)) % 78);
+      const duration = item.kind === 'bat' ? 14 + (idx % 6) * 2.1 : 19 + (idx % 5) * 2.8;
+      const delay = -((idx * 3.7) % duration);
+      const size = item.kind === 'bat' ? 18 + (idx % 4) * 5 : 20 + (idx % 3) * 6;
+      const wave1 = ((idx % 2 ? -1 : 1) * (18 + (idx % 5) * 7));
+      const wave2 = -wave1 * 0.65;
+      const endY = ((idx % 3) - 1) * 14;
+      const opacity = item.kind === 'bat' ? 0.30 + (idx % 4) * 0.06 : 0.22 + (idx % 3) * 0.06;
+
+      el.style.setProperty('--hf-top', `${top}%`);
+      el.style.setProperty('--hf-duration', `${duration.toFixed(1)}s`);
+      el.style.setProperty('--hf-delay', `${delay.toFixed(1)}s`);
+      el.style.setProperty('--hf-size', `${size}px`);
+      el.style.setProperty('--hf-wave1', `${wave1}px`);
+      el.style.setProperty('--hf-wave2', `${wave2.toFixed(1)}px`);
+      el.style.setProperty('--hf-end-y', `${endY}px`);
+      el.style.setProperty('--hf-opacity', opacity.toFixed(2));
+      scenery.appendChild(el);
+    });
+  }
+}
 
 /* ====== BACKGROUND RANDOM ====== */
 (function(){
@@ -14,15 +80,110 @@ const S_KEY = 'ws_saggio_token';
   if (main) main.style.backgroundImage = `url('${url}')`;
 })();
 
-/* ====== SPLASH (robusto) ====== */
+/* ====== SPLASH + AUDIO ====== */
 (function(){
   const splash  = document.getElementById('splash');
   const start   = document.getElementById('startApp');
   const music   = document.getElementById('introMusic');
+  const bgMusic = document.getElementById('halloweenBgMusic');
 
-  // --- 1️⃣ Chiude lo splash e avvia musica
-  const hideSplash = ()=>{
+  let entering = false;
+  let halloweenBgPrimed = false;
+
+  function primeHalloweenBackground(){
+    if (!WS_HALLOWEEN_ACTIVE || !bgMusic || halloweenBgPrimed) return;
+
+    try {
+      bgMusic.loop = true;
+      bgMusic.muted = true;
+      bgMusic.volume = 0.22;
+      bgMusic.currentTime = 0;
+      const p = bgMusic.play();
+      halloweenBgPrimed = true;
+      if (p?.catch) {
+        p.catch(()=>{
+          halloweenBgPrimed = false;
+        });
+      }
+    } catch {
+      halloweenBgPrimed = false;
+    }
+  }
+
+  function startHalloweenBackground(){
+    if (!WS_HALLOWEEN_ACTIVE || !bgMusic) return;
+
+    try {
+      bgMusic.loop = true;
+      bgMusic.currentTime = 0;
+      bgMusic.volume = 0.22;
+      bgMusic.muted = false;
+      const p = bgMusic.play();
+      if (p?.catch) p.catch(()=>{});
+    } catch {}
+  }
+
+  function revealApp(){
     if (!splash || splash.classList.contains('hidden')) return;
+    splash.classList.add('hidden');
+    document.body.classList.add('ws-started');
+    startHalloweenBackground();
+  }
+
+  // Halloween: il click su “Avvia” fa partire il brano disturbante
+  // mantenendo visibile lo splash. Solo alla fine entra nell'app e
+  // parte in loop la musica di sottofondo.
+  const hideSplash = ()=>{
+    if (!splash || splash.classList.contains('hidden') || entering) return;
+    entering = true;
+
+    if (WS_HALLOWEEN_ACTIVE){
+      if (start){
+        start.disabled = true;
+        start.textContent = '😱 ...';
+      }
+
+      // Avvia il background già durante il gesto utente ma silenziato:
+      // al termine dello splash potrà essere reso udibile in modo affidabile
+      // anche sui browser mobili con restrizioni sull'autoplay.
+      primeHalloweenBackground();
+
+      if (music){
+        let finished = false;
+        const finishHalloweenIntro = ()=>{
+          if (finished) return;
+          finished = true;
+          music.removeEventListener('ended', finishHalloweenIntro);
+          music.removeEventListener('error', finishHalloweenIntro);
+          revealApp();
+        };
+
+        try {
+          music.muted = false;
+          music.volume = 1;
+          music.addEventListener('ended', finishHalloweenIntro, { once:true });
+          music.addEventListener('error', finishHalloweenIntro, { once:true });
+
+          // Se il browser ha consentito l'autoplay, il brano sta già suonando
+          // sullo splash: non lo riavviamo da capo al tocco su “Avvia”.
+          if (music.ended){
+            finishHalloweenIntro();
+          } else if (music.paused){
+            music.currentTime = 0;
+            const p = music.play();
+            if (p?.catch) p.catch(finishHalloweenIntro);
+          }
+        } catch {
+          finishHalloweenIntro();
+        }
+        return;
+      }
+
+      revealApp();
+      return;
+    }
+
+    // Fuori dal periodo Halloween: mantiene il comportamento storico.
     try {
       if (music){
         music.muted = false;
@@ -31,8 +192,8 @@ const S_KEY = 'ws_saggio_token';
         if (p?.catch) p.catch(()=>{});
       }
     } catch {}
-    splash.classList.add('hidden');
-    document.body.classList.add('ws-started');
+
+    revealApp();
   };
 
   if (start) {
@@ -48,16 +209,35 @@ const S_KEY = 'ws_saggio_token';
     if (e.key==='Enter' || e.key===' ') hideSplash();
   }, { once:true });
 
-  // --- 2️⃣ Avvio silenzioso dell’audio (per sbloccare autoplay)
-  try {
-    if (music){
-      music.muted = true;
-      music.volume = 1;
-      music.play().catch(()=>{});
-    }
-  } catch {}
+  // Durante Halloween proviamo a far partire subito il brano disturbante
+  // mentre lo splash è visibile. I browser mobili possono bloccare l'audio
+  // automatico: in quel caso partirà dal primo tocco su “Avvia”.
+  if (WS_HALLOWEEN_ACTIVE){
+    try {
+      if (music){
+        music.muted = false;
+        music.volume = 1;
+        music.currentTime = 0;
+        const p = music.play();
+        if (p?.catch) {
+          p.catch(()=>{
+            try { music.pause(); music.currentTime = 0; } catch {}
+          });
+        }
+      }
+    } catch {}
+  } else {
+    // Fuori da Halloween conserva il pre-avvio silenzioso del jingle normale.
+    try {
+      if (music){
+        music.muted = true;
+        music.volume = 1;
+        music.play().catch(()=>{});
+      }
+    } catch {}
+  }
 
-  // --- 3️⃣ Helper: animazione western del contatore
+  // --- Contatore visite
   function animateCount(el, to) {
     const prevStored = Number(localStorage.getItem('ws_last_visits') || 0);
     const from = Number.isFinite(prevStored) && prevStored > 0
@@ -70,42 +250,34 @@ const S_KEY = 'ws_saggio_token';
       return;
     }
 
-    const dur = 800; // durata animazione ms
+    const dur = 800;
     const t0 = performance.now();
 
     function step(t){
       const p = Math.min(1, (t - t0) / dur);
-      const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
+      const eased = 1 - Math.pow(1 - p, 3);
       const val = Math.round(from + (target - from) * eased);
       el.textContent = val.toLocaleString('it-IT');
       if (p < 1) requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
 
-    // Effetto “puff” western
     el.classList.remove('count-pulse','count-shine');
-    void el.offsetWidth; // forza reflow per riavviare animazione
+    void el.offsetWidth;
     el.classList.add('count-pulse','count-shine');
-
-    // Memorizza ultimo valore locale
     localStorage.setItem('ws_last_visits', String(target));
   }
 
-   // --- 4️⃣ Contatore visite: Upstash via Vercel
   try {
     const el = document.getElementById('visitCounter');
     if (el) {
-      // host considerati "sviluppo"
       const devHosts = ['', 'localhost', '127.0.0.1'];
-
       const isDev = devHosts.includes(location.hostname);
 
-      // 👉 In sviluppo: NON chiamiamo l'API, mostriamo solo "DEV"
       if (isDev) {
         el.textContent = 'DEV';
         console.log('[WS] contatore disattivato in dev (host:', location.hostname, ')');
       } else {
-        // 👉 Online (qualsiasi dominio reale): usa sempre /api/visits
         const URL = '/api/visits';
         console.log('[WS] visits endpoint:', URL, 'host:', location.hostname);
 
@@ -130,10 +302,7 @@ const S_KEY = 'ws_saggio_token';
     console.error('[WS] errore inizializzazione contatore', err);
   }
 
-})(); // ✅ CHIUSURA DELL'IIFE SPLASH
-
-
-
+})();
 
 /* ====== UTIL ====== */
 const $  = sel => document.querySelector(sel);
@@ -153,7 +322,7 @@ const debounce = (fn, delay = 120) => {
 
 /* ====== DATA (brani) ====== */
 let SONGS = [];
-let FILTER = { dance:'', song:'' };
+let FILTER = { dance:'', song:'', course:'line', year:'all' };
 let PLAYLIST = JSON.parse(localStorage.getItem('ws_playlist') || '[]');
 
 let plIndex = 0;
@@ -168,18 +337,10 @@ function openAt(index){
 }
 
 const elCards = $('#cards');
-const elCount = $('#count');
 
 /* === Canzone in evidenza: FUN WITH ASIA sempre in cima === */
 const FEATURED_KEY = 'FUN WITH ASIA';
-const SECRET_KEY = 'VALCENO 2026';
-const DISASTER_KEY = 'UNITED COUNTRIES 2026';
 
-
-function isSecretSong(s){
-  const up = v => (v || '').toUpperCase().trim();
-  return up(s.danceTitle) === SECRET_KEY || up(s.songTitle) === SECRET_KEY;
-}
 
 function hasSweatDustBg(s){
   const up = v => (v || '').toUpperCase().trim();
@@ -189,15 +350,24 @@ function hasSweatDustBg(s){
     title === 'UNITED COUNTRIES 2026' ||
     title === 'VALCENO 2026' ||
     title === 'OVER1325 SWEAT AND DUST 2026' ||
-    title === 'MARSHALL COUNTY MAN (VALCENO 2025)' ||
     title === 'SECOND TIME (OVER 1008 - 2025)' ||
     title === 'ONE (OVER 1000 - 2025)'
   );
 }
 
-function isDisasterSong(s){
-  const up = v => (v || '').toUpperCase().trim();
-  return up(s.danceTitle) === DISASTER_KEY || up(s.songTitle) === DISASTER_KEY;
+function getCardWatermark(s){
+  const title = String(s?.danceTitle || '').toUpperCase().trim();
+
+  if (title === 'UNITED COUNTRIES 2026 - TIME KILLER') {
+    return './assets/images/logo_united_countries.png';
+  }
+  if (title === 'VALCENO 2026 - JUST ANOTHER DAY') {
+    return './assets/images/valceno.png';
+  }
+  if (title === 'MARSHALL COUNTY MAN (VALCENO 2025)') {
+    return './assets/images/valceno.png';
+  }
+  return '';
 }
 
 function isFeaturedSong(s){
@@ -214,6 +384,39 @@ function promoteFeaturedSong(list){
   return list;
 }
 
+/* ====== CORSI / ANNI ====== */
+const CATALANO_YEAR = 10;
+
+function isCatalanoSong(s){
+  return Number(s?.year) === CATALANO_YEAR;
+}
+
+function matchesCourseAndYear(s){
+  if (FILTER.course === 'catalano') return isCatalanoSong(s);
+  if (isCatalanoSong(s)) return false;
+  if (FILTER.year === 'all') return true;
+  return Number(s?.year) === Number(FILTER.year);
+}
+
+function yearBadgeText(s){
+  return isCatalanoSong(s) ? '🇪🇸 CATALANO' : `ANNO&nbsp;<b>${s.year}</b>`;
+}
+
+function syncCourseFilterUI(){
+  $$('.course-tab').forEach(btn => {
+    const active = btn.dataset.course === FILTER.course;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+
+  const yearFilters = $('#yearFilters');
+  if (yearFilters) yearFilters.classList.toggle('hidden', FILTER.course === 'catalano');
+
+  $$('.year-chip').forEach(btn => {
+    btn.classList.toggle('active', String(btn.dataset.year) === String(FILTER.year));
+  });
+}
+
 /* ====== RENDER CARDS ====== */
 function render(){
   if (!elCards) return;
@@ -223,6 +426,7 @@ function render(){
   const playlistKeys = new Set(PLAYLIST.map(p => `${p.year}-${p.songNumber}`));
 
   const rows = SONGS.filter(s =>
+    matchesCourseAndYear(s) &&
     (!qd || (s.danceTitle||'').toLowerCase().includes(qd)) &&
     (!qs || (s.songTitle||'').toLowerCase().includes(qs))
   );
@@ -232,9 +436,8 @@ function render(){
     const cover = vid ? `https://img.youtube.com/vi/${vid}/0.jpg` : './assets/images/icon.png';
     const inPl  = playlistKeys.has(`${s.year}-${s.songNumber}`);
     const featured = isFeaturedSong(s);
-const secret = isSecretSong(s);
 const sweatBg = hasSweatDustBg(s);
-    const disaster = isDisasterSong(s);
+    const cardWatermark = getCardWatermark(s);
 
     if (featured){
       return `
@@ -272,74 +475,18 @@ const sweatBg = hasSweatDustBg(s);
 </div>
 
 <div class="asia-subtext">
-  ATTENZIONE!!! ATTENZIONE!!!!<br>
-  se non fai SUBSCRIBE ai nostri due canali<br>
-  andrai incontro a RESTART e TAG ERRATI tutto l'anno!!!
+  SUBSCRIBE -ATTENZIONE!!! ATTENZIONE!!!!- SUBSCRIBE<br>
 </div>
-
-
 
 
       </article>
       `;
     }
 
-if (disaster){
-  return `
-    <article class="card card-luca-special card-sweat-bg">
-        <div class="card-row">
-        <img class="cover" src="./assets/images/logo_united_countries.png" alt="United Countries 2026" loading="lazy" />
-        <div style="flex:1; min-width:0">
-          <div class="title">${(s.danceTitle||'').toUpperCase()}</div>
-          <div class="meta">${s.singerName||''} — ${s.songTitle||''}</div>
-        </div>
-        <div class="badges">
-          <span class="badge">#${s.songNumber}</span>
-          <span class="badge year">ANNO&nbsp;<b>${s.year}</b></span>
-        </div>
-      </div>
-
-      <div class="actions">
-        <a class="action action-luca" data-luca-disaster="dance" data-n="${s.songNumber}" data-y="${s.year}">Apri Ballo</a>
-        <a class="action action-luca" data-luca-disaster="song" data-n="${s.songNumber}" data-y="${s.year}">Apri Canzone</a>
-        <button class="action ${inPl?'play-added':''}" data-addpl data-n="${s.songNumber}" data-y="${s.year}">
-          ${inPl?'✓ In playlist':'+ Playlist'}
-        </button>
-      </div>
-    </article>
-  `;
-}
-
-
-if (secret){
-  return `
-    <article class="card card-secret-special card-sweat-bg">
-      <div class="card-row">
-        <img class="cover" src="./assets/images/valceno.png" alt="cover segreta" loading="lazy" />
-        <div style="flex:1; min-width:0">
-          <div class="title">${(s.danceTitle||'').toUpperCase()}</div>
-          <div class="meta">${s.singerName||''} — ${s.songTitle||''}</div>
-        </div>
-        <div class="badges">
-          <span class="badge">#${s.songNumber}</span>
-          <span class="badge year">ANNO&nbsp;<b>${s.year}</b></span>
-        </div>
-      </div>
-
-      <div class="actions">
-        <a class="action action-secret" data-secret="dance" data-n="${s.songNumber}" data-y="${s.year}">Apri Ballo</a>
-        <a class="action action-secret" data-secret="song" data-n="${s.songNumber}" data-y="${s.year}">Apri Canzone</a>
-        <button class="action ${inPl?'play-added':''}" data-addpl data-n="${s.songNumber}" data-y="${s.year}">
-          ${inPl?'✓ In playlist':'+ Playlist'}
-        </button>
-      </div>
-    </article>
-  `;
-}
-
 
     return `
-     <article class="card ${sweatBg ? 'card-sweat-bg' : ''}">
+     <article class="card ${sweatBg ? 'card-sweat-bg' : ''} ${cardWatermark ? 'card-event-watermark' : ''}">
+        ${cardWatermark ? `<img class="card-watermark-img" src="${cardWatermark}" alt="" aria-hidden="true" loading="lazy" />` : ''}
         <div class="card-row">
           <img class="cover" src="${cover}" alt="cover" loading="lazy" />
           <div style="flex:1; min-width:0">
@@ -348,7 +495,7 @@ if (secret){
           </div>
           <div class="badges">
             <span class="badge">#${s.songNumber}</span>
-            <span class="badge year">ANNO&nbsp;<b>${s.year}</b></span>
+            <span class="badge year">${yearBadgeText(s)}</span>
           </div>
         </div>
         <div class="actions">
@@ -419,51 +566,7 @@ function requestAsiaBoomCheck(){
 window.addEventListener('scroll', requestAsiaBoomCheck, { passive:true });
 window.addEventListener('resize', requestAsiaBoomCheck);
 
-/* ====== SECRET CARD PRANK ====== */
-(function(){
-  function showSecretNo(){
-    let prank = document.getElementById('wsSecretNo');
-    if (!prank){
-      prank = document.createElement('img');
-      prank.id = 'wsSecretNo';
-      prank.src = './assets/images/alessia.png';
-      prank.alt = 'No';
-      prank.className = 'ws-secret-no hidden';
-      document.body.appendChild(prank);
-    }
-
-    prank.classList.remove('hidden');
-    prank.classList.remove('shake-no');
-    void prank.offsetWidth;
-    prank.classList.add('shake-no');
-
-  try {
-  const noNoNo = document.getElementById('fxSecretNo');
-  if (noNoNo){
-    noNoNo.currentTime = 0;
-    noNoNo.play().catch(err => console.log('fxSecretNo blocked:', err));
-  }
-} catch (err) {
-  console.log('Errore audio prank:', err);
-}
-    
-    setTimeout(()=>{
-      prank.classList.add('hidden');
-      prank.classList.remove('shake-no');
-    }, 1400);
-  }
-
-  document.addEventListener('click', e=>{
-    const a = e.target.closest('[data-secret]');
-    if (!a) return;
-    e.preventDefault();
-    e.stopPropagation();
-    showSecretNo();
-  });
-})();
-
-
-/* ====== OPEN LINKS (frusta) ====== */
+/* ====== OPEN LINKS (urlo Halloween) ====== */
 (function(){
   document.addEventListener('click', e=>{
     const a = e.target.closest?.('[data-open]');
@@ -472,78 +575,17 @@ window.addEventListener('resize', requestAsiaBoomCheck);
     const s = SONGS.find(x=>x.year==y && x.songNumber==n);
     const url = a.dataset.open==='dance' ? s?.danceVideoUrl : s?.songUrl;
     if (!url) return;
-    $('#fxWhip')?.play?.();
+    const scream = $('#fxOpenScream');
+    if (scream){
+      try {
+        scream.currentTime = 0;
+        const p = scream.play();
+        if (p?.catch) p.catch(()=>{});
+      } catch {}
+    }
     setTimeout(()=> window.open(url, '_blank'), 120);
   });
 })();
-
-/* ====== LUCA DISASTRO PRANK ====== */
-(function(){
-  let lucaAudio = null;
-
-  function playLucaSound(){
-    try {
-      if (!lucaAudio) {
-        lucaAudio = new Audio('./assets/audio/man_angry_loud.mp3');
-        lucaAudio.preload = 'auto';
-      }
-
-      lucaAudio.currentTime = 0;
-      lucaAudio.play().catch(err => console.log('man_angry_loud blocked:', err));
-    } catch (err) {
-      console.log('Errore audio Luca Disastro:', err);
-    }
-  }
-
-  function showLucaDisaster(){
-    let overlay = document.getElementById('lucaDisasterOverlay');
-
-    if (!overlay){
-      overlay = document.createElement('div');
-      overlay.id = 'lucaDisasterOverlay';
-      overlay.className = 'luca-disaster-overlay hidden';
-
-      overlay.innerHTML = `
-        <img
-          src="./assets/images/luca_disastro.png"
-          alt="Luca Disastro"
-          class="luca-disaster-img"
-        />
-      `;
-
-      document.body.appendChild(overlay);
-
-      overlay.addEventListener('click', ()=>{
-        overlay.classList.add('hidden');
-        overlay.classList.remove('show');
-      });
-    }
-
-    overlay.classList.remove('hidden');
-    overlay.classList.remove('show');
-
-    void overlay.offsetWidth;
-
-    overlay.classList.add('show');
-    playLucaSound();
-
-    setTimeout(()=>{
-      overlay.classList.add('hidden');
-      overlay.classList.remove('show');
-    }, 2200);
-  }
-
-  document.addEventListener('click', e=>{
-    const a = e.target.closest?.('[data-luca-disaster]');
-    if (!a) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    showLucaDisaster();
-  });
-})();
-
 
 /* ====== PLAYLIST ====== */
 function updatePlaylistButton(btn, inPlaylist){
@@ -666,684 +708,44 @@ $('#saggioLoginForm')?.addEventListener('submit', async e=>{
 });
 
 
-
-/* ===========================================================
-   PUZZLE / QUIZ — domanda casuale; esatto: rivela + nuova domanda; errato: non cambia
-   =========================================================== */
-const PZ_CFG = { livesByGrid: { 3: 7, 4: 5, 5: 4 } };
-
-const TILE_COVERS = [
-  './assets/images/covers/stivali.png',
-  './assets/images/covers/luca_1.png',
-  './assets/images/covers/ws_logo.png'
-];
-
-
-const PZ = {
-  root:  $('#pzOverlay'),
-  grid:  $('#pzGrid'),
-  img:   $('#pzImg'),
-  q:     $('#pzQuestion'),
-  ans:   $('#pzAnswers'),
-  score: $('#pzScore'),
-  time:  $('#pzTime'),
-  livesEl: $('#pzLives'),
-  no:    $('#noImg'),
-  lbModal: $('#pzLbModal'),
-  lbList: $('#pzLbList'),
-  lbWeek: $('#pzLbWeek'),
-  lbPlayer: $('#pzLbPlayer'),
-  size:  3,
-  timer: null,
-  t0: 0,
-  lives: 7,
-  errors: 0,
-  won: false
-};
-
-/* --- musica puzzle --- */
-function playBg(){
-  const bg = document.getElementById('bgPuzzle');
-  if (!bg) return;
-  try { bg.volume = 0.6; bg.currentTime = 0; bg.play().catch(()=>{}); } catch {}
-}
-function stopBg(){
-  const bg = document.getElementById('bgPuzzle');
-  if (!bg) return;
-  try { bg.pause(); } catch {}
-}
-
-
-/* --- leaderboard puzzle V2: profilo giocatore + classifica --- */
-function getPuzzleDifficultyLabel(){
-  return `${PZ.size}x${PZ.size}`;
-}
-function getPuzzleElapsedSeconds(){
-  return Math.max(1, Math.floor((Date.now() - PZ.t0) / 1000));
-}
-function getPuzzleBaseScore(size){
-  return ({ 3: 180, 4: 360, 5: 620 })[size] || 180;
-}
-function getPuzzlePreviewScore(){
-  const score = getPuzzleBaseScore(PZ.size) + (PZ.lives * 45) - (PZ.errors * 25) - (getPuzzleElapsedSeconds() * 2);
-  return Math.max(1, score);
-}
-function refreshPuzzleScore(){
-  if (PZ.score) PZ.score.textContent = String(getPuzzlePreviewScore());
-}
-
-function normalizePlayerName(name){
-  return String(name || '')
-    .trim()
-    .replace(/\s+/g, ' ')
-    .replace(/[^\p{L}\p{N}\s._-]/gu, '')
-    .slice(0, 18);
-}
-
-function normalizePuzzleYear(value){
-  return String(value || '')
-    .trim()
-    .replace(/\s+/g, ' ')
-    .replace(/[^\p{L}\p{N}\s._/-]/gu, '')
-    .slice(0, 12);
-}
-
-function normalizeTeacherName(value){
-  return String(value || '')
-    .trim()
-    .replace(/\s+/g, ' ')
-    .replace(/[^\p{L}\p{N}\s._'-]/gu, '')
-    .slice(0, 28);
-}
-
-function getPuzzleProfile(){
-  return {
-    name: normalizePlayerName(localStorage.getItem('ws_puzzle_player_name') || ''),
-    year: normalizePuzzleYear(localStorage.getItem('ws_puzzle_player_year') || ''),
-    teacher: normalizeTeacherName(localStorage.getItem('ws_puzzle_player_teacher') || '')
-  };
-}
-
-function savePuzzleProfile(profile){
-  localStorage.setItem('ws_puzzle_player_name', normalizePlayerName(profile?.name || ''));
-  localStorage.setItem('ws_puzzle_player_year', normalizePuzzleYear(profile?.year || ''));
-  localStorage.setItem('ws_puzzle_player_teacher', normalizeTeacherName(profile?.teacher || ''));
-}
-
-function fillPuzzleProfileForm(){
-  const p = getPuzzleProfile();
-  const nameEl = document.getElementById('pzPlayerName');
-  const yearEl = document.getElementById('pzPlayerYear');
-  const teacherEl = document.getElementById('pzPlayerTeacher');
-  if (nameEl) nameEl.value = p.name || '';
-  if (yearEl) yearEl.value = p.year || '';
-  if (teacherEl) teacherEl.value = p.teacher || '';
-}
-
-function openPuzzleProfileModal(){
-  fillPuzzleProfileForm();
-  document.getElementById('pzProfileError')?.classList.add('hidden');
-  document.getElementById('pzProfileModal')?.classList.remove('hidden');
-}
-
-function closePuzzleProfileModal(){
-  document.getElementById('pzProfileModal')?.classList.add('hidden');
-}
-
-function showPassedToast(name){
-  if (!name) return;
-  const old = document.querySelector('.pz-pass-toast');
-  if (old) old.remove();
-
-  const toast = document.createElement('div');
-  toast.className = 'pz-pass-toast';
-  toast.textContent = `🔥 Hai superato ${name}!`;
-  document.body.appendChild(toast);
-
-  setTimeout(() => {
-    toast.style.transition = 'opacity .35s ease, transform .35s ease';
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(-50%) translateY(-8px)';
-    setTimeout(() => toast.remove(), 400);
-  }, 2200);
-}
-
-function ensurePuzzleProfileBeforeStart(){
-  const p = getPuzzleProfile();
-  if (p.name) return true;
-  openPuzzleProfileModal();
-  return false;
-}
-
-function formatPuzzleTime(totalSeconds){
-  const s = Math.max(0, Number(totalSeconds) || 0);
-  const mm = String(Math.floor(s / 60)).padStart(2, '0');
-  const ss = String(s % 60).padStart(2, '0');
-  return `${mm}:${ss}`;
-}
-
-function renderPuzzleLeaderboard(data){
-  if (PZ.lbWeek) PZ.lbWeek.textContent = `Settimana ${data?.weekKey || 'corrente'}`;
-
-  const me = normalizePlayerName(localStorage.getItem('ws_puzzle_player_name') || '');
-  const myYear = normalizePuzzleYear(localStorage.getItem('ws_puzzle_player_year') || '');
-  const myTeacher = normalizeTeacherName(localStorage.getItem('ws_puzzle_player_teacher') || '');
-
-  if (PZ.lbPlayer){
-    const rank = Number(data?.myRank || 0);
-    const myBest = Number(data?.myBest || 0);
-    const extra = [myYear, myTeacher].filter(Boolean).join(' · ');
-
-    if (me && rank > 0){
-      PZ.lbPlayer.innerHTML = `TU · <b>${me}</b>${extra ? ` · ${extra}` : ''} · posizione <b>#${rank}</b> · miglior punteggio <b>${myBest}</b>`;
-      PZ.lbPlayer.classList.remove('hidden');
-    } else if (me && myBest > 0){
-      PZ.lbPlayer.innerHTML = `TU · <b>${me}</b>${extra ? ` · ${extra}` : ''} · miglior punteggio <b>${myBest}</b>`;
-      PZ.lbPlayer.classList.remove('hidden');
-    } else {
-      PZ.lbPlayer.classList.add('hidden');
-      PZ.lbPlayer.textContent = '';
-    }
-  }
-
-  if (!PZ.lbList) return;
-  const top = Array.isArray(data?.top) ? data.top : [];
-  if (!top.length){
-    PZ.lbList.innerHTML = '<div class="card">Nessun risultato questa settimana. Sii il primo a giocare!</div>';
-    return;
-  }
-
-  PZ.lbList.innerHTML = top.map((row, idx) => {
-    const pos = idx + 1;
-    const isMe = normalizePlayerName(row.name) === me;
-
-    const medal =
-      pos === 1 ? '🥇' :
-      pos === 2 ? '🥈' :
-      pos === 3 ? '🥉' : '';
-
-    const topClass =
-      pos === 1 ? ' top1' :
-      pos === 2 ? ' top2' :
-      pos === 3 ? ' top3' : '';
-
-    const meClass = isMe ? ' me' : '';
-    const meBadge = isMe ? '<span class="pz-me-badge">TU</span>' : '';
-
-    const extraParts = [];
-    if (row.year) extraParts.push(row.year);
-    if (row.teacher) extraParts.push(row.teacher);
-
-    return `
-      <div class="pz-lb-row${topClass}${meClass}">
-        <div class="pz-lb-rank">
-          ${medal ? `<span class="pz-medal" aria-hidden="true">${medal}</span>` : `#${pos}`}
-        </div>
-        <div class="pz-lb-main">
-          <div class="pz-lb-name">${meBadge}${row.name || 'Giocatore'}</div>
-          ${extraParts.length ? `<div class="pz-lb-extra">${extraParts.join(' · ')}</div>` : ''}
-          <div class="pz-lb-meta">${row.difficulty || '-'} · ${formatPuzzleTime(row.timeSeconds)} · errori ${row.errors ?? 0} · vite ${row.livesLeft ?? 0}</div>
-        </div>
-        <div class="pz-lb-score">${row.score ?? 0}</div>
-      </div>
-    `;
-  }).join('');
-}
-
-async function openPuzzleLeaderboard(){
-  PZ.lbModal?.classList.remove('hidden');
-  if (PZ.lbList) PZ.lbList.innerHTML = '<div class="card">Caricamento classifica…</div>';
-  try {
-    const me = normalizePlayerName(localStorage.getItem('ws_puzzle_player_name') || '');
-    const url = me ? `/api/puzzle-leaderboard?name=${encodeURIComponent(me)}` : '/api/puzzle-leaderboard';
-    const res = await fetch(url, { cache:'no-store' });
-    const data = await res.json();
-    renderPuzzleLeaderboard(data);
-  } catch (err){
-    console.error('Errore classifica puzzle', err);
-    if (PZ.lbList) PZ.lbList.innerHTML = '<div class="card">Classifica momentaneamente non disponibile.</div>';
-  }
-}
-
-async function submitPuzzleScore(){
-  const profile = getPuzzleProfile();
-
-  const payload = {
-    name: profile.name,
-    year: profile.year,
-    teacher: profile.teacher,
-    difficulty: getPuzzleDifficultyLabel(),
-    timeSeconds: getPuzzleElapsedSeconds(),
-    livesLeft: PZ.lives,
-    errors: PZ.errors
-  };
-
-  const res = await fetch('/api/puzzle-score', {
-    method:'POST',
-    headers:{ 'Content-Type':'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  if (!res.ok) throw new Error('score submit failed');
-  return await res.json();
-}
-
-async function showPuzzleVictoryCard(){
-  let result = null;
-  try {
-    result = await submitPuzzleScore();
-    if (result?.passedPlayer) showPassedToast(result.passedPlayer);
-  } catch (err){
-    console.error('Errore salvataggio score puzzle', err);
-  }
-
-  const profile = getPuzzleProfile();
-  const bravo = document.createElement('div');
-  bravo.className = 'bravo';
-
-  const time = formatPuzzleTime(getPuzzleElapsedSeconds());
-  const score = Number(result?.score || getPuzzlePreviewScore());
-  const rank = Number(result?.rank || 0);
-
-  bravo.innerHTML = `
-    <div class="bravo-card">
-      <div class="bravo-title">Bravo!</div>
-      <div class="bravo-lines">
-        Giocatore: <b>${profile.name || 'Giocatore'}</b><br>
-        ${profile.year ? `Anno: <b>${profile.year}</b><br>` : ''}
-        ${profile.teacher ? `Maestra/Maestro: <b>${profile.teacher}</b><br>` : ''}
-        Tempo: <b>${time}</b><br>
-        Difficoltà: <b>${getPuzzleDifficultyLabel()}</b><br>
-        Errori: <b>${PZ.errors}</b> · Vite rimaste: <b>${PZ.lives}</b><br>
-        Punteggio settimanale: <b>${score}</b>${rank ? `<br>Posizione attuale: <b>#${rank}</b>` : ''}
-      </div>
-      <div class="bravo-hint">Tocca per ricominciare · usa “🏆 Classifica” per confrontarti con tutti</div>
-    </div>
-  `;
-
-  const restart = ()=>{
-    bravo.remove();
-    startPuzzle();
-  };
-  bravo.addEventListener('click', restart, { once:true });
-  document.body.appendChild(bravo);
-}
-
-
-/* --- vite --- */
-function setLives(n){
-  PZ.lives = n;
-  if (PZ.livesEl) PZ.livesEl.textContent = String(Math.max(0, n));
-}
-function gameOver(){
-  const over = document.createElement('div');
-  over.className = 'bravo';
-  over.textContent = 'Peccato! Tocca per riprovare';
-  const restart = ()=>{
-    over.remove();
-    startPuzzle(true);
-  };
-  over.addEventListener('click', restart, { once:true });
-  document.body.appendChild(over);
-}
-
-/* --- immagine casuale evitando ripetizione --- */
-let pzLastIndex = -1;
-function pickRandomPuzzleSrc(){
-  const MAX = 27;
-  let i;
-  do { i = Math.floor(Math.random()*MAX)+1; } while (MAX>1 && i===pzLastIndex);
-  pzLastIndex = i;
-  return `./assets/images/puzzles/${i}.png`;
-}
-function loadNewPuzzleImage(){
-  if (PZ.img) PZ.img.src = pickRandomPuzzleSrc();
-}
-
-/* --- griglia n×n --- */
-function buildGrid(n){
-  PZ.size = n;
-  if (!PZ.grid) return;
-
-  PZ.grid.innerHTML = '';
-  PZ.grid.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
-  PZ.grid.style.gridTemplateRows    = `repeat(${n}, 1fr)`;
-
-  // matrice copertine scelte
-  const coverAt = Array.from({length:n}, ()=> Array(n).fill(null));
-
-  for (let r = 0; r < n; r++){
-    for (let c = 0; c < n; c++){
-      const ban = new Set();
-      if (c > 0) ban.add(coverAt[r][c-1]); // vieta la stessa della tessera a sinistra
-      if (r > 0) ban.add(coverAt[r-1][c]); // vieta la stessa della tessera sopra
-
-      const choices = TILE_COVERS.filter(u => !ban.has(u));
-      const pick = choices[Math.floor(Math.random() * choices.length)];
-      coverAt[r][c] = pick;
-
-      const tile = document.createElement('div');
-      tile.className = 'pz-tile';
-      tile.style.setProperty('--cover-url', `url("${pick}")`);
-      PZ.grid.appendChild(tile);
-    }
-  }
-}
-
-function livingTiles(){
-  return PZ.grid ? Array.from(PZ.grid.querySelectorAll('.pz-tile:not(.cleared)')) : [];
-}
-
-/* --- rivela un tassello e verifica vittoria --- */
-function revealRandomTileAndCheckWin(){
-  const live = livingTiles();
-  if (!live.length) return;
-
-  const t = live[Math.floor(Math.random()*live.length)];
-
-  // reset + avvio animazione
-  t.classList.remove('hit');
-  t.style.animation = 'none';
-  t.offsetHeight; // reflow
-  t.style.animation = '';
-  t.classList.add('hit');
-
-  let finalized = false;
-  const finalize = ()=>{
-    if (finalized) return;
-    finalized = true;
-
-    t.classList.remove('hit');
-    t.classList.add('cleared');
-    // fallback visivo inline
-    t.style.opacity = '0';
-    t.style.visibility = 'hidden';
-    t.style.pointerEvents = 'none';
-
-    // puff
-    try {
-      const wrap = PZ.grid?.parentElement;
-      if (wrap){
-        const tr = t.getBoundingClientRect();
-        const wr = wrap.getBoundingClientRect();
-        const puff = document.createElement('div');
-        puff.className = 'puff';
-        puff.style.left = (tr.left + tr.width/2 - wr.left) + 'px';
-        puff.style.top  = (tr.top  + tr.height/2 - wr.top)  + 'px';
-        wrap.appendChild(puff);
-        puff.addEventListener('animationend', ()=>puff.remove(), { once:true });
-      }
-    } catch {}
-
-    // vittoria?
-    if (!livingTiles().length){
-      try { $('#fxVictory')?.play(); } catch {}
-      stopBg();
-      clearInterval(PZ.timer);
-      if (!PZ.won){
-        PZ.won = true;
-        setTimeout(()=>{ showPuzzleVictoryCard(); }, 300);
-      }
-    }
-  };
-
-  // standard: quando l'animazione finisce
-  const onEnd = ()=>{ t.removeEventListener('animationend', onEnd); finalize(); };
-  t.addEventListener('animationend', onEnd);
-
-  // fallback temporale
-  setTimeout(finalize, 700);
-}
-
-/* --- timer --- */
-function startTimer(){
-  clearInterval(PZ.timer);
-  PZ.t0 = Date.now();
-  refreshPuzzleScore();
-  PZ.timer = setInterval(()=>{
-    const s = Math.floor((Date.now()-PZ.t0)/1000);
-    const m = `${Math.floor(s/60)}`.padStart(2,'0');
-    const ss= `${s%60}`.padStart(2,'0');
-    if (PZ.time) PZ.time.textContent = `${m}:${ss}`;
-    refreshPuzzleScore();
-  }, 500);
-}
-
-/* ====================== QUIZ ENGINE (random vero) ====================== */
-const Quiz = (function(){
-  let pool = [];        // tutte le chiavi disponibili
-  let deck = [];        // mazzo rimanente (SEMpre mescolato)
-  let current = null;   // { q, correct, answers }
-
-  function shuffle(a){
-    for(let i=a.length-1;i>0;i--){
-      const j = Math.floor(Math.random()*(i+1));
-      [a[i],a[j]] = [a[j],a[i]];
-    }
-    return a;
-  }
-
-  function buildPool(){
-    pool = SONGS.filter(s => !isFeaturedSong(s) && s?.songTitle && s?.danceTitle && s?.singerName).flatMap(s=>{
-      const keys = [];
-      keys.push({ type:'SINGER', year:s.year, num:s.songNumber });
-      keys.push({ type:'DANCE',  year:s.year, num:s.songNumber });
-      return keys;
-    });
-    deck = shuffle([...pool]);
-  }
-
-  function ensureDeck(){
-    if (!deck.length) {
-      // quando finisce, ricrea un mazzo nuovo e mescolato
-      deck = shuffle([...pool]);
-    }
-  }
-
-  function pickOptions(correct, field){
-    const uniq = new Set([correct]);
-    let guard = 0;
-    while(uniq.size<4 && guard<800){
-      guard++;
-      const o = SONGS[Math.floor(Math.random()*SONGS.length)]?.[field];
-      if(o) uniq.add(o);
-    }
-    return shuffle([...uniq]);
-  }
-
-  function makeQuestion(key){
-    const s = SONGS.find(x=> x.year==key.year && x.songNumber==key.num);
-    if(!s) return { q:'Domanda non disponibile', correct:'', answers:[] };
-
-    if(key.type==='SINGER'){
-      return {
-        q: `Chi è il cantante di “${s.songTitle}”?`,
-        correct: s.singerName,
-        answers: pickOptions(s.singerName, 'singerName')
-      };
-    } else {
-      return {
-        q: `Qual è il titolo del ballo per “${s.songTitle}”?`,
-        correct: s.danceTitle,
-        answers: pickOptions(s.danceTitle, 'danceTitle')
-      };
-    }
-  }
-
-  function next(){
-    ensureDeck();
-    const k = deck.pop();              // preleva dall’estremità del mazzo mescolato
-    current = makeQuestion(k);
-    return current;
-  }
-
-  function get(){ return current; }
-
-  const norm = v => String(v??'').trim().toLowerCase();
-  function isCorrect(ans){ return norm(ans) === norm(current?.correct); }
-
-  function init(){ buildPool(); }                // costruisce pool + deck mescolato
-  function reset(){ deck = shuffle([...pool]); } // <<< ora reset mescola SEMPRE
-
-  return { init, next, get, isCorrect, reset };
-})();
-
-
-/* --- render domanda --- */
-function renderQuestion(){
-  const q = Quiz.get() || Quiz.next();
-  if (!PZ.q || !PZ.ans) return;
-  PZ.q.textContent = q.q;
-  PZ.ans.innerHTML = '';
-  q.answers.forEach(opt=>{
-    const btn = document.createElement('button');
-    btn.className = 'btn';
-    btn.textContent = String(opt).toUpperCase();
-    btn.dataset.raw = String(opt);
-    btn.addEventListener('click', ()=> onAnswer(btn.dataset.raw));
-    PZ.ans.appendChild(btn);
-  });
-}
-
-/* --- gestione risposta --- */
-function onAnswer(val){
-  if(!Quiz.get()) return;
-
-  if(Quiz.isCorrect(val)){
-    try{ $('#fxOk')?.play(); }catch{}
-    try{ const gun=$('#fxGun'); if(gun){ gun.currentTime=0; gun.play().catch(()=>{});} }catch{}
-    revealRandomTileAndCheckWin();
-    Quiz.next();
-    renderQuestion();
-    return;
-  }
-
-  // errata → non cambiare domanda
-  try{ $('#fxWrong')?.play(); }catch{}
-  const no = PZ.no;
-  if(no){ no.classList.remove('hidden'); no.classList.add('shake'); }
-  setTimeout(()=>{
-    if(no){ no.classList.add('hidden'); no.classList.remove('shake'); }
-    PZ.errors += 1;
-    setLives(PZ.lives - 1);
-    refreshPuzzleScore();
-    if(PZ.lives <= 0){ stopBg(); gameOver(); }
-  }, 700);
-}
-
-/* --- misura topbar per safe-area iOS e centratura --- */
-function updateTopbarHeight(){
-  const tb = document.querySelector('.pz-topbar');
-  if (!tb) return;
-  document.documentElement.style.setProperty('--pz-topbar-h', tb.offsetHeight + 'px');
-}
-
-/* --- avvio / UI puzzle --- */
-function startPuzzle(){
-  if (!ensurePuzzleProfileBeforeStart()) return;
-
-  if (PZ.root){
-    PZ.root.style.display = '';
-    PZ.root.classList.remove('hidden');
-    PZ.root.setAttribute('aria-hidden','false');
-  }
-
-  PZ.time = 0;
-  PZ.lives = 3;
-  PZ.errors = 0;
-
-  PZ.timeEl.textContent = '0';
-  PZ.livesEl.textContent = '3';
-  PZ.scoreEl.textContent = '0';
-
-  clearInterval(PZ.timer);
-  PZ.timer = setInterval(()=>{
-    PZ.time++;
-    PZ.timeEl.textContent = PZ.time;
-  },1000);
-
-  buildTiles();
-  startBg();
-}
-
-// Effetto "liquid light" che segue il dito/mouse
-(function attachLiquidFollow(){
-  const grid = PZ.grid;
-  if (!grid || grid.__liquidBound) return;
-  grid.__liquidBound = true;
-
-  const move = (e)=>{
-    const r = grid.getBoundingClientRect();
-    const x = ((e.clientX - r.left) / r.width) * 100;
-    const y = ((e.clientY - r.top) / r.height) * 100;
-    grid.style.setProperty('--mx', x.toFixed(1) + '%');
-    grid.style.setProperty('--my', y.toFixed(1) + '%');
-  };
-  grid.addEventListener('pointermove', move);
-  grid.addEventListener('pointerleave', ()=> {
-    grid.style.setProperty('--mx', '50%');
-    grid.style.setProperty('--my', '40%');
-  });
-})();
-
-
-
-/* --- bindings UI puzzle --- */
-//$('#btnPuzzle')?.addEventListener('click', ()=> startPuzzle());
-$('#pzClose' )?.addEventListener('click', ()=>{ PZ.root?.classList.add('hidden'); PZ.lbModal?.classList.add('hidden'); clearInterval(PZ.timer); stopBg(); });
-$('#pzBack'  )?.addEventListener('click', ()=>{ PZ.root?.classList.add('hidden'); PZ.lbModal?.classList.add('hidden'); clearInterval(PZ.timer); stopBg(); });
-$('#pzNext'  )?.addEventListener('click', ()=>{ loadNewPuzzleImage(); buildGrid(PZ.size); updateTopbarHeight(); refreshPuzzleScore(); });
-$('#pzLeaderboard')?.addEventListener('click', ()=> openPuzzleLeaderboard());
-$('#pzLbClose')?.addEventListener('click', ()=> PZ.lbModal?.classList.add('hidden'));
-$('#pzProfileBtn')?.addEventListener('click', ()=> openPuzzleProfileModal());
-
-$('#pzProfileClose')?.addEventListener('click', ()=> closePuzzleProfileModal());
-
-$('#pzProfileForm')?.addEventListener('submit', (e)=>{
-  e.preventDefault();
-
-  const name = normalizePlayerName(document.getElementById('pzPlayerName')?.value || '');
-  const year = normalizePuzzleYear(document.getElementById('pzPlayerYear')?.value || '');
-  const teacher = normalizeTeacherName(document.getElementById('pzPlayerTeacher')?.value || '');
-  const err = document.getElementById('pzProfileError');
-
-  if (!name){
-    err?.classList.remove('hidden');
-    return;
-  }
-
-  savePuzzleProfile({ name, year, teacher });
-  err?.classList.add('hidden');
-  closePuzzleProfileModal();
-  startPuzzle();
-});
-
-
-$$('.chip-btn').forEach(b=>{
-  b.addEventListener('click', ()=>{
-    $$('.chip-btn').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
-    PZ.size = +b.dataset.diff;
-    buildGrid(PZ.size);
-    const max = PZ_CFG.livesByGrid[PZ.size] ?? 5;
-    setLives(max);
-    refreshPuzzleScore();
-  });
-});
-
-addEventListener('resize', updateTopbarHeight);
-addEventListener('orientationchange', updateTopbarHeight);
-
 /* ====== FILTRI ====== */
 $('#fDance')?.addEventListener('input', debounce(e=>{ FILTER.dance = e.target.value; render(); }));
 $('#fSong' )?.addEventListener('input', debounce(e=>{ FILTER.song  = e.target.value; render(); }));
+
+$$('.course-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const course = btn.dataset.course;
+    if (course !== 'line' && course !== 'catalano') return;
+    FILTER.course = course;
+    FILTER.year = 'all';
+    syncCourseFilterUI();
+    render();
+  });
+});
+
+$$('.year-chip').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (FILTER.course !== 'line') return;
+    const year = btn.dataset.year;
+    if (year !== 'all' && !['1','2','3','4'].includes(year)) return;
+    FILTER.year = year;
+    syncCourseFilterUI();
+    render();
+  });
+});
+
 $('#clearFilters')?.addEventListener('click', ()=>{
-  FILTER={dance:'',song:''};
+  FILTER.dance = '';
+  FILTER.song = '';
+  FILTER.year = 'all';
   const fd = $('#fDance'), fs = $('#fSong');
   if (fd) fd.value='';
   if (fs) fs.value='';
+  syncCourseFilterUI();
   render();
 });
+
+syncCourseFilterUI();
 
 /* ====== DATA LOAD ====== */
 function normalizeSongRow(row){
@@ -1377,7 +779,6 @@ async function load(){
     SONGS = data.map(normalizeSongRow);
     SONGS.sort((a,b)=> (b.songNumber||0) - (a.songNumber||0));
     promoteFeaturedSong(SONGS);
-    Quiz.init();
     render();
   }catch(e){
     if (elCards) elCards.innerHTML = `<div class="card">Errore nel caricamento dati.</div>`;
@@ -1474,40 +875,6 @@ if ('ResizeObserver' in window) {
   if (document.readyState === 'complete' || document.readyState === 'interactive'){
     setTimeout(styleCards, 0);
   }
-})();
-
-/* ===== COUNTDOWN EVENTO ===== */
-(function(){
-
-  // 👉 imposta data evento (MODIFICA QUI)
-  const eventDate = new Date("2026-06-12T15:00:00"); 
-
-  function updateCountdown(){
-    const now = new Date();
-    const diff = eventDate - now;
-
-    if (diff <= 0){
-      document.getElementById('ec-days').textContent = '0';
-      document.getElementById('ec-hours').textContent = '0';
-      document.getElementById('ec-min').textContent = '0';
-      document.getElementById('ec-sec').textContent = '0';
-      return;
-    }
-
-    const d = Math.floor(diff / (1000*60*60*24));
-    const h = Math.floor((diff / (1000*60*60)) % 24);
-    const m = Math.floor((diff / (1000*60)) % 60);
-    const s = Math.floor((diff / 1000) % 60);
-
-    document.getElementById('ec-days').textContent = d;
-    document.getElementById('ec-hours').textContent = h;
-    document.getElementById('ec-min').textContent = m;
-    document.getElementById('ec-sec').textContent = s;
-  }
-
-  setInterval(updateCountdown, 1000);
-  updateCountdown();
-
 })();
 
 /* ===== HERO PREMIUM ON SCROLL ===== */

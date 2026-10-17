@@ -577,6 +577,32 @@ article.card:hover{
 }
 
 
+/* ===== Event logo watermark: exact selected cards only ===== */
+.card-event-watermark{
+  overflow:hidden;
+}
+
+.card-event-watermark .card-watermark-img{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:min(58%, 430px);
+  height:82%;
+  transform:translate(-50%, -50%);
+  object-fit:contain;
+  object-position:center;
+  opacity:.18;
+  pointer-events:none;
+  user-select:none;
+  z-index:0;
+}
+
+.card-event-watermark .card-row,
+.card-event-watermark .actions{
+  position:relative;
+  z-index:2;
+}
+
 
 .card-row{
   display:flex;
@@ -883,223 +909,6 @@ article.card:hover{
   line-height:1.4;
 }
 
-/* ===== puzzle ===== */
-.pz-profile-card{ max-width:460px; }
-.pz-profile-body{ margin-top:12px; }
-.pz-profile-note{ font-size:13px; opacity:.75; margin-bottom:10px; }
-
-.pz-topbar{
-  position:fixed;
-  top:calc(env(safe-area-inset-top, 0px) + 12px);
-  left:50%;
-  transform:translateX(-50%);
-  width:min(96vw, 980px);
-  box-sizing:border-box;
-  z-index:50;
-  display:flex;
-  gap:8px;
-  align-items:center;
-  justify-content:center;
-  flex-wrap:wrap;
-  padding:8px 10px;
-  border-radius:14px;
-  backdrop-filter:blur(10px) saturate(140%);
-  -webkit-backdrop-filter:blur(10px) saturate(140%);
-  background:linear-gradient(180deg, rgba(10,15,20,.65), rgba(10,15,20,.35));
-  color:#fff;
-  text-shadow:0 1px 2px rgba(0,0,0,.35);
-}
-
-.pz-stage{
-  display:grid;
-  place-items:center;
-  min-height:60vh;
-  padding-top:calc(env(safe-area-inset-top, 0px) + var(--pz-topbar-h, 76px) + 28px);
-  padding-bottom:clamp(150px, 28vh, 240px);
-}
-
-.pz-img-wrap{
-  position:relative;
-  width:min(90vw,820px);
-  aspect-ratio:4/3;
-}
-.pz-img-wrap img#pzImg{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:contain;
-  z-index:1;
-}
-
-#pzGrid{
-  position:absolute;
-  inset:0;
-  z-index:2;
-  display:grid;
-  gap:6px;
-  --mx:50%;
-  --my:40%;
-}
-
-.pz-tile{
-  position:relative;
-  isolation:isolate;
-  overflow:hidden;
-  border-radius:16px;
-  background:
-    var(--cover-url) center/cover no-repeat padding-box,
-    linear-gradient(#0d1014,#0d1014) padding-box;
-  border:1px solid transparent;
-  background-clip:padding-box, padding-box, border-box;
-  box-shadow:
-    0 1px 0 rgba(255,255,255,.06) inset,
-    0 8px 20px rgba(0,0,0,.35);
-}
-.pz-tile::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  z-index:1;
-  border-radius:inherit;
-  pointer-events:none;
-  background:
-    radial-gradient(80% 60% at var(--mx) var(--my), rgba(255,255,255,.18), rgba(255,255,255,.06) 35%, transparent 60%),
-    linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,.18));
-  mix-blend-mode:screen;
-}
-.pz-tile::after{
-  content:"";
-  position:absolute;
-  inset:-1px;
-  border-radius:inherit;
-  z-index:2;
-  background:conic-gradient(from 0deg, #ff8a00, #ffd36a 12%, #ff8a00 28%, #b14d00 52%, #ff8a00 76%, #ffd36a 88%, #ff8a00);
-  animation:liquidSpin 6s linear infinite;
-  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite:xor;
-  mask-composite:exclude;
-}
-@keyframes liquidSpin{ to{ transform:rotate(360deg); } }
-
-.pz-tile.hit{ animation:pzFlipOut 0.6s ease forwards; }
-@keyframes pzFlipOut{
-  0%{ transform:perspective(700px) rotateY(0deg) scale(1); opacity:1; }
-  45%{ transform:perspective(700px) rotateY(90deg) scale(1.03); opacity:1; }
-  60%{ opacity:.35; }
-  100%{ transform:perspective(700px) rotateY(180deg) scale(.98); opacity:0; }
-}
-.pz-tile.cleared{
-  opacity:0 !important;
-  visibility:hidden;
-  pointer-events:none;
-}
-
-.no-img{
-  position:absolute;
-  inset:auto auto 4% 50%;
-  transform:translateX(-50%);
-  width:min(42vw,300px);
-  z-index:3;
-}
-.no-img.shake{ animation:shake .7s; }
-@keyframes shake{
-  0%,100%{ transform:translate(-50%,0); }
-  20%{ transform:translate(-50%,-8px) rotate(-4deg); }
-  40%{ transform:translate(-50%,6px) rotate(3deg); }
-  60%{ transform:translate(-50%,-4px) rotate(-2deg); }
-  80%{ transform:translate(-50%,2px) rotate(1deg); }
-}
-
-.qa-card{
-  position:fixed;
-  left:50%;
-  bottom:16px;
-  transform:translateX(-50%);
-  width:min(96vw,980px);
-  background:url('./assets/images/wood.png') center/cover;
-  border-radius:16px;
-  padding:14px;
-  color:#fff;
-  z-index:25;
-  box-shadow:0 18px 60px rgba(0,0,0,.53);
-}
-.qa-title{ font-weight:900; margin:4px 6px 10px; }
-.qa-answers{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-.qa-answers .btn{
-  background:#fff;
-  color:#111;
-  border-radius:12px;
-}
-
-.bravo{
-  position:fixed;
-  inset:0;
-  display:grid;
-  place-items:center;
-  z-index:26;
-  background:rgba(0,0,0,.35);
-  backdrop-filter:blur(4px);
-  color:#fff;
-  font-weight:900;
-  font-size:clamp(22px,5vw,44px);
-}
-
-/* leaderboard */
-.pz-lb-sub{ opacity:.8; margin:8px 0 10px; }
-.pz-lb-player{
-  margin:8px 0 12px;
-  padding:10px 12px;
-  border-radius:14px;
-  background:rgba(255,255,255,.08);
-}
-.pz-lb-list{ display:grid; gap:10px; }
-.pz-lb-row{
-  display:grid;
-  grid-template-columns:auto 1fr auto;
-  gap:12px;
-  align-items:center;
-  padding:12px;
-  border-radius:16px;
-  background:rgba(255,255,255,.08);
-}
-.pz-lb-row.top1{ background:linear-gradient(135deg,#3a2a00,#6b4b00); }
-.pz-lb-row.top2{ background:linear-gradient(135deg,#2f2f2f,#555); }
-.pz-lb-row.top3{ background:linear-gradient(135deg,#3a260f,#6a3d14); }
-
-.pz-medal{
-  font-size:20px;
-  display:inline-block;
-  animation:medalGlow 2s ease-in-out infinite alternate;
-}
-@keyframes medalGlow{
-  from{ filter:drop-shadow(0 0 2px rgba(255,215,0,.4)); }
-  to{ filter:drop-shadow(0 0 12px rgba(255,215,0,.9)); }
-}
-
-.pz-lb-score{ font-weight:900; }
-.pz-lb-name{ font-weight:800; }
-.pz-lb-extra,
-.pz-lb-meta{ opacity:.8; font-size:13px; }
-
-.pz-pass-toast{
-  position:fixed;
-  left:50%;
-  bottom:96px;
-  transform:translateX(-50%);
-  z-index:70;
-  padding:12px 16px;
-  border-radius:999px;
-  background:rgba(0,0,0,.74);
-  color:#fff;
-  box-shadow:0 10px 30px rgba(0,0,0,.25);
-}
-
 /* ===== footer ===== */
 .footer{
   position:relative;
@@ -1170,11 +979,6 @@ article.card:hover{
   .asia-main{ gap:6px; }
 }
 
-@media (max-width: 420px){
-  #pzGrid{ gap:4px; }
-  .pz-tile{ border-radius:14px; }
-  .pz-topbar{ width:94vw; }
-}
 
 @media (prefers-reduced-motion: reduce){
   article.card,
@@ -1186,126 +990,417 @@ article.card:hover{
     transition:none !important;
     animation:none !important;
   }
-  .pz-tile::after{ animation:none; }
-  .pz-tile.hit{ animation:none; opacity:0; }
 }
 
-.card-secret-special{
-  border: 1px solid rgba(255,255,255,.28);
+/* ====== CORSI / FILTRI ANNO ====== */
+.course-switch{
+  width:min(520px, calc(100% - 24px));
+  margin:4px auto 6px;
+  padding:4px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:4px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:16px;
+  background:rgba(10,12,14,.38);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 8px 22px rgba(0,0,0,.18);
+  backdrop-filter:blur(14px) saturate(130%);
+  -webkit-backdrop-filter:blur(14px) saturate(130%);
 }
 
-.action-secret{
-  cursor: pointer;
+.course-tab{
+  min-height:36px;
+  border:1px solid transparent;
+  border-radius:12px;
+  background:transparent;
+  color:rgba(255,255,255,.78);
+  font:inherit;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.035em;
+  cursor:pointer;
+  transition:transform .16s ease, background .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease;
 }
 
-.ws-secret-no{
-  position: fixed;
-  left: 50%;
-  top: 52%;
-  transform: translate(-50%, -50%);
-  width: min(34vw, 220px);
-  z-index: 1200;
-  pointer-events: none;
-  filter: drop-shadow(0 10px 24px rgba(0,0,0,.35));
+.course-tab.active{
+  color:#241500;
+  border-color:rgba(255,214,102,.68);
+  background:linear-gradient(180deg, rgba(255,218,112,.98), rgba(205,143,31,.96));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55), 0 4px 14px rgba(0,0,0,.24);
 }
 
-.shake-no{
-  animation: wsNoShake .9s ease;
+.course-tab:active{ transform:scale(.98); }
+
+.year-filters{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:5px;
+  margin:0 auto 5px;
+  padding:0 10px;
 }
 
-@keyframes wsNoShake{
-  0%   { transform: translate(-50%, -50%) rotate(0deg); }
-  15%  { transform: translate(-50%, -50%) rotate(-10deg); }
-  30%  { transform: translate(-50%, -50%) rotate(10deg); }
-  45%  { transform: translate(-50%, -50%) rotate(-8deg); }
-  60%  { transform: translate(-50%, -50%) rotate(8deg); }
-  75%  { transform: translate(-50%, -50%) rotate(-4deg); }
-  100% { transform: translate(-50%, -50%) rotate(0deg); }
+.year-chip{
+  min-height:28px;
+  padding:4px 9px;
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:999px;
+  background:rgba(0,0,0,.28);
+  color:rgba(255,255,255,.82);
+  font:inherit;
+  font-size:10px;
+  font-weight:850;
+  letter-spacing:.02em;
+  cursor:pointer;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
 }
 
-/* ===== Luca Disastro card/prank ===== */
-.card-luca-special{
-  border-color:rgba(255,90,60,.45);
+.year-chip.active{
+  color:#fff4d0;
+  border-color:rgba(255,202,79,.65);
+  background:rgba(171,108,13,.78);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 3px 10px rgba(0,0,0,.2);
+}
+
+.year-filters.hidden{ display:none !important; }
+
+@media (max-width: 520px){
+  .course-switch{
+    width:calc(100% - 20px);
+    margin-top:2px;
+  }
+  .course-tab{
+    min-height:34px;
+    font-size:11px;
+  }
+  .year-filters{
+    gap:4px;
+    padding:0 6px;
+  }
+  .year-chip{
+    padding:4px 7px;
+    font-size:9px;
+  }
+}
+
+/* ===== HALLOWEEN 2026 · attivo solo con body.halloween-mode ===== */
+body.halloween-mode{
+  --brand:#ff7417;
+  --brandText:#ffe1b8;
+  --bg:#09060d;
+}
+
+body.halloween-mode .bg.main{
+  filter:brightness(.48) saturate(92%) contrast(108%);
+}
+
+body.halloween-mode .bg.blur{
+  filter:blur(5px) brightness(.38) saturate(125%) contrast(112%);
+}
+
+body.halloween-mode .splash{
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 50% 32%, rgba(116,44,139,.24), transparent 35%),
+    radial-gradient(circle at 50% 115%, rgba(255,103,16,.22), transparent 42%),
+    linear-gradient(180deg,#08040c 0%,#020203 100%);
+}
+
+body.halloween-mode .splash::before{
+  content:"🦇";
+  position:absolute;
+  top:7%;
+  left:9%;
+  font-size:clamp(28px,7vw,58px);
+  opacity:.80;
+  transform:rotate(-14deg);
+  filter:drop-shadow(0 0 10px rgba(154,72,199,.45));
+  animation:wsHalloweenBat 4.8s ease-in-out infinite;
+  pointer-events:none;
+}
+
+body.halloween-mode .splash::after{
+  content:"🎃";
+  position:absolute;
+  right:8%;
+  bottom:7%;
+  font-size:clamp(38px,9vw,74px);
+  opacity:.92;
+  filter:drop-shadow(0 0 18px rgba(255,104,13,.48));
+  animation:wsPumpkinGlow 2.7s ease-in-out infinite;
+  pointer-events:none;
+}
+
+body.halloween-mode .splash-img{
+  filter:brightness(.80) contrast(1.08) saturate(.88)
+         drop-shadow(0 0 18px rgba(115,49,145,.25));
+}
+
+body.halloween-mode .splash-tip{
+  color:#ffc58a;
+  font-weight:800;
+  text-shadow:0 0 12px rgba(255,92,0,.26);
+}
+
+body.halloween-mode .splash-counter{
+  color:#ff7417;
+  text-shadow:0 2px 0 #431500,0 0 18px rgba(255,95,0,.55);
+}
+
+body.halloween-mode #startApp{
+  color:#fff2de;
+  border-color:rgba(255,137,54,.72);
+  background:
+    radial-gradient(120% 160% at 0% 0%,rgba(255,197,125,.25),transparent 55%),
+    linear-gradient(180deg,rgba(174,64,10,.98),rgba(55,12,36,.98));
   box-shadow:
-    0 8px 28px rgba(0,0,0,.28),
-    0 0 22px rgba(255,70,35,.20),
+    0 10px 30px rgba(0,0,0,.48),
+    0 0 22px rgba(255,94,0,.18),
+    inset 0 1px 0 rgba(255,204,142,.30);
+}
+
+body.halloween-mode .hero-sticky::before,
+body.halloween-mode .hero-sticky::after{
+  position:absolute;
+  top:16px;
+  font-size:clamp(24px,5vw,44px);
+  opacity:.88;
+  pointer-events:none;
+  filter:drop-shadow(0 0 11px rgba(255,98,0,.34));
+}
+
+body.halloween-mode .hero-sticky::before{
+  content:"🎃";
+  left:max(12px,calc(50% - 310px));
+  animation:wsPumpkinGlow 3.2s ease-in-out infinite;
+}
+
+body.halloween-mode .hero-sticky::after{
+  content:"🦇";
+  right:max(12px,calc(50% - 310px));
+  animation:wsHalloweenBat 4.2s ease-in-out infinite reverse;
+}
+
+body.halloween-mode .hero-sign{
+  filter:drop-shadow(0 7px 14px rgba(0,0,0,.48))
+         drop-shadow(0 0 13px rgba(255,100,0,.18));
+}
+
+body.halloween-mode .course-switch{
+  border-color:rgba(255,111,28,.32);
+  background:rgba(17,8,22,.62);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 8px 24px rgba(0,0,0,.28),
+    0 0 18px rgba(104,41,132,.12);
+}
+
+body.halloween-mode .course-tab.active{
+  color:#281100;
+  border-color:rgba(255,155,72,.76);
+  background:linear-gradient(180deg,#ff9b45,#dc5b0d);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.38),0 0 14px rgba(255,99,0,.20);
+}
+
+body.halloween-mode .year-chip.active{
+  color:#fff1dd;
+  border-color:rgba(255,123,35,.72);
+  background:linear-gradient(180deg,rgba(157,52,10,.92),rgba(75,22,79,.92));
+}
+
+body.halloween-mode .filters .input{
+  color:#fff4ea;
+  background:rgba(21,10,27,.84);
+  border:1px solid rgba(255,119,32,.22);
+}
+
+body.halloween-mode .filters .input::placeholder{
+  color:rgba(255,227,207,.58);
+}
+
+body.halloween-mode .btn-glass.btn-amber{
+  background:
+    radial-gradient(120% 180% at 0% 0%,rgba(255,180,94,.46),transparent 55%),
+    radial-gradient(120% 200% at 100% 100%,rgba(83,23,97,.95),rgba(35,10,26,.98)),
+    linear-gradient(135deg,rgba(222,84,18,.70),rgba(56,13,60,.95));
+  border-color:rgba(255,136,58,.62);
+}
+
+body.halloween-mode article.card{
+  border-color:rgba(255,118,32,.32);
+  background:
+    linear-gradient(180deg,rgba(62,22,69,.18),rgba(16,8,20,.30)) padding-box,
+    linear-gradient(180deg,rgba(255,131,50,.28),rgba(102,42,125,.12)) border-box;
+  box-shadow:
+    0 10px 32px rgba(0,0,0,.36),
+    0 0 20px rgba(96,35,123,.10),
+    inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+body.halloween-mode .card-event-watermark .card-watermark-img{
+  opacity:.22;
+  filter:drop-shadow(0 0 12px rgba(255,122,0,.18));
+}
+
+body.halloween-mode article.card:hover{
+  border-color:rgba(255,130,44,.48);
+  box-shadow:
+    0 13px 36px rgba(0,0,0,.40),
+    0 0 22px rgba(255,94,0,.13),
     inset 0 1px 0 rgba(255,255,255,.10);
 }
 
-.action-luca{
-  border-color:#ff4b2b;
-  color:#ff4b2b;
+body.halloween-mode .badge.year{
+  background:rgba(75,25,89,.88);
 }
 
-.action-luca:hover{
-  background:#ff4b2b;
+body.halloween-mode .action{
+  border-color:#ff7417;
+  color:#d85505;
+  background:rgba(255,248,240,.96);
+}
+
+body.halloween-mode .action:hover,
+body.halloween-mode .action.play-added{
   color:#fff;
+  background:linear-gradient(180deg,#f6781c,#9d3209);
+  border-color:#ff8a34;
 }
 
-.luca-disaster-overlay{
+body.halloween-mode .card-asia-special{
+  border-color:rgba(255,126,42,.48);
+  box-shadow:0 6px 20px rgba(0,0,0,.58),0 0 18px rgba(129,47,151,.15);
+}
+
+body.halloween-mode .footer{
+  color:#ffc28c;
+}
+
+body.halloween-mode .ws-scenery{
+  display:block;
   position:fixed;
   inset:0;
-  z-index:10000;
-  display:grid;
-  place-items:center;
-  background:rgba(0,0,0,.62);
-  backdrop-filter:blur(5px);
-  -webkit-backdrop-filter:blur(5px);
-}
-
-.luca-disaster-overlay.hidden{
-  display:none !important;
-}
-
-.luca-disaster-img{
-  width:min(72vw, 520px);
-  max-height:82vh;
-  object-fit:contain;
-  border-radius:22px;
-  box-shadow:
-    0 20px 60px rgba(0,0,0,.65),
-    0 0 0 3px rgba(255,255,255,.18);
-  transform:scale(.04) rotate(-8deg);
-  opacity:0;
-}
-
-.luca-disaster-overlay.show .luca-disaster-img{
-  animation:lucaDisasterZoom .75s cubic-bezier(.18,.95,.22,1.25) forwards;
-}
-
-@keyframes lucaDisasterZoom{
-  0%{
-    transform:scale(.04) rotate(-12deg);
-    opacity:0;
-    filter:brightness(1.8) blur(8px);
-  }
-  45%{
-    transform:scale(1.12) rotate(3deg);
-    opacity:1;
-    filter:brightness(1.25) blur(0);
-  }
-  70%{
-    transform:scale(.96) rotate(-1deg);
-  }
-  100%{
-    transform:scale(1) rotate(0deg);
-    opacity:1;
-    filter:brightness(1) blur(0);
-  }
-}
-
-.card-united-special .badge{
-  position:relative;
   z-index:2;
+  overflow:hidden;
+  pointer-events:none;
 }
 
-.card-united-special .title{
-  color:#fff7d6;
-  text-shadow:0 2px 4px rgba(0,0,0,.9);
+body.halloween-mode .ws-scenery::before{
+  content:"";
+  position:absolute;
+  left:-20%;
+  bottom:-7vh;
+  width:140%;
+  height:28vh;
+  opacity:.12;
+  background:
+    radial-gradient(ellipse at 20% 70%,rgba(230,220,255,.74),transparent 34%),
+    radial-gradient(ellipse at 55% 80%,rgba(190,167,221,.66),transparent 37%),
+    radial-gradient(ellipse at 85% 72%,rgba(235,223,255,.58),transparent 32%);
+  filter:blur(26px);
+  animation:wsHalloweenFog 13s ease-in-out infinite alternate;
 }
 
-.card-united-special .meta{
-  color:#fff;
-  opacity:.95;
-  text-shadow:0 2px 4px rgba(0,0,0,.9);
+body.halloween-mode .ws-scenery::after{
+  content:"🦇";
+  position:absolute;
+  top:27vh;
+  left:-50px;
+  font-size:24px;
+  opacity:.48;
+  filter:drop-shadow(0 0 8px rgba(106,46,129,.45));
+  animation:wsHalloweenFly 16s linear infinite;
+}
+
+@keyframes wsHalloweenBat{
+  0%,100%{ transform:translateY(0) rotate(-12deg) scale(1); }
+  50%{ transform:translateY(-8px) rotate(7deg) scale(1.07); }
+}
+
+@keyframes wsPumpkinGlow{
+  0%,100%{ transform:scale(1); filter:drop-shadow(0 0 8px rgba(255,104,13,.28)); }
+  50%{ transform:scale(1.06); filter:drop-shadow(0 0 20px rgba(255,104,13,.62)); }
+}
+
+@keyframes wsHalloweenFog{
+  from{ transform:translateX(-3%) scale(1); }
+  to{ transform:translateX(4%) scale(1.08); }
+}
+
+@keyframes wsHalloweenFly{
+  0%{ transform:translateX(0) translateY(0) rotate(-8deg); }
+  25%{ transform:translateX(28vw) translateY(-24px) rotate(7deg); }
+  50%{ transform:translateX(56vw) translateY(12px) rotate(-5deg); }
+  75%{ transform:translateX(84vw) translateY(-18px) rotate(8deg); }
+  100%{ transform:translateX(calc(100vw + 90px)) translateY(4px) rotate(-6deg); }
+}
+
+/* Pipistrelli e teschi vaganti: solo decorativi, non intercettano i tocchi. */
+body.halloween-mode .halloween-floater{
+  position:absolute;
+  top:var(--hf-top,40%);
+  font-size:var(--hf-size,24px);
+  line-height:1;
+  opacity:var(--hf-opacity,.32);
+  pointer-events:none;
+  user-select:none;
+  will-change:transform;
+  filter:drop-shadow(0 0 8px rgba(142,61,171,.32));
+}
+
+body.halloween-mode .halloween-bat{
+  left:-12vw;
+  animation:wsHalloweenBatDrift var(--hf-duration,18s) linear var(--hf-delay,0s) infinite;
+}
+
+body.halloween-mode .halloween-skull{
+  right:-12vw;
+  animation:wsHalloweenSkullDrift var(--hf-duration,24s) linear var(--hf-delay,0s) infinite;
+  filter:grayscale(.15) drop-shadow(0 0 9px rgba(255,117,30,.26));
+}
+
+@keyframes wsHalloweenBatDrift{
+  0%{ transform:translate3d(0,0,0) rotate(-12deg) scale(.86); }
+  25%{ transform:translate3d(30vw,var(--hf-wave1),0) rotate(9deg) scale(1.04); }
+  52%{ transform:translate3d(62vw,var(--hf-wave2),0) rotate(-7deg) scale(.95); }
+  78%{ transform:translate3d(94vw,var(--hf-wave1),0) rotate(10deg) scale(1.08); }
+  100%{ transform:translate3d(124vw,var(--hf-end-y),0) rotate(-6deg) scale(.90); }
+}
+
+@keyframes wsHalloweenSkullDrift{
+  0%{ transform:translate3d(0,0,0) rotate(7deg) scale(.88); }
+  28%{ transform:translate3d(-34vw,var(--hf-wave2),0) rotate(-10deg) scale(1.02); }
+  56%{ transform:translate3d(-68vw,var(--hf-wave1),0) rotate(8deg) scale(.94); }
+  82%{ transform:translate3d(-98vw,var(--hf-wave2),0) rotate(-9deg) scale(1.05); }
+  100%{ transform:translate3d(-124vw,var(--hf-end-y),0) rotate(5deg) scale(.90); }
+}
+
+@media (max-width:520px){
+  body.halloween-mode .hero-sticky::before{
+    left:8px;
+    top:9px;
+  }
+  body.halloween-mode .hero-sticky::after{
+    right:8px;
+    top:9px;
+  }
+  body.halloween-mode .ws-scenery::after{
+    top:34vh;
+    font-size:20px;
+    opacity:.38;
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  body.halloween-mode .splash::before,
+  body.halloween-mode .splash::after,
+  body.halloween-mode .hero-sticky::before,
+  body.halloween-mode .hero-sticky::after,
+  body.halloween-mode .ws-scenery::before,
+  body.halloween-mode .ws-scenery::after,
+  body.halloween-mode .halloween-floater{
+    animation:none !important;
+  }
 }
