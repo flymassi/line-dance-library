@@ -108,7 +108,7 @@ if (WS_HALLOWEEN_ACTIVE){
   }
 
   const tip = document.querySelector('.splash-tip');
-  if (tip) tip.textContent = 'Tocca “Avvia”… se hai coraggio 🎃';
+  if (tip) tip.textContent = '🎃🎃🎃 Tocca “Avvia”… se hai coraggio 🎃🎃🎃';
 
   const startBtn = document.getElementById('startApp');
   if (startBtn) startBtn.textContent = '🎃 Avvia';
@@ -121,7 +121,9 @@ if (WS_HALLOWEEN_ACTIVE){
 
     const specs = [
       ...Array.from({ length: 9 }, (_, i) => ({ icon:'🦇', kind:'bat', i })),
-      ...Array.from({ length: 5 }, (_, i) => ({ icon:'💀', kind:'skull', i }))
+      ...Array.from({ length: 6 }, (_, i) => ({ icon:'💀', kind:'skull', i })),
+      ...Array.from({ length: 5 }, (_, i) => ({ icon:'🧛', kind:'skull', i })),
+      ...Array.from({ length: 3 }, (_, i) => ({ icon:'🎃', kind:'skull', i }))
     ];
 
     specs.forEach((item, idx)=>{
@@ -557,9 +559,7 @@ const sweatBg = hasSweatDustBg(s);
 </div>
 
 <div class="asia-subtext">
-  ATTENZIONE!!! ATTENZIONE!!!!<br>
-  se non fai SUBSCRIBE ai nostri due canali<br>
-  andrai incontro a RESTART e TAG ERRATI tutto l'anno!!!
+  SUBSCRIBE - ATTENZIONE!!! ATTENZIONE!!!! - SUBSCIBE<br>
 </div>
 
 
