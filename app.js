@@ -1,5 +1,5 @@
-/* Western Spritz — app.js v51 · Halloween 2026 */
-console.log('[WS] app v51 · Halloween 2026');
+/* Western Spritz — app.js v53 · Halloween 2026 */
+console.log('[WS] app v53 · Halloween 2026');
 
 /*-- VERSIONE OTTIMIZZATA */
 const S_KEY = 'ws_saggio_token';
@@ -14,6 +14,88 @@ function isHalloweenPeriod(date = new Date()){
 
 const WS_HALLOWEEN_ACTIVE = isHalloweenPeriod();
 
+
+/* ====== RIPRISTINO MUSICA HALLOWEEN DOPO LINK ESTERNO ====== */
+let WS_HALLOWEEN_BG_RETURN_PENDING = false;
+let WS_HALLOWEEN_BG_RESUME_NOT_BEFORE = 0;
+let WS_HALLOWEEN_BG_RESUME_TIMER = null;
+
+function pauseHalloweenBackgroundForExternalMedia(){
+  if (!WS_HALLOWEEN_ACTIVE) return false;
+
+  const bgMusic = document.getElementById('halloweenBgMusic');
+  if (!bgMusic || bgMusic.paused || bgMusic.ended) return false;
+
+  try {
+    // Conserva currentTime: al ritorno la musica riprende dal punto interrotto.
+    bgMusic.pause();
+    WS_HALLOWEEN_BG_RETURN_PENDING = true;
+    // Evita che un focus/visibilitychange immediato faccia ripartire l'audio
+    // prima che la nuova scheda abbia avuto il tempo di aprirsi.
+    WS_HALLOWEEN_BG_RESUME_NOT_BEFORE = Date.now() + 1000;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function resumeHalloweenBackgroundAfterReturn(){
+  WS_HALLOWEEN_BG_RESUME_TIMER = null;
+
+  if (!WS_HALLOWEEN_ACTIVE || !WS_HALLOWEEN_BG_RETURN_PENDING) return;
+  if (document.hidden) return;
+
+  const splash = document.getElementById('splash');
+  if (!document.body.classList.contains('ws-started')) return;
+  if (splash && !splash.classList.contains('hidden')) return;
+
+  // Non sovrapporre il sottofondo all'urlo di apertura se l'utente torna subito.
+  const scream = document.getElementById('fxOpenScream');
+  if (scream && !scream.paused && !scream.ended){
+    scream.addEventListener('ended', resumeHalloweenBackgroundAfterReturn, { once:true });
+    return;
+  }
+
+  const bgMusic = document.getElementById('halloweenBgMusic');
+  if (!bgMusic) {
+    WS_HALLOWEEN_BG_RETURN_PENDING = false;
+    return;
+  }
+
+  try {
+    bgMusic.loop = true;
+    bgMusic.volume = 0.22;
+    bgMusic.muted = false;
+    const p = bgMusic.play();
+
+    if (p?.then) {
+      p.then(()=>{
+        WS_HALLOWEEN_BG_RETURN_PENDING = false;
+      }).catch(()=>{
+        // Mantiene pending=true: un successivo focus/visibilitychange ritenterà.
+      });
+    } else {
+      WS_HALLOWEEN_BG_RETURN_PENDING = false;
+    }
+  } catch {}
+}
+
+function scheduleHalloweenBackgroundResume(delay = 120){
+  if (!WS_HALLOWEEN_BG_RETURN_PENDING) return;
+
+  const waitForArm = Math.max(0, WS_HALLOWEEN_BG_RESUME_NOT_BEFORE - Date.now());
+  const wait = Math.max(delay, waitForArm);
+
+  clearTimeout(WS_HALLOWEEN_BG_RESUME_TIMER);
+  WS_HALLOWEEN_BG_RESUME_TIMER = setTimeout(resumeHalloweenBackgroundAfterReturn, wait);
+}
+
+window.addEventListener('focus', ()=> scheduleHalloweenBackgroundResume());
+document.addEventListener('visibilitychange', ()=>{
+  if (!document.hidden) scheduleHalloweenBackgroundResume();
+});
+window.addEventListener('pageshow', ()=> scheduleHalloweenBackgroundResume());
+
 if (WS_HALLOWEEN_ACTIVE){
   document.body.classList.add('halloween-mode');
 
@@ -26,7 +108,7 @@ if (WS_HALLOWEEN_ACTIVE){
   }
 
   const tip = document.querySelector('.splash-tip');
-  if (tip) tip.textContent = '🎃🎃 Tocca “Avvia”… se hai coraggio 🎃🎃';
+  if (tip) tip.textContent = 'Tocca “Avvia”… se hai coraggio 🎃';
 
   const startBtn = document.getElementById('startApp');
   if (startBtn) startBtn.textContent = '🎃 Avvia';
@@ -475,7 +557,9 @@ const sweatBg = hasSweatDustBg(s);
 </div>
 
 <div class="asia-subtext">
-  SUBSCRIBE -ATTENZIONE!!! ATTENZIONE!!!!- SUBSCRIBE<br>
+  ATTENZIONE!!! ATTENZIONE!!!!<br>
+  se non fai SUBSCRIBE ai nostri due canali<br>
+  andrai incontro a RESTART e TAG ERRATI tutto l'anno!!!
 </div>
 
 
@@ -575,6 +659,11 @@ window.addEventListener('resize', requestAsiaBoomCheck);
     const s = SONGS.find(x=>x.year==y && x.songNumber==n);
     const url = a.dataset.open==='dance' ? s?.danceVideoUrl : s?.songUrl;
     if (!url) return;
+    // Quando si apre un ballo o una canzone, interrompi il sottofondo.
+    // Se era in riproduzione, verrà ripreso automaticamente quando l'utente
+    // torna alla scheda dell'app.
+    pauseHalloweenBackgroundForExternalMedia();
+
     const scream = $('#fxOpenScream');
     if (scream){
       try {
