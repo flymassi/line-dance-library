@@ -109,10 +109,10 @@ if (WS_HALLOWEEN_ACTIVE){
   }
 
   const tip = document.querySelector('.splash-tip');
-  if (tip) tip.textContent = 'Tocca “Avvia”… se hai coraggio 🎃';
+  if (tip) tip.textContent = '🎃🎃🎃Tocca “Avvia”… se hai coraggio 🎃🎃🎃';
 
   const startBtn = document.getElementById('startApp');
-  if (startBtn) startBtn.textContent = '🎃 Avvia';
+  if (startBtn) startBtn.textContent = '🎃 Avvia 🎃';
 
   // Decorazioni leggere e non interattive: pipistrelli e teschi vaganti.
   // Vengono create solo durante il periodo Halloween.
