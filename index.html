@@ -239,9 +239,26 @@
         <p id="saggioRequestStatus" class="catalano-request-status hidden"></p>
         <div class="catalano-auth-actions">
           <button id="saggioBackToLogin" type="button" class="btn ghost">Torna al login</button>
-          <button type="submit" class="btn btn-primary">Invia richiesta</button>
+          <button id="saggioRequestSubmit" type="submit" class="btn btn-primary">Invia richiesta</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- CONFERMA PRESA IN CARICO RICHIESTA CATALANO -->
+  <div id="catalanoRequestAckModal" class="overlay hidden" aria-hidden="true">
+    <div class="pl-card catalano-auth-card catalano-ack-card" role="dialog" aria-modal="true" aria-labelledby="catalanoAckTitle">
+      <div class="pl-top">
+        <h3 id="catalanoAckTitle">✅ Richiesta presa in carico</h3>
+        <button id="catalanoRequestAckClose" class="btn ghost" type="button">Chiudi</button>
+      </div>
+      <div class="catalano-ack-box">
+        <p>La tua richiesta di accesso all’area <b>Catalano</b> è stata presa in carico.</p>
+        <p>Sarà lavorata il prima possibile. Potrai accedere non appena l’amministratore avrà approvato le credenziali richieste.</p>
+      </div>
+      <div class="catalano-auth-actions">
+        <button id="catalanoRequestAckOk" type="button" class="btn btn-primary">OK</button>
+      </div>
     </div>
   </div>
 
@@ -249,7 +266,7 @@
     <source src="./assets/audio/urlo.mp3" type="audio/mpeg" />
   </audio>
 
-  <script src="./app.js?v=79" defer></script>
+  <script src="./app.js?v=80" defer></script>
   <script>
     if ('serviceWorker' in navigator){
       addEventListener('load', () => {

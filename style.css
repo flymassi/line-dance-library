@@ -1456,3 +1456,31 @@ body.halloween-mode .catalano-auth-card{
     flex:1 1 140px;
   }
 }
+
+
+/* ===== CATALANO · conferma presa in carico ===== */
+.catalano-ack-card{
+  width:min(92vw, 540px);
+}
+
+.catalano-ack-box{
+  margin-top:12px;
+  padding:14px 16px;
+  border:1px solid rgba(111,220,145,.35);
+  border-radius:14px;
+  background:rgba(31,92,55,.24);
+  line-height:1.5;
+}
+
+.catalano-ack-box p{
+  margin:0 0 10px;
+}
+
+.catalano-ack-box p:last-child{
+  margin-bottom:0;
+}
+
+#saggioRequestSubmit:disabled{
+  opacity:.65;
+  cursor:wait;
+}

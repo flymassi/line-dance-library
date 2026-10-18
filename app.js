@@ -1,10 +1,9 @@
-/* Western Spritz — app.js v54 · Halloween 2026 + Catalano access */
-console.log('[WS] app v54 · Halloween 2026 + Catalano access');
+/* Western Spritz — app.js v55 · Halloween 2026 + Catalano access + request email */
+console.log('[WS] app v55 · Halloween 2026 + Catalano access + request email');
 
 /*-- VERSIONE OTTIMIZZATA */
 const S_KEY = 'ws_catalano_token';
 const S_USER_KEY = 'ws_catalano_user';
-const CATALANO_ADMIN_EMAIL = 'flymassi@hotmail.com';
 
 
 /* ====== HALLOWEEN 2026 · 17 ottobre → 2 novembre ====== */
@@ -110,7 +109,7 @@ if (WS_HALLOWEEN_ACTIVE){
   }
 
   const tip = document.querySelector('.splash-tip');
-  if (tip) tip.textContent = 'Tocca “Avvia”… se hai coraggio 🎃';
+  if (tip) tip.textContent = '🎃🎃🎃 Tocca “Avvia”… se hai coraggio 🎃🎃🎃';
 
   const startBtn = document.getElementById('startApp');
   if (startBtn) startBtn.textContent = '🎃 Avvia';
@@ -581,8 +580,10 @@ const sweatBg = hasSweatDustBg(s);
 </div>
 
 <div class="asia-subtext">
-  ATTENZIONE!!! - SUBSCRIBE - ATTENZIONE!!!!<br>
-  </div>
+  ATTENZIONE!!! ATTENZIONE!!!!<br>
+  se non fai SUBSCRIBE ai nostri due canali<br>
+  andrai incontro a RESTART e TAG ERRATI tutto l'anno!!!
+</div>
 
 
       </article>
@@ -874,15 +875,29 @@ $('#saggioBackToLogin')?.addEventListener('click', ()=>{
   openCatalanoLogin();
 });
 
-$('#saggioRequestForm')?.addEventListener('submit', e=>{
+function openCatalanoRequestAck(){
+  $('#catalanoRequestAckModal')?.classList.remove('hidden');
+  setTimeout(()=> $('#catalanoRequestAckOk')?.focus(), 30);
+}
+
+function closeCatalanoRequestAck(){
+  $('#catalanoRequestAckModal')?.classList.add('hidden');
+}
+
+$('#catalanoRequestAckOk')?.addEventListener('click', closeCatalanoRequestAck);
+$('#catalanoRequestAckClose')?.addEventListener('click', closeCatalanoRequestAck);
+
+$('#saggioRequestForm')?.addEventListener('submit', async e=>{
   e.preventDefault();
 
+  const form = e.currentTarget;
   const name = $('#saggioRequestName')?.value.trim() || '';
   const user = $('#saggioRequestUser')?.value.trim() || '';
   const pass = $('#saggioRequestPass')?.value || '';
   const pass2 = $('#saggioRequestPass2')?.value || '';
   const err = $('#saggioRequestError');
   const status = $('#saggioRequestStatus');
+  const submitBtn = $('#saggioRequestSubmit');
 
   if (err) err.classList.add('hidden');
   if (status) status.classList.add('hidden');
@@ -911,31 +926,47 @@ $('#saggioRequestForm')?.addEventListener('submit', e=>{
     return;
   }
 
-  const jsonEntry = JSON.stringify({ user, pass });
-  const subject = 'Richiesta accesso Catalano - Western Spritz';
-  const body = [
-    'Ciao,',
-    '',
-    'richiedo l’accesso all’area Catalano di Western Spritz.',
-    '',
-    `Nome: ${name}`,
-    `Username scelto: ${user}`,
-    `Password scelta: ${pass}`,
-    '',
-    'Voce pronta da aggiungere a SAGGIO_USERS se la richiesta viene approvata:',
-    jsonEntry,
-    '',
-    'La richiesta resta inattiva finché l’amministratore non la approva.'
-  ].join('\n');
+  try {
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.dataset.oldText = submitBtn.textContent;
+      submitBtn.textContent = 'Invio…';
+    }
+    if (status) {
+      status.textContent = 'Invio della richiesta in corso…';
+      status.classList.remove('hidden');
+    }
 
-  const href = `mailto:${CATALANO_ADMIN_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    const res = await fetch('/api/catalano-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, username: user, password: pass })
+    });
 
-  if (status) {
-    status.textContent = `Si aprirà la tua app email. Invia il messaggio a ${CATALANO_ADMIN_EMAIL}; l’accesso sarà attivo solo dopo approvazione.`;
-    status.classList.remove('hidden');
+    const data = await res.json().catch(()=> ({}));
+
+    if (!res.ok || !data?.ok) {
+      throw new Error(data?.error || 'Invio non riuscito');
+    }
+
+    form?.reset();
+    if (status) status.classList.add('hidden');
+    closeCatalanoRequest();
+    openCatalanoRequestAck();
+  } catch (ex) {
+    console.error('Errore richiesta accesso Catalano', ex);
+    if (status) status.classList.add('hidden');
+    if (err) {
+      err.textContent = 'Non è stato possibile inviare la richiesta. Riprova tra poco.';
+      err.classList.remove('hidden');
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = submitBtn.dataset.oldText || 'Invia richiesta';
+      delete submitBtn.dataset.oldText;
+    }
   }
-
-  window.location.href = href;
 });
 
 /* ====== FILTRI ====== */
