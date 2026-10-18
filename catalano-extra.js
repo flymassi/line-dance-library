@@ -1,4 +1,4 @@
-/* Western Spritz — Catalano extra v1 · email richiesta + gestione utenti */
+/* Western Spritz — Catalano extra v2 · richiesta completa + gestione utenti */
 (() => {
   const $ = sel => document.querySelector(sel);
   const S_KEY = 'ws_catalano_token';
@@ -39,18 +39,56 @@
     err.classList.remove('hidden');
   }
 
-  // Sostituisce il submit originale solo per la richiesta di accredito, così possiamo
-  // aggiungere l'email senza alterare la logica principale dell'app.
-  $('#saggioRequestForm')?.addEventListener('submit', async e => {
+  function getRequestValues(){
+    return {
+      name: $('#saggioRequestName')?.value.trim() || '',
+      email: $('#saggioRequestEmail')?.value.trim().toLowerCase() || '',
+      reason: $('#saggioRequestReason')?.value.trim() || '',
+      user: $('#saggioRequestUser')?.value.trim() || '',
+      pass: $('#saggioRequestPass')?.value || '',
+      pass2: $('#saggioRequestPass2')?.value || ''
+    };
+  }
+
+  function isRequestFormValid(){
+    const form = $('#saggioRequestForm');
+    if (!form) return false;
+    const { name, email, reason, user, pass, pass2 } = getRequestValues();
+    return form.checkValidity()
+      && !!name
+      && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+      && reason.length >= 1
+      && reason.length <= 100
+      && user.length >= 3
+      && /^[A-Za-z0-9._-]+$/.test(user)
+      && pass.length >= 4
+      && pass === pass2;
+  }
+
+  function syncRequestSubmit(){
+    const submitBtn = $('#saggioRequestSubmit');
+    const counter = $('#saggioRequestReasonCount');
+    const reasonLength = ($('#saggioRequestReason')?.value || '').length;
+    if (counter) counter.textContent = `${reasonLength}/100 caratteri`;
+    if (submitBtn && submitBtn.dataset.sending !== '1') {
+      submitBtn.disabled = !isRequestFormValid();
+    }
+  }
+
+  const requestForm = $('#saggioRequestForm');
+  requestForm?.addEventListener('input', syncRequestSubmit);
+  requestForm?.addEventListener('change', syncRequestSubmit);
+  requestForm?.addEventListener('reset', () => setTimeout(syncRequestSubmit, 0));
+  syncRequestSubmit();
+
+  // Sostituisce il submit originale solo per la richiesta di accredito, mantenendo
+  // la logica principale dell'app e validando tutti i campi prima dell'invio.
+  requestForm?.addEventListener('submit', async e => {
     e.preventDefault();
     e.stopImmediatePropagation();
 
     const form = e.currentTarget;
-    const name = $('#saggioRequestName')?.value.trim() || '';
-    const email = $('#saggioRequestEmail')?.value.trim().toLowerCase() || '';
-    const user = $('#saggioRequestUser')?.value.trim() || '';
-    const pass = $('#saggioRequestPass')?.value || '';
-    const pass2 = $('#saggioRequestPass2')?.value || '';
+    const { name, email, reason, user, pass, pass2 } = getRequestValues();
     const err = $('#saggioRequestError');
     const status = $('#saggioRequestStatus');
     const submitBtn = $('#saggioRequestSubmit');
@@ -58,25 +96,40 @@
     err?.classList.add('hidden');
     status?.classList.add('hidden');
 
-    if (!name || !email || user.length < 3 || pass.length < 4) {
-      showRequestError('Compila tutti i campi. Username minimo 3 caratteri e password minimo 4.');
+    if (!name || !email || !reason || user.length < 3 || pass.length < 4) {
+      showRequestError('Compila correttamente tutti i campi. Username minimo 3 caratteri e password minimo 4.');
+      syncRequestSubmit();
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       showRequestError('Inserisci un indirizzo email valido.');
+      syncRequestSubmit();
+      return;
+    }
+    if (reason.length > 100) {
+      showRequestError('La motivazione può contenere al massimo 100 caratteri.');
+      syncRequestSubmit();
       return;
     }
     if (!/^[A-Za-z0-9._-]+$/.test(user)) {
       showRequestError('Lo username può contenere solo lettere, numeri, punto, trattino e underscore.');
+      syncRequestSubmit();
       return;
     }
     if (pass !== pass2) {
       showRequestError('Le due password non coincidono.');
+      syncRequestSubmit();
+      return;
+    }
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      syncRequestSubmit();
       return;
     }
 
     try {
       if (submitBtn) {
+        submitBtn.dataset.sending = '1';
         submitBtn.disabled = true;
         submitBtn.dataset.oldText = submitBtn.textContent;
         submitBtn.textContent = 'Invio…';
@@ -89,7 +142,7 @@
       const res = await fetch('/api/catalano-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, username: user, password: pass })
+        body: JSON.stringify({ name, email, reason, username: user, password: pass })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.ok) throw new Error(data?.error || 'Invio non riuscito');
@@ -105,10 +158,11 @@
       showRequestError(ex?.message || 'Non è stato possibile inviare la richiesta. Riprova tra poco.');
     } finally {
       if (submitBtn) {
-        submitBtn.disabled = false;
         submitBtn.textContent = submitBtn.dataset.oldText || 'Invia richiesta';
         delete submitBtn.dataset.oldText;
+        delete submitBtn.dataset.sending;
       }
+      syncRequestSubmit();
     }
   }, true);
 
