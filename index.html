@@ -225,16 +225,21 @@
 
       <form id="saggioRequestForm" class="saggio-form">
         <label>
-          Nome e cognome
-          <input id="saggioRequestName" type="text" class="input" autocomplete="name" required />
+          Nome
+          <input id="saggioRequestName" type="text" class="input" autocomplete="name" maxlength="60" required />
         </label>
         <label>
           Email
           <input id="saggioRequestEmail" type="email" class="input" autocomplete="email" maxlength="254" required />
         </label>
         <label>
+          Perché devo accettare la richiesta?
+          <textarea id="saggioRequestReason" class="input" rows="3" maxlength="100" required></textarea>
+        </label>
+        <p id="saggioRequestReasonCount" class="catalano-security-note">0/100 caratteri</p>
+        <label>
           Username desiderato
-          <input id="saggioRequestUser" type="text" class="input" autocomplete="username" minlength="3" maxlength="30" required />
+          <input id="saggioRequestUser" type="text" class="input" autocomplete="username" minlength="3" maxlength="30" pattern="[A-Za-z0-9._-]+" required />
         </label>
         <label>
           Password scelta
@@ -249,7 +254,7 @@
         <p id="saggioRequestStatus" class="catalano-request-status hidden"></p>
         <div class="catalano-auth-actions">
           <button id="saggioBackToLogin" type="button" class="btn ghost">Torna al login</button>
-          <button id="saggioRequestSubmit" type="submit" class="btn btn-primary">Invia richiesta</button>
+          <button id="saggioRequestSubmit" type="submit" class="btn btn-primary" disabled>Invia richiesta</button>
         </div>
       </form>
     </div>
@@ -302,7 +307,7 @@
   </audio>
 
   <script src="./app.js?v=81" defer></script>
-  <script src="./catalano-extra.js?v=1" defer></script>
+  <script src="./catalano-extra.js?v=2" defer></script>
   <script>
     if ('serviceWorker' in navigator){
       addEventListener('load', () => {
