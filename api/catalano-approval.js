@@ -102,6 +102,7 @@ export default async function handler(req, res) {
       <div class="meta">
         <b>Nome:</b> ${escapeHtml(request.name)}<br>
         <b>Email:</b> ${escapeHtml(request.email || "—")}<br>
+        <b>Perché devo accettare la richiesta?</b> ${escapeHtml(request.reason || "—")}<br>
         <b>Username:</b> ${escapeHtml(request.username)}<br>
         <b>Richiesta:</b> ${escapeHtml(new Date(request.requestedAt).toLocaleString("it-IT", { timeZone: "Europe/Rome" }))}
       </div>
