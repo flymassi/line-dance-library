@@ -1404,3 +1404,55 @@ body.halloween-mode .halloween-skull{
     animation:none !important;
   }
 }
+
+/* ===== CATALANO · accesso controllato tramite ex Area 51 ===== */
+.catalano-auth-card{
+  width:min(92vw, 560px);
+}
+
+.catalano-auth-actions{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:12px;
+}
+
+.catalano-security-note{
+  margin:6px 0 0;
+  font-size:11px;
+  line-height:1.35;
+  opacity:.68;
+  text-align:left;
+}
+
+.catalano-request-status{
+  margin:8px 0 0;
+  padding:8px 10px;
+  border:1px solid rgba(255,210,100,.35);
+  border-radius:10px;
+  background:rgba(90,60,10,.28);
+  color:#ffe7a3;
+  font-size:12px;
+  line-height:1.4;
+  text-align:left;
+}
+
+#courseCatalano:not(.active) #catalanoTabLabel{
+  opacity:.92;
+}
+
+body.halloween-mode .catalano-auth-card{
+  border:1px solid rgba(255,126,34,.28);
+  box-shadow:0 18px 50px rgba(0,0,0,.42), 0 0 26px rgba(255,107,25,.12);
+}
+
+@media (max-width:520px){
+  .catalano-auth-actions{
+    justify-content:stretch;
+  }
+  .catalano-auth-actions .btn{
+    flex:1 1 140px;
+  }
+}

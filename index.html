@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" href="./assets/images/icon.png" />
   <link rel="manifest" href="./manifest.webmanifest" />
 
-  <link rel="stylesheet" href="./style.css?v=76" />
+  <link rel="stylesheet" href="./style.css?v=79" />
 </head>
 <body>
 
@@ -110,7 +110,9 @@
 
     <div class="course-switch" role="tablist" aria-label="Seleziona corso">
       <button id="courseLine" class="course-tab active" type="button" role="tab" aria-selected="true" data-course="line">🤠 LINE DANCE</button>
-      <button id="courseCatalano" class="course-tab" type="button" role="tab" aria-selected="false" data-course="catalano">🇪🇸 CATALANO</button>
+      <button id="courseCatalano" class="course-tab" type="button" role="tab" aria-selected="false" data-course="catalano">
+        <span id="catalanoTabLabel">🇪🇸 CATALANO 🔒</span>
+      </button>
     </div>
 
     <div id="yearFilters" class="year-filters" aria-label="Filtra Line Dance per anno">
@@ -132,11 +134,12 @@
         <span class="btn-label">Aggiorna</span>
       </button>
 
-      <button id="btnSaggio" class="btn btn-glass btn-amber btn-slim">
-        <span class="btn-icon">☢️</span>
-        <span class="btn-label">Area 51</span>
+      <button id="btnCatalanoLogout" class="btn btn-glass btn-amber btn-slim hidden" type="button">
+        <span class="btn-icon">🔓</span>
+        <span class="btn-label">Esci Catalano</span>
       </button>
-<button id="btnPlaylist" class="btn btn-glass btn-amber btn-slim">
+
+      <button id="btnPlaylist" class="btn btn-glass btn-amber btn-slim">
         <span class="btn-icon">▶︎</span>
         <span class="btn-label">Playlist</span>
       </button>
@@ -171,43 +174,74 @@
     </div>
   </div>
 
-  <!-- LOGIN SAGGIO -->
+  <!-- ACCESSO CATALANO -->
   <div id="saggioLoginModal" class="overlay hidden" aria-hidden="true">
-    <div class="pl-card">
+    <div class="pl-card catalano-auth-card">
       <div class="pl-top">
-        <h3>Area riservata</h3>
-        <button id="saggioCloseLogin" class="btn ghost">Chiudi</button>
+        <h3>🇪🇸 Catalano — Area riservata</h3>
+        <button id="saggioCloseLogin" class="btn ghost" type="button">Chiudi</button>
       </div>
+
+      <p class="saggio-note">
+        Le schede del corso Catalano sono visibili solo agli utenti autorizzati.
+      </p>
 
       <form id="saggioLoginForm" class="saggio-form">
         <label>
           Username
-          <input id="saggioUser" type="text" class="input" autocomplete="off" />
+          <input id="saggioUser" type="text" class="input" autocomplete="username" required />
         </label>
         <label>
           Password
-          <input id="saggioPass" type="password" class="input" autocomplete="off" />
+          <input id="saggioPass" type="password" class="input" autocomplete="current-password" required />
         </label>
-        <p id="saggioError" class="saggio-error hidden">Credenziali non valide.</p>
-        <div class="actions" style="justify-content:flex-end;">
+        <p id="saggioError" class="saggio-error hidden">Credenziali non valide oppure richiesta non ancora approvata.</p>
+        <div class="catalano-auth-actions">
+          <button id="saggioRequestAccess" type="button" class="btn ghost">Richiedi accesso</button>
           <button type="submit" class="btn btn-primary">Entra</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- AREA RISERVATA SAGGIO -->
-  <div id="saggioArea" class="overlay hidden" aria-hidden="true">
-    <div class="pl-card">
+  <!-- RICHIESTA ACCESSO CATALANO -->
+  <div id="saggioRequestModal" class="overlay hidden" aria-hidden="true">
+    <div class="pl-card catalano-auth-card">
       <div class="pl-top">
-        <h3>Saggio 2026 — Area riservata</h3>
-        <button id="saggioCloseArea" class="btn ghost">Chiudi</button>
+        <h3>Richiedi accesso a Catalano</h3>
+        <button id="saggioCloseRequest" class="btn ghost" type="button">Chiudi</button>
       </div>
 
       <p class="saggio-note">
-        Benvenuto nell’area riservata per il Saggio 2026.<br />
-        Qui potrai inserire più avanti link ai video, scalette, istruzioni, ecc.
+        Scegli le tue credenziali. La richiesta <b>non abilita subito l’accesso</b>:
+        dovrà prima essere approvata dall’amministratore.
       </p>
+
+      <form id="saggioRequestForm" class="saggio-form">
+        <label>
+          Nome e cognome
+          <input id="saggioRequestName" type="text" class="input" autocomplete="name" required />
+        </label>
+        <label>
+          Username desiderato
+          <input id="saggioRequestUser" type="text" class="input" autocomplete="username" minlength="3" maxlength="30" required />
+        </label>
+        <label>
+          Password scelta
+          <input id="saggioRequestPass" type="password" class="input" autocomplete="new-password" minlength="4" required />
+        </label>
+        <label>
+          Conferma password
+          <input id="saggioRequestPass2" type="password" class="input" autocomplete="new-password" minlength="4" required />
+        </label>
+        <p class="catalano-security-note">Non usare una password che utilizzi per altri servizi.</p>
+        <p id="saggioRequestError" class="saggio-error hidden"></p>
+        <p id="saggioRequestStatus" class="catalano-request-status hidden"></p>
+        <div class="catalano-auth-actions">
+          <button id="saggioBackToLogin" type="button" class="btn ghost">Torna al login</button>
+          <button type="submit" class="btn btn-primary">Invia richiesta</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -215,7 +249,7 @@
     <source src="./assets/audio/urlo.mp3" type="audio/mpeg" />
   </audio>
 
-  <script src="./app.js?v=78" defer></script>
+  <script src="./app.js?v=79" defer></script>
   <script>
     if ('serviceWorker' in navigator){
       addEventListener('load', () => {

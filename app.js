@@ -1,8 +1,10 @@
-/* Western Spritz — app.js v53 · Halloween 2026 */
-console.log('[WS] app v53 · Halloween 2026');
+/* Western Spritz — app.js v54 · Halloween 2026 + Catalano access */
+console.log('[WS] app v54 · Halloween 2026 + Catalano access');
 
 /*-- VERSIONE OTTIMIZZATA */
-const S_KEY = 'ws_saggio_token';
+const S_KEY = 'ws_catalano_token';
+const S_USER_KEY = 'ws_catalano_user';
+const CATALANO_ADMIN_EMAIL = 'flymassi@hotmail.com';
 
 
 /* ====== HALLOWEEN 2026 · 17 ottobre → 2 novembre ====== */
@@ -108,7 +110,7 @@ if (WS_HALLOWEEN_ACTIVE){
   }
 
   const tip = document.querySelector('.splash-tip');
-  if (tip) tip.textContent = '🎃🎃🎃 Tocca “Avvia”… se hai coraggio 🎃🎃🎃';
+  if (tip) tip.textContent = 'Tocca “Avvia”… se hai coraggio 🎃';
 
   const startBtn = document.getElementById('startApp');
   if (startBtn) startBtn.textContent = '🎃 Avvia';
@@ -121,9 +123,7 @@ if (WS_HALLOWEEN_ACTIVE){
 
     const specs = [
       ...Array.from({ length: 9 }, (_, i) => ({ icon:'🦇', kind:'bat', i })),
-      ...Array.from({ length: 6 }, (_, i) => ({ icon:'💀', kind:'skull', i })),
-      ...Array.from({ length: 5 }, (_, i) => ({ icon:'🧛', kind:'skull', i })),
-      ...Array.from({ length: 3 }, (_, i) => ({ icon:'🎃', kind:'skull', i }))
+      ...Array.from({ length: 5 }, (_, i) => ({ icon:'💀', kind:'skull', i }))
     ];
 
     specs.forEach((item, idx)=>{
@@ -413,7 +413,8 @@ let plIndex = 0;
 const plWindowName = 'ws_player';
 
 function openAt(index){
-  const item = PLAYLIST[index];
+  const items = getAccessiblePlaylist();
+  const item = items[index];
   if (!item) return;
   const url = item.songUrl || item.danceVideoUrl;
   if (!url) return;
@@ -475,8 +476,16 @@ function isCatalanoSong(s){
   return Number(s?.year) === CATALANO_YEAR;
 }
 
+function isCatalanoAuth(){
+  try {
+    return !!sessionStorage.getItem(S_KEY);
+  } catch {
+    return false;
+  }
+}
+
 function matchesCourseAndYear(s){
-  if (FILTER.course === 'catalano') return isCatalanoSong(s);
+  if (FILTER.course === 'catalano') return isCatalanoAuth() && isCatalanoSong(s);
   if (isCatalanoSong(s)) return false;
   if (FILTER.year === 'all') return true;
   return Number(s?.year) === Number(FILTER.year);
@@ -486,12 +495,25 @@ function yearBadgeText(s){
   return isCatalanoSong(s) ? '🇪🇸 CATALANO' : `ANNO&nbsp;<b>${s.year}</b>`;
 }
 
+function getAccessiblePlaylist(){
+  if (isCatalanoAuth()) return PLAYLIST;
+  return PLAYLIST.filter(s => !isCatalanoSong(s));
+}
+
 function syncCourseFilterUI(){
+  const authed = isCatalanoAuth();
+
   $$('.course-tab').forEach(btn => {
     const active = btn.dataset.course === FILTER.course;
     btn.classList.toggle('active', active);
     btn.setAttribute('aria-selected', active ? 'true' : 'false');
   });
+
+  const catalanoLabel = $('#catalanoTabLabel');
+  if (catalanoLabel) catalanoLabel.textContent = authed ? '🇪🇸 CATALANO ✓' : '🇪🇸 CATALANO 🔒';
+
+  const logoutBtn = $('#btnCatalanoLogout');
+  if (logoutBtn) logoutBtn.classList.toggle('hidden', !authed);
 
   const yearFilters = $('#yearFilters');
   if (yearFilters) yearFilters.classList.toggle('hidden', FILTER.course === 'catalano');
@@ -559,8 +581,8 @@ const sweatBg = hasSweatDustBg(s);
 </div>
 
 <div class="asia-subtext">
-  SUBSCRIBE - ATTENZIONE!!! ATTENZIONE!!!! - SUBSCIBE<br>
-</div>
+  ATTENZIONE!!! - SUBSCRIBE - ATTENZIONE!!!!<br>
+  </div>
 
 
       </article>
@@ -657,6 +679,10 @@ window.addEventListener('resize', requestAsiaBoomCheck);
     if (!a) return;
     const y = +a.dataset.y, n = +a.dataset.n;
     const s = SONGS.find(x=>x.year==y && x.songNumber==n);
+    if (s && isCatalanoSong(s) && !isCatalanoAuth()) {
+      openCatalanoLogin();
+      return;
+    }
     const url = a.dataset.open==='dance' ? s?.danceVideoUrl : s?.songUrl;
     if (!url) return;
     // Quando si apre un ballo o una canzone, interrompi il sottofondo.
@@ -688,6 +714,10 @@ document.addEventListener('click', e=>{
   const y = +b.dataset.y, n = +b.dataset.n;
   const s = SONGS.find(x=>x.year==y && x.songNumber==n);
   if (!s) return;
+  if (isCatalanoSong(s) && !isCatalanoAuth()) {
+    openCatalanoLogin();
+    return;
+  }
 
   const idx = PLAYLIST.findIndex(p=>p.year==y && p.songNumber==n);
   if (idx>=0) PLAYLIST.splice(idx,1); else PLAYLIST.push(s);
@@ -699,9 +729,10 @@ $('#btnPlaylist')?.addEventListener('click', ()=>{
   const modal = $('#plModal');
   const list  = $('#plList');
   if(!modal || !list) return;
+  const items = getAccessiblePlaylist();
   plIndex = 0;
-  list.innerHTML = PLAYLIST.length
-    ? PLAYLIST.map((s,i)=>`<div class="card" style="margin-top:8px">
+  list.innerHTML = items.length
+    ? items.map((s,i)=>`<div class="card" style="margin-top:8px">
         ${i+1}. ${s.danceTitle||''} — <i>${s.singerName||''}</i>
       </div>`).join('')
     : `<div class="card">Nessun brano nella playlist.</div>`;
@@ -716,8 +747,9 @@ $('#plClear')?.addEventListener('click', ()=>{
   render();
 });
 $('#plPlay')?.addEventListener('click', ()=>{
-  if (!PLAYLIST.length) return;
-  const ids = PLAYLIST
+  const items = getAccessiblePlaylist();
+  if (!items.length) return;
+  const ids = items
     .map(s => getYouTubeId(s.songUrl || s.danceVideoUrl))
     .filter(Boolean);
   if (!ids.length) return;
@@ -725,46 +757,56 @@ $('#plPlay')?.addEventListener('click', ()=>{
   window.open(url, '_blank');
 });
 $('#plPrev')?.addEventListener('click', ()=>{
-  if (!PLAYLIST.length) return;
-  plIndex = (plIndex - 1 + PLAYLIST.length) % PLAYLIST.length;
+  const items = getAccessiblePlaylist();
+  if (!items.length) return;
+  plIndex = (plIndex - 1 + items.length) % items.length;
   openAt(plIndex);
 });
 $('#plNext')?.addEventListener('click', ()=>{
-  if (!PLAYLIST.length) return;
-  plIndex = (plIndex + 1) % PLAYLIST.length;
+  const items = getAccessiblePlaylist();
+  if (!items.length) return;
+  plIndex = (plIndex + 1) % items.length;
   openAt(plIndex);
 });
 
 
-/* ====== AREA RISERVATA: SAGGIO 2026 ====== */
+/* ====== ACCESSO CATALANO ====== */
 
-function isSaggioAuth(){
+function openCatalanoLogin(){
+  $('#saggioRequestModal')?.classList.add('hidden');
+  $('#saggioLoginModal')?.classList.remove('hidden');
+  const err = $('#saggioError');
+  if (err) err.classList.add('hidden');
+  setTimeout(()=> $('#saggioUser')?.focus(), 30);
+}
+
+function closeCatalanoLogin(){
+  $('#saggioLoginModal')?.classList.add('hidden');
+}
+
+function activateCatalanoCourse(){
+  FILTER.course = 'catalano';
+  FILTER.year = 'all';
+  closeCatalanoLogin();
+  syncCourseFilterUI();
+  render();
+}
+
+function logoutCatalano(){
   try {
-    return !!sessionStorage.getItem(S_KEY);
-  } catch {
-    return false;
-  }
+    sessionStorage.removeItem(S_KEY);
+    sessionStorage.removeItem(S_USER_KEY);
+  } catch {}
+  FILTER.course = 'line';
+  FILTER.year = 'all';
+  syncCourseFilterUI();
+  render();
 }
 
-function openSaggioArea(){
-  $('#saggioLoginModal')?.classList.add('hidden');
-  $('#saggioArea')?.classList.remove('hidden');
-}
+$('#saggioCloseLogin')?.addEventListener('click', closeCatalanoLogin);
 
-$('#btnSaggio')?.addEventListener('click', ()=>{
-  if (isSaggioAuth()){
-    openSaggioArea();
-  } else {
-    $('#saggioLoginModal')?.classList.remove('hidden');
-  }
-});
-
-$('#saggioCloseLogin')?.addEventListener('click', ()=>{
-  $('#saggioLoginModal')?.classList.add('hidden');
-});
-
-$('#saggioCloseArea')?.addEventListener('click', ()=>{
-  $('#saggioArea')?.classList.add('hidden');
+$('#btnCatalanoLogout')?.addEventListener('click', ()=>{
+  logoutCatalano();
 });
 
 $('#saggioLoginForm')?.addEventListener('submit', async e=>{
@@ -773,6 +815,14 @@ $('#saggioLoginForm')?.addEventListener('submit', async e=>{
   const p = $('#saggioPass')?.value || '';
   const err = $('#saggioError');
 
+  if (!u || !p) {
+    if (err) {
+      err.textContent = 'Inserisci username e password.';
+      err.classList.remove('hidden');
+    }
+    return;
+  }
+
   try {
     const res = await fetch('/api/saggio-login', {
       method: 'POST',
@@ -780,22 +830,113 @@ $('#saggioLoginForm')?.addEventListener('submit', async e=>{
       body: JSON.stringify({ username: u, password: p })
     });
 
-    const data = await res.json();
+    const data = await res.json().catch(()=> ({}));
 
     if (res.ok && data?.ok && data?.token) {
-        sessionStorage.setItem(S_KEY, data.token);
-    if (err) err.classList.add('hidden');
-        openSaggioArea();
-    } 
-    else {
-      if (err) err.classList.remove('hidden');
+      sessionStorage.setItem(S_KEY, data.token);
+      sessionStorage.setItem(S_USER_KEY, u);
+      if (err) err.classList.add('hidden');
+      activateCatalanoCourse();
+    } else {
+      if (err) {
+        err.textContent = 'Credenziali non valide oppure richiesta non ancora approvata.';
+        err.classList.remove('hidden');
+      }
     }
   } catch (e) {
-    console.error('Errore login saggio', e);
-    if (err) err.classList.remove('hidden');
+    console.error('Errore login Catalano', e);
+    if (err) {
+      err.textContent = 'Impossibile verificare le credenziali. Riprova tra poco.';
+      err.classList.remove('hidden');
+    }
   }
 });
 
+function openCatalanoRequest(){
+  closeCatalanoLogin();
+  const modal = $('#saggioRequestModal');
+  const err = $('#saggioRequestError');
+  const status = $('#saggioRequestStatus');
+  if (err) err.classList.add('hidden');
+  if (status) status.classList.add('hidden');
+  modal?.classList.remove('hidden');
+  setTimeout(()=> $('#saggioRequestName')?.focus(), 30);
+}
+
+function closeCatalanoRequest(){
+  $('#saggioRequestModal')?.classList.add('hidden');
+}
+
+$('#saggioRequestAccess')?.addEventListener('click', openCatalanoRequest);
+$('#saggioCloseRequest')?.addEventListener('click', closeCatalanoRequest);
+$('#saggioBackToLogin')?.addEventListener('click', ()=>{
+  closeCatalanoRequest();
+  openCatalanoLogin();
+});
+
+$('#saggioRequestForm')?.addEventListener('submit', e=>{
+  e.preventDefault();
+
+  const name = $('#saggioRequestName')?.value.trim() || '';
+  const user = $('#saggioRequestUser')?.value.trim() || '';
+  const pass = $('#saggioRequestPass')?.value || '';
+  const pass2 = $('#saggioRequestPass2')?.value || '';
+  const err = $('#saggioRequestError');
+  const status = $('#saggioRequestStatus');
+
+  if (err) err.classList.add('hidden');
+  if (status) status.classList.add('hidden');
+
+  if (!name || user.length < 3 || pass.length < 4) {
+    if (err) {
+      err.textContent = 'Compila tutti i campi. Username minimo 3 caratteri e password minimo 4.';
+      err.classList.remove('hidden');
+    }
+    return;
+  }
+
+  if (!/^[A-Za-z0-9._-]+$/.test(user)) {
+    if (err) {
+      err.textContent = 'Lo username può contenere solo lettere, numeri, punto, trattino e underscore.';
+      err.classList.remove('hidden');
+    }
+    return;
+  }
+
+  if (pass !== pass2) {
+    if (err) {
+      err.textContent = 'Le due password non coincidono.';
+      err.classList.remove('hidden');
+    }
+    return;
+  }
+
+  const jsonEntry = JSON.stringify({ user, pass });
+  const subject = 'Richiesta accesso Catalano - Western Spritz';
+  const body = [
+    'Ciao,',
+    '',
+    'richiedo l’accesso all’area Catalano di Western Spritz.',
+    '',
+    `Nome: ${name}`,
+    `Username scelto: ${user}`,
+    `Password scelta: ${pass}`,
+    '',
+    'Voce pronta da aggiungere a SAGGIO_USERS se la richiesta viene approvata:',
+    jsonEntry,
+    '',
+    'La richiesta resta inattiva finché l’amministratore non la approva.'
+  ].join('\n');
+
+  const href = `mailto:${CATALANO_ADMIN_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+  if (status) {
+    status.textContent = `Si aprirà la tua app email. Invia il messaggio a ${CATALANO_ADMIN_EMAIL}; l’accesso sarà attivo solo dopo approvazione.`;
+    status.classList.remove('hidden');
+  }
+
+  window.location.href = href;
+});
 
 /* ====== FILTRI ====== */
 $('#fDance')?.addEventListener('input', debounce(e=>{ FILTER.dance = e.target.value; render(); }));
@@ -805,6 +946,12 @@ $$('.course-tab').forEach(btn => {
   btn.addEventListener('click', () => {
     const course = btn.dataset.course;
     if (course !== 'line' && course !== 'catalano') return;
+
+    if (course === 'catalano' && !isCatalanoAuth()) {
+      openCatalanoLogin();
+      return;
+    }
+
     FILTER.course = course;
     FILTER.year = 'all';
     syncCourseFilterUI();

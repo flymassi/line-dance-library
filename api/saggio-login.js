@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   const { username, password } = req.body || {};
 
   try {
-    const raw = process.env.SAGGIO_USERS || "[]";
+    const raw = process.env.CATALANO_USERS || process.env.SAGGIO_USERS || "[]";
     const users = JSON.parse(raw);
     const found = users.find(u => timingSafeEqual(u.user, username) && timingSafeEqual(u.pass, password));
 
