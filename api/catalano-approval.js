@@ -38,6 +38,70 @@ function sendPage(res, payload) {
   return res.send(payload.html);
 }
 
+function getBaseUrl(req) {
+  const proto = clean(req.headers?.["x-forwarded-proto"] || "https", 10).split(",")[0];
+  const host = clean(req.headers?.["x-forwarded-host"] || req.headers?.host || "", 200).split(",")[0];
+  if (!host) return "https://western-spritz.vercel.app";
+  return `${proto === "http" ? "http" : "https"}://${host}`;
+}
+
+async function sendApprovalEmail(req, request) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const to = clean(request?.email, 254).toLowerCase();
+  if (!apiKey || !to) return { sent: false, skipped: true };
+
+  const fromEmail = process.env.CATALANO_FROM_EMAIL || "Western Spritz <onboarding@resend.dev>";
+  const appUrl = getBaseUrl(req);
+  const text = [
+    `Ciao ${request.name || ""},`,
+    "",
+    "la tua richiesta di accesso all'area Catalano di Western Spritz è stata approvata.",
+    `Username: ${request.username}`,
+    "Puoi accedere usando la password che hai scelto durante la registrazione.",
+    "",
+    `Apri Western Spritz: ${appUrl}`,
+    "",
+    "Per sicurezza la password non viene riportata in questa email."
+  ].join("\n");
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.55;color:#202124;max-width:640px;margin:auto">
+      <h2>✅ Accesso Catalano approvato</h2>
+      <p>Ciao <b>${escapeHtml(request.name || "")}</b>,</p>
+      <p>la tua richiesta di accesso all’area <b>Catalano</b> di Western Spritz è stata approvata.</p>
+      <p><b>Username:</b> ${escapeHtml(request.username)}</p>
+      <p>Puoi accedere usando la password che hai scelto durante la registrazione.</p>
+      <p style="margin:24px 0"><a href="${escapeHtml(appUrl)}" style="display:inline-block;background:#111827;color:#fff;text-decoration:none;padding:12px 18px;border-radius:9px;font-weight:700">APRI WESTERN SPRITZ</a></p>
+      <p style="font-size:13px;color:#5f6368">Per sicurezza la password non viene riportata in questa email.</p>
+    </div>`;
+
+  try {
+    const mailRes = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        from: fromEmail,
+        to: [to],
+        subject: "Accesso Catalano approvato - Western Spritz",
+        text,
+        html
+      })
+    });
+    const data = await mailRes.json().catch(() => ({}));
+    if (!mailRes.ok) {
+      console.error("CATALANO approval: confirmation email error", mailRes.status, data);
+      return { sent: false, error: data?.message || `HTTP ${mailRes.status}` };
+    }
+    return { sent: true, id: data?.id || null };
+  } catch (err) {
+    console.error("CATALANO approval: confirmation email exception", err);
+    return { sent: false, error: err?.message || "email exception" };
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== "GET" && req.method !== "POST") {
     return res.status(405).send("Method Not Allowed");
@@ -64,11 +128,11 @@ export default async function handler(req, res) {
   }
 
   if (req.method === "GET") {
-    // Nessuna modifica su GET: evita approvazioni accidentali da scanner automatici delle email.
     const html = `
       <h1>🇪🇸 Gestione richiesta Catalano</h1>
       <div class="meta">
         <b>Nome:</b> ${escapeHtml(request.name)}<br>
+        <b>Email:</b> ${escapeHtml(request.email || "—")}<br>
         <b>Username:</b> ${escapeHtml(request.username)}<br>
         <b>Richiesta:</b> ${escapeHtml(new Date(request.requestedAt).toLocaleString("it-IT", { timeZone: "Europe/Rome" }))}
       </div>
@@ -95,10 +159,17 @@ export default async function handler(req, res) {
   if (decision === "approve") {
     try {
       await approvePendingRequest(request);
+      const mail = await sendApprovalEmail(req, request);
+      const mailStatus = request.email
+        ? (mail.sent
+          ? `<p>📧 Email di conferma inviata a <b>${escapeHtml(request.email)}</b>.</p>`
+          : `<p style="color:#fbbf24">⚠️ Accesso approvato, ma la mail di conferma non è stata inviata. L'utente può comunque accedere subito.</p>`)
+        : `<p class="note">Questa richiesta non conteneva un indirizzo email (utente registrato con la versione precedente).</p>`;
       return sendPage(res, page("Accesso approvato", `
         <h1>✅ Accesso approvato</h1>
         <p>L'utente <b>${escapeHtml(request.username)}</b> è stato abilitato.</p>
         <p><b>Può accedere immediatamente a Catalano.</b></p>
+        ${mailStatus}
         <p class="note">Non devi modificare SAGGIO_USERS e non devi fare alcun redeploy.</p>`));
     } catch (err) {
       console.error("CATALANO approval: approve error", err);
