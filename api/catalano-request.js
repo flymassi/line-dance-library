@@ -34,12 +34,17 @@ export default async function handler(req, res) {
   }
 
   const name = clean(req.body?.name, 120);
+  const email = clean(req.body?.email, 254).toLowerCase();
   const username = clean(req.body?.username, 30);
   const password = String(req.body?.password ?? "").slice(0, 120);
   const usernameNorm = normalizeUsername(username);
 
-  if (!name || username.length < 3 || password.length < 4) {
+  if (!name || !email || username.length < 3 || password.length < 4) {
     return res.status(400).json({ ok: false, error: "Dati incompleti" });
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ ok: false, error: "Email non valida" });
   }
 
   if (!/^[A-Za-z0-9._-]+$/.test(username)) {
@@ -66,6 +71,7 @@ export default async function handler(req, res) {
   try {
     requestId = await createPendingRequest({
       name,
+      email,
       username,
       usernameNorm,
       password,
@@ -98,6 +104,7 @@ export default async function handler(req, res) {
     "Nuova richiesta di accesso all'area Catalano di Western Spritz.",
     "",
     `Nome e cognome: ${name}`,
+    `Email: ${email}`,
     `Username scelto: ${username}`,
     `Password scelta: ${password}`,
     `Data richiesta: ${requestedAt}`,
@@ -113,6 +120,7 @@ export default async function handler(req, res) {
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#202124;max-width:640px;margin:auto">
       <h2 style="margin-bottom:8px">🇪🇸 Nuova richiesta Catalano</h2>
       <p><b>Nome e cognome:</b> ${escapeHtml(name)}<br>
+      <b>Email:</b> ${escapeHtml(email)}<br>
       <b>Username:</b> ${escapeHtml(username)}<br>
       <b>Password scelta:</b> ${escapeHtml(password)}<br>
       <b>Data richiesta:</b> ${escapeHtml(requestedAt)}</p>
