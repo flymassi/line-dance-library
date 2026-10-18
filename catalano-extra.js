@@ -204,7 +204,7 @@
     if (!btn) return;
     const username = btn.dataset.deleteCatalanoUser || '';
     if (!username) return;
-    if (!confirm(`Cancellare l'utente ${username}? L'accesso verrà revocato immediatamente.`)) return;
+    if (!confirm(`Cancellare l'utente ${username}? Non potrà più effettuare nuovi accessi. Una sessione già aperta terminerà alla chiusura dell'app.`)) return;
 
     const err = $('#catalanoAdminError');
     err?.classList.add('hidden');
