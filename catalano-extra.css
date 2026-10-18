@@ -49,6 +49,18 @@
   opacity:.78;
 }
 
+#saggioRequestForm textarea.input{
+  min-height:82px;
+  resize:vertical;
+}
+
+#saggioRequestSubmit:disabled{
+  opacity:.42;
+  cursor:not-allowed;
+  filter:grayscale(.35);
+  box-shadow:none;
+}
+
 @media (max-width:560px){
   .catalano-admin-user{
     align-items:stretch;
