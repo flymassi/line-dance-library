@@ -13,7 +13,7 @@
   <link rel="apple-touch-icon" href="./assets/images/icon.png" />
   <link rel="manifest" href="./manifest.webmanifest" />
 
-  <link rel="stylesheet" href="./style.css?v=80" />
+  <link rel="stylesheet" href="./style.css?v=82" />
 </head>
 <body>
 
@@ -139,6 +139,11 @@
         <span class="btn-label">Esci Catalano</span>
       </button>
 
+      <button id="btnCatalanoAdmin" class="btn btn-glass btn-amber btn-slim hidden" type="button">
+        <span class="btn-icon">👥</span>
+        <span class="btn-label">Utenti Catalano</span>
+      </button>
+
       <button id="btnPlaylist" class="btn btn-glass btn-amber btn-slim">
         <span class="btn-icon">▶︎</span>
         <span class="btn-label">Playlist</span>
@@ -223,6 +228,10 @@
           <input id="saggioRequestName" type="text" class="input" autocomplete="name" required />
         </label>
         <label>
+          Email
+          <input id="saggioRequestEmail" type="email" class="input" autocomplete="email" maxlength="254" required />
+        </label>
+        <label>
           Username desiderato
           <input id="saggioRequestUser" type="text" class="input" autocomplete="username" minlength="3" maxlength="30" required />
         </label>
@@ -242,6 +251,31 @@
           <button id="saggioRequestSubmit" type="submit" class="btn btn-primary">Invia richiesta</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- GESTIONE UTENTI CATALANO -->
+  <div id="catalanoAdminModal" class="overlay hidden" aria-hidden="true">
+    <div class="pl-card catalano-auth-card catalano-admin-card" role="dialog" aria-modal="true" aria-labelledby="catalanoAdminTitle">
+      <div class="pl-top">
+        <h3 id="catalanoAdminTitle">👥 Gestione utenti Catalano</h3>
+        <button id="catalanoAdminClose" class="btn ghost" type="button">Chiudi</button>
+      </div>
+      <p class="saggio-note">
+        Qui puoi vedere e cancellare gli utenti approvati tramite registrazione.
+        Per sicurezza inserisci di nuovo la password dell’amministratore.
+      </p>
+      <form id="catalanoAdminAuthForm" class="saggio-form">
+        <label>
+          Password amministratore
+          <input id="catalanoAdminPass" type="password" class="input" autocomplete="current-password" required />
+        </label>
+        <p id="catalanoAdminError" class="saggio-error hidden"></p>
+        <div class="catalano-auth-actions">
+          <button id="catalanoAdminLoad" type="submit" class="btn btn-primary">Carica utenti</button>
+        </div>
+      </form>
+      <div id="catalanoAdminList" class="catalano-admin-list hidden"></div>
     </div>
   </div>
 
@@ -267,6 +301,7 @@
   </audio>
 
   <script src="./app.js?v=81" defer></script>
+  <script src="./catalano-extra.js?v=1" defer></script>
   <script>
     if ('serviceWorker' in navigator){
       addEventListener('load', () => {
