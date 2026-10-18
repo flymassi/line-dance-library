@@ -33,13 +33,14 @@ export default async function handler(req, res) {
     return res.status(503).json({ ok: false, error: "Servizio email non configurato" });
   }
 
-  const name = clean(req.body?.name, 120);
+  const name = clean(req.body?.name, 60);
   const email = clean(req.body?.email, 254).toLowerCase();
+  const reason = clean(req.body?.reason, 100);
   const username = clean(req.body?.username, 30);
   const password = String(req.body?.password ?? "").slice(0, 120);
   const usernameNorm = normalizeUsername(username);
 
-  if (!name || !email || username.length < 3 || password.length < 4) {
+  if (!name || !email || !reason || username.length < 3 || password.length < 4) {
     return res.status(400).json({ ok: false, error: "Dati incompleti" });
   }
 
@@ -72,6 +73,7 @@ export default async function handler(req, res) {
     requestId = await createPendingRequest({
       name,
       email,
+      reason,
       username,
       usernameNorm,
       password,
@@ -103,8 +105,9 @@ export default async function handler(req, res) {
   const text = [
     "Nuova richiesta di accesso all'area Catalano di Western Spritz.",
     "",
-    `Nome e cognome: ${name}`,
+    `Nome: ${name}`,
     `Email: ${email}`,
+    `Perché devo accettare la richiesta?: ${reason}`,
     `Username scelto: ${username}`,
     `Password scelta: ${password}`,
     `Data richiesta: ${requestedAt}`,
@@ -119,8 +122,9 @@ export default async function handler(req, res) {
   const html = `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#202124;max-width:640px;margin:auto">
       <h2 style="margin-bottom:8px">🇪🇸 Nuova richiesta Catalano</h2>
-      <p><b>Nome e cognome:</b> ${escapeHtml(name)}<br>
+      <p><b>Nome:</b> ${escapeHtml(name)}<br>
       <b>Email:</b> ${escapeHtml(email)}<br>
+      <b>Perché devo accettare la richiesta?</b> ${escapeHtml(reason)}<br>
       <b>Username:</b> ${escapeHtml(username)}<br>
       <b>Password scelta:</b> ${escapeHtml(password)}<br>
       <b>Data richiesta:</b> ${escapeHtml(requestedAt)}</p>
