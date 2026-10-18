@@ -1,0 +1,60 @@
+/* ===== CATALANO · gestione utenti amministratore ===== */
+.catalano-admin-card{
+  width:min(94vw, 680px);
+  max-height:86vh;
+  overflow:auto;
+}
+
+.catalano-admin-list{
+  margin-top:16px;
+  display:grid;
+  gap:10px;
+}
+
+.catalano-admin-user{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;
+  background:rgba(0,0,0,.20);
+}
+
+.catalano-admin-user-info{
+  min-width:0;
+  display:grid;
+  gap:2px;
+  text-align:left;
+}
+
+.catalano-admin-user-info span,
+.catalano-admin-user-info small{
+  overflow-wrap:anywhere;
+}
+
+.catalano-admin-user-info small{
+  opacity:.72;
+}
+
+.catalano-admin-delete{
+  flex:0 0 auto;
+}
+
+.catalano-admin-empty{
+  padding:14px;
+  border:1px dashed rgba(255,255,255,.18);
+  border-radius:12px;
+  opacity:.78;
+}
+
+@media (max-width:560px){
+  .catalano-admin-user{
+    align-items:stretch;
+    flex-direction:column;
+  }
+  .catalano-admin-delete{
+    width:100%;
+  }
+}
