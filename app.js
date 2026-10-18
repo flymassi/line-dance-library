@@ -1,5 +1,5 @@
-/* Western Spritz — app.js v55 · Halloween 2026 + Catalano access + request email */
-console.log('[WS] app v55 · Halloween 2026 + Catalano access + request email');
+/* Western Spritz — app.js v56 · Halloween 2026 + Catalano access + one-click approval */
+console.log('[WS] app v56 · Halloween 2026 + Catalano access + one-click approval');
 
 /*-- VERSIONE OTTIMIZZATA */
 const S_KEY = 'ws_catalano_token';
@@ -109,7 +109,7 @@ if (WS_HALLOWEEN_ACTIVE){
   }
 
   const tip = document.querySelector('.splash-tip');
-  if (tip) tip.textContent = '🎃🎃🎃 Tocca “Avvia”… se hai coraggio 🎃🎃🎃';
+  if (tip) tip.textContent = 'Tocca “Avvia”… se hai coraggio 🎃';
 
   const startBtn = document.getElementById('startApp');
   if (startBtn) startBtn.textContent = '🎃 Avvia';
@@ -957,7 +957,7 @@ $('#saggioRequestForm')?.addEventListener('submit', async e=>{
     console.error('Errore richiesta accesso Catalano', ex);
     if (status) status.classList.add('hidden');
     if (err) {
-      err.textContent = 'Non è stato possibile inviare la richiesta. Riprova tra poco.';
+      err.textContent = ex?.message || 'Non è stato possibile inviare la richiesta. Riprova tra poco.';
       err.classList.remove('hidden');
     }
   } finally {
