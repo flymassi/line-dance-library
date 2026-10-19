@@ -180,3 +180,12 @@
     if (!document.hidden) validateSession();
   });
 })();
+
+/* ====== CARICAMENTO WESTERN SPRITZ CHALLENGE ====== */
+(() => {
+  if (document.querySelector('script[data-ws-challenge-loader]')) return;
+  const script = document.createElement('script');
+  script.src = './challenge.js?v=1';
+  script.dataset.wsChallengeLoader = '1';
+  document.head.appendChild(script);
+})();
