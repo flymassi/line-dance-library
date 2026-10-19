@@ -109,7 +109,6 @@
   function restoreOrMigrateSession(){
     const saved = readPersistentSession();
 
-    // Sessione persistente già presente: deve essere completa e non scaduta.
     if (saved.token || saved.expiresAt) {
       if (
         saved.token &&
@@ -121,12 +120,10 @@
         return true;
       }
 
-      // Dati incompleti o scaduti: non devono essere riattivati.
       clearAuthStorage();
       return false;
     }
 
-    // Migra una eventuale sessione già aperta prima di questo aggiornamento.
     return persistCurrentSession();
   }
 
@@ -143,8 +140,6 @@
     return true;
   }
 
-  // Il login esistente continua a scrivere in sessionStorage. Quando va a buon fine,
-  // activateCatalanoCourse viene chiamata: qui estendiamo soltanto la sessione a 6 ore.
   const originalActivateCatalanoCourse = typeof window.activateCatalanoCourse === 'function'
     ? window.activateCatalanoCourse
     : null;
@@ -156,7 +151,6 @@
     };
   }
 
-  // Logout manuale: cancella sia la sessione corrente sia quella persistente.
   if (originalLogoutCatalano) {
     window.logoutCatalano = function(...args){
       clearAuthStorage();
@@ -172,8 +166,6 @@
     } catch {}
   }
 
-  // Se il telefono/PC resta sospeso o la scheda rimane aperta, ricontrolla la scadenza
-  // appena l'utente torna nell'app.
   window.addEventListener('focus', validateSession);
   window.addEventListener('pageshow', validateSession);
   document.addEventListener('visibilitychange', () => {
@@ -185,7 +177,7 @@
 (() => {
   if (document.querySelector('script[data-ws-challenge-loader]')) return;
   const script = document.createElement('script');
-  script.src = './challenge.js?v=1';
+  script.src = './challenge.js?v=2';
   script.dataset.wsChallengeLoader = '1';
   document.head.appendChild(script);
 })();
