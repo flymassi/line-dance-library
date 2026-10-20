@@ -1,6 +1,15 @@
 [
 {
   "year": 10,
+  "songNumber": 1004,
+  "danceTitle": "THANKS TO YOU",
+  "danceVideoUrl": "https://youtu.be/lvFZIOAvCiw?si=XZFOsrIDvIk3ASnE",
+  "singerName": "Carolyn Dawn Johnson",
+  "songTitle": "I'll Think Of You That Way",
+  "songUrl": "https://youtu.be/ccWlXnZYpqg?si=DkGZnlzGBVlYEDxq"
+},
+  {
+  "year": 10,
   "songNumber": 1003,
   "danceTitle": "SORE EYES",
   "danceVideoUrl": "https://youtu.be/1FKSkXBzMgU?si=0b9oj19FWRIU71WL",
