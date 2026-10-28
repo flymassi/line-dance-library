@@ -580,10 +580,8 @@ const sweatBg = hasSweatDustBg(s);
 </div>
 
 <div class="asia-subtext">
-  ATTENZIONE!!! ATTENZIONE!!!!<br>
-  se non fai SUBSCRIBE ai nostri due canali<br>
-  andrai incontro a RESTART e TAG ERRATI tutto l'anno!!!
-</div>
+  ATTENZIONE!!! - SUBSCRIBE - ATTENZIONE!!!!<br>
+  </div>
 
 
       </article>
