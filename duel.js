@@ -96,7 +96,7 @@
   }
   const $=id=>document.getElementById(id);
   const modal=$('duelModal'); if(!modal) return;
-  const KEY='ws_challenge_device_v1',NICK='ws_challenge_nickname_v1',LAST='ws_duel_last_id_v1';
+  const KEY='ws_challenge_device_v1',NICK='ws_challenge_nickname_v1',LAST='ws_duel_last_id_v2';
   let duelId='',info=null,submitting=false,timer=null,poller=null,deadline=0,active=false;
   const fmt=n=>Math.round(Number(n||0)).toLocaleString('it-IT');
   const text=(id,value)=>{const e=$(id);if(e)e.textContent=String(value??'');};
