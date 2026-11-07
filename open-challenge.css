@@ -1,0 +1,108 @@
+/* Western Spritz - Sfida Aperta: independent UI, compatible with existing theme. */
+#btnOpenChallenge {
+  position: relative;
+  isolation: isolate;
+  overflow: visible !important;
+  color: #fff2ce !important;
+  background: linear-gradient(135deg, #875021, #bb812e 56%, #40583d) !important;
+  border: 1px solid rgba(255, 214, 129, .76) !important;
+  font-weight: 900;
+  box-shadow: 0 0 13px rgba(230, 150, 48, .23) !important;
+}
+#btnOpenChallenge::after {
+  content: "NEW";
+  position: absolute;
+  top: -11px;
+  right: -10px;
+  padding: 2px 6px;
+  color: white;
+  background: #e52424;
+  border-radius: 999px;
+  border: 1px solid white;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .7px;
+  line-height: 1.3;
+  box-shadow: 0 2px 8px rgba(0,0,0,.45);
+  pointer-events: none;
+  z-index: 3;
+  animation: oc-new-pulse 2.1s ease-in-out infinite;
+}
+@keyframes oc-new-pulse {
+  0%, 100% {transform:scale(1);filter:brightness(1)}
+  50% {transform:scale(1.13);filter:brightness(1.2)}
+}
+.oc-card {
+  width: min(690px, 96vw);
+  max-height: min(91vh, 850px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: linear-gradient(145deg,#182c2c,#172220 48%,#3b2b20) !important;
+  border: 1px solid rgba(250,198,113,.49);
+  color: #fff4d9;
+  box-shadow: 0 22px 70px rgba(0,0,0,.65);
+  position: relative;
+}
+.oc-header h3 {color:#ffda93;font-family:Georgia,serif;font-size:clamp(20px,4vw,27px);margin:7px 0}
+.oc-header p {font-size:12px;color:#e4d5c1;max-width:450px;line-height:1.5}
+.oc-kicker {font-size:11px;font-weight:900;letter-spacing:1.25px;color:#fbd38a}
+.oc-tabbar {display:flex;gap:9px;margin:13px 0;border-bottom:1px solid rgba(255,230,164,.2);padding-bottom:12px}
+.oc-tab {
+  border:1px solid rgba(253,210,148,.38);color:#f7e1b7;
+  border-radius:24px;background:rgba(255,255,255,.08);
+  padding:8px 16px;font-weight:800;cursor:pointer
+}
+.oc-tab.active {background:linear-gradient(135deg,#b2762c,#62441e);color:white;border-color:#ffd484}
+.oc-panel {padding:10px 4px 3px}
+.oc-panel h4 {font-size:clamp(18px,3.8vw,25px);line-height:1.28;color:#ffe0a5;margin:10px 0}
+.oc-panel p {font-size:13px;line-height:1.6;color:#eadfce}
+.oc-hero {font-size:clamp(39px,7vw,67px);text-align:center;padding:5px 0}
+.oc-rule {padding:12px;border-radius:12px;background:rgba(249,197,103,.09);border:1px solid rgba(251,214,155,.27);font-size:12px;line-height:1.6;color:#ffebc9;margin:14px 0}
+.oc-label {display:block;font-size:12px;font-weight:900;color:#ffe3ad;margin:14px 0 6px}
+.oc-form {display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.oc-form .input {flex:1;min-width:175px;min-height:44px;background:#102023!important;color:white!important;border:1px solid rgba(255,223,168,.48)}
+.oc-form .btn {min-height:43px}
+.oc-actions {display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:15px}
+.oc-actions .btn {min-height:40px}
+.oc-muted {font-size:11px!important;color:#c5baaa!important}
+.oc-share {padding:13px;border-radius:13px;background:rgba(255,255,255,.055);border:1px solid rgba(255,215,157,.30);margin:13px 0}
+.oc-share .input {width:100%;font-size:12px;background:#13252b!important;color:#e4f0ef!important;border:1px solid rgba(240,235,223,.28)}
+.oc-stats {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0}
+.oc-stat {padding:11px 6px;border-radius:12px;background:rgba(239,182,96,.085);border:1px solid rgba(255,215,157,.20);text-align:center}
+.oc-stat strong {display:block;font-size:20px;color:#ffe5a3;word-break:break-word}
+.oc-stat small {display:block;font-size:10px;line-height:1.45;color:#ddceb6;margin-top:5px}
+.oc-clockbar {display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;font-size:12px;font-weight:900;color:#ffe1ad}
+.oc-clockbar strong {font-size:23px;color:#ffe39c}
+.oc-track {height:7px;background:rgba(255,255,255,.19);border-radius:20px;overflow:hidden;margin:12px 0 19px}
+.oc-track div {width:100%;height:100%;background:linear-gradient(90deg,#ff9d3d,#ffe397);transition:width .2s linear}
+.oc-answers {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0}
+.oc-answer {border:1px solid rgba(255,230,176,.38);border-radius:12px;background:rgba(255,255,255,.095);padding:14px 12px;min-height:56px;text-align:left;font:inherit;font-size:13px;font-weight:750;color:#fff7e7;cursor:pointer}
+.oc-answer:hover,.oc-answer:focus-visible {background:rgba(231,154,68,.25);border-color:#ffe2a7}
+.oc-answer:disabled {opacity:.56;cursor:wait}
+.oc-feedback {font-size:13px;min-height:20px;color:#ffdf9d}
+.oc-error {background:rgba(156,45,39,.26);color:#ffdbd5;border:1px solid rgba(255,133,119,.6);border-radius:10px;padding:12px;font-size:12px}
+.oc-ranking {border:1px solid rgba(252,210,141,.3);border-radius:12px;max-height:385px;overflow:auto;background:rgba(255,255,255,.03)}
+.oc-rank-row {display:grid;grid-template-columns:32px minmax(0,1fr) auto;align-items:center;gap:9px;border-bottom:1px solid rgba(255,255,255,.1);padding:11px}
+.oc-rank-row:last-child {border-bottom:0}
+.oc-rank-row.oc-own {background:rgba(218,161,67,.20)}
+.oc-rank-no {font-size:14px;font-weight:900;color:#ffd784;text-align:center}
+.oc-rank-name {min-width:0;overflow-wrap:anywhere;font-size:12px;font-weight:900;color:#f9e5bd}
+.oc-rank-name small {display:block;font-size:10px;color:#c9bfaf;font-weight:500;margin-top:4px}
+.oc-rank-score {font-size:15px;font-weight:900;color:#ffe1aa;text-align:right}
+.oc-rank-score small {display:block;font-size:9px;font-weight:500;color:#d5cbbb}
+.oc-highlight {padding:15px;border:1px solid rgba(255,206,119,.35);background:rgba(234,164,58,.12);border-radius:13px;margin:12px 0}
+.oc-highlight strong {font-size:clamp(23px,5vw,33px);color:#ffe5a6}
+.oc-finish-text {margin-top:8px;font-size:12px}
+@media(max-width:600px){
+  .oc-card {max-height:94vh;padding:15px}
+  .oc-stats {gap:5px}
+  .oc-stat {padding:8px 4px}
+  .oc-stat strong {font-size:17px}
+  .oc-answers {grid-template-columns:1fr}
+  .oc-form .btn {flex:1}
+  .oc-actions .btn {flex:1 1 130px}
+}
+@media(prefers-reduced-motion:reduce){
+  #btnOpenChallenge::after {animation:none}
+  .oc-track div {transition:none}
+}
