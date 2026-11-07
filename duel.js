@@ -34,7 +34,7 @@
           <div class="duel-buttons"><button id="duelCopy" class="btn ghost" type="button">📋 Copia link</button><button id="duelWhatsApp" class="btn btn-primary" type="button">🟢 Sfida su WhatsApp</button></div>
         </div>
         <p class="duel-muted">Puoi giocare subito oppure aspettare il tuo amico. Il duello resta disponibile per sette giorni.</p>
-        <div class="duel-buttons"><button id="duelStart" class="btn btn-primary" type="button">🎯 Inizia le 5 domande</button><button id="duelRefresh" class="btn ghost" type="button">↻ Aggiorna</button></div>
+        <div class="duel-buttons"><button id="duelStart" class="btn btn-primary" type="button">🎯 Inizia le 5 domande</button><button id="duelRefresh" class="btn ghost" type="button">↻ Aggiorna</button><button id="duelLobbyNew" class="btn ghost" type="button">Nuovo duello</button></div>
       </section>
       <section id="duelQuiz" class="duel-panel hidden">
         <div class="duel-quiz-bar"><span id="duelProgress">DOMANDA 1 / 5</span><div><strong id="duelTimer">15</strong><small> secondi</small></div><div><strong id="duelScore">0</strong><small> punti</small></div></div>
@@ -48,6 +48,11 @@
         <h4 id="duelResultHeading">Duello completato</h4>
         <div class="duel-vs duel-results-vs"><div><span>🤠</span><strong id="duelResultHost">Cowboy 1</strong><b id="duelResultHostScore">—</b></div><b>VS</b><div><span>🤠</span><strong id="duelResultGuest">Cowboy 2</strong><b id="duelResultGuestScore">—</b></div></div>
         <p id="duelResultNote" class="duel-result-note">In attesa del secondo giocatore.</p>
+        <div id="duelResultInviteArea" class="duel-share hidden">
+          <label class="duel-label" for="duelResultLink">Invita ora il tuo avversario</label>
+          <input id="duelResultLink" class="input duel-link" readonly />
+          <div class="duel-buttons"><button id="duelResultCopy" class="btn ghost" type="button">📋 Copia link</button><button id="duelResultWhatsApp" class="btn btn-primary" type="button">🟢 Sfida su WhatsApp</button></div>
+        </div>
         <div class="duel-buttons"><button id="duelResultRefresh" class="btn ghost" type="button">↻ Aggiorna risultati</button><button id="duelShareResult" class="btn btn-primary hidden" type="button">🟢 Condividi risultato</button><button id="duelNew" class="btn ghost" type="button">Nuovo duello</button></div>
       </section>
     </div>
@@ -65,7 +70,7 @@
   }
   const $=id=>document.getElementById(id);
   const modal=$('duelModal'); if(!modal) return;
-  const KEY='ws_challenge_device_v1',NICK='ws_challenge_nickname_v1';
+  const KEY='ws_challenge_device_v1',NICK='ws_challenge_nickname_v1',LAST='ws_duel_last_id_v1';
   let duelId='',info=null,submitting=false,timer=null,poller=null,deadline=0,active=false;
   const fmt=n=>Math.round(Number(n||0)).toLocaleString('it-IT');
   const text=(id,value)=>{const e=$(id);if(e)e.textContent=String(value??'');};
@@ -74,6 +79,9 @@
   function validNick(value){return value.length>=2 && value.length<=18;}
   function saveNickname(value){try{localStorage.setItem(NICK,value);}catch{}}
   function getNickname(){try{return localStorage.getItem(NICK)||'';}catch{return '';}}
+  function saveLastId(id){try{localStorage.setItem(LAST,id);}catch{}}
+  function getLastId(){try{return localStorage.getItem(LAST)||'';}catch{return '';}}
+  function clearLastId(){try{localStorage.removeItem(LAST);}catch{}}
   function deviceId(){
     let id='';try{id=localStorage.getItem(KEY)||'';}catch{}
     if(/^[a-f0-9]{32,64}$/.test(id))return id;
@@ -95,7 +103,7 @@
     text('duelHostName',info.duel.host?.nickname||'Cowboy 1');text('duelGuestName',info.duel.guest?.nickname||'In attesa…');
     text('duelHostStatus',publicStatus(info.duel.host));text('duelGuestStatus',info.duel.guest?publicStatus(info.duel.guest):'Invita un amico');
   }
-  function enterWelcome(){stopTimer();stopPoll();duelId='';info=null;const url=new URL(location.href);url.searchParams.delete('duel');history.replaceState({},'',url.toString());$('duelNickname').value=getNickname();panels('duelWelcome');}
+  function enterWelcome(){stopTimer();stopPoll();clearLastId();duelId='';info=null;const url=new URL(location.href);url.searchParams.delete('duel');history.replaceState({},'',url.toString());$('duelNickname').value=getNickname();panels('duelWelcome');}
   function renderQuiz(){
     const me=info.me,q=me?.question;
     if(!q){render();return;}
@@ -134,6 +142,8 @@
       text('duelResultKicker','⏳ IN ATTESA');text('duelResultHeading','Hai concluso il tuo duello!');
       text('duelResultNote',`Il tuo risultato: ${fmt(me?.score)} punti, ${me?.correct||0}/5 corrette. ${!duel.guest?'Invita un amico per completare la sfida.':'L’avversario deve ancora terminare la propria partita.'}`);
     }
+    show('duelResultInviteArea',!complete&&me?.role==='host'&&!duel.guest);
+    if(!complete&&me?.role==='host'&&!duel.guest)$('duelResultLink').value=shareUrl();
     show('duelShareResult',complete);
     show('duelResultRefresh',!complete);
     stopPoll();if(!complete)poller=setInterval(()=>{if(active)refresh(false);},9000);
@@ -163,10 +173,14 @@
       if(info.me?.status==='playing'&&$('duelQuiz')&&!$('duelQuiz').classList.contains('hidden'))return;
       if(info.me?.status==='ready'&&old===info.duel.status&&!$('duelLobby').classList.contains('hidden')){updateVersus();return;}
       render();
-    }catch(e){if(showErrors)error(e.message);}
+    }catch(e){
+      if(/non è più disponibile|non valido/.test(e.message)){enterWelcome();error(e.message);}
+      else if(showErrors)error(e.message);
+    }
   }
   function open(id=''){
-    active=true;modal.classList.remove('hidden');modal.setAttribute('aria-hidden','false');
+    active=true;
+    if(!id&&!duelId){const last=getLastId();if(/^[a-f0-9]{20}$/.test(last))id=last;}modal.classList.remove('hidden');modal.setAttribute('aria-hidden','false');
     if(id){duelId=id;info=null;panels('duelLobby');text('duelLobbyKicker','Caricamento duello…');refresh();}
     else if(duelId)refresh();
     else enterWelcome();
@@ -174,12 +188,12 @@
   function close(){active=false;stopTimer();stopPoll();modal.classList.add('hidden');modal.setAttribute('aria-hidden','true');}
   async function create(){const name=nickname();if(!validNick(name))return error('Inserisci un nickname di 2–18 caratteri.');
     const button=$('duelCreate');button.disabled=true;error('');
-    try{saveNickname(name);info=await post('create',{nickname:name});duelId=info.duel.id;render();}
+    try{saveNickname(name);info=await post('create',{nickname:name});duelId=info.duel.id;saveLastId(duelId);render();}
     catch(e){error(e.message);}finally{button.disabled=false;}
   }
   async function join(){const name=String($('duelGuestNickname').value||'').trim();if(!validNick(name))return error('Inserisci un nickname di 2–18 caratteri.');
     const button=$('duelJoin');button.disabled=true;error('');
-    try{saveNickname(name);info=await post('join',{nickname:name});render();}
+    try{saveNickname(name);info=await post('join',{nickname:name});saveLastId(duelId);render();}
     catch(e){error(e.message);}finally{button.disabled=false;}
   }
   async function start(){const button=$('duelStart');button.disabled=true;error('');
@@ -200,7 +214,7 @@
       setTimeout(()=>{submitting=false;if(active)render();},850);
     }catch(e){submitting=false;error(e.message);await refresh(false);}
   }
-  async function copyLink(){const url=shareUrl();try{await navigator.clipboard.writeText(url);text('duelCopy','✅ Copiato!');setTimeout(()=>text('duelCopy','📋 Copia link'),1600);}catch{const input=$('duelLink');input.focus();input.select();try{document.execCommand('copy');text('duelCopy','✅ Copiato!');}catch{error('Seleziona e copia il link qui sopra.');}}}
+  async function copyLink(resultMode=false){const url=shareUrl(),id=resultMode?'duelResultCopy':'duelCopy';try{await navigator.clipboard.writeText(url);text(id,'✅ Copiato!');setTimeout(()=>text(id,'📋 Copia link'),1600);}catch{const input=$(resultMode?'duelResultLink':'duelLink');input.focus();input.select();try{document.execCommand('copy');text(id,'✅ Copiato!');}catch{error('Seleziona e copia il link qui sopra.');}}}
   function openWhatsApp(value){window.open(`https://wa.me/?text=${encodeURIComponent(value)}`,'_blank','noopener,noreferrer');}
   function shareInvite(){if(!duelId)return;openWhatsApp(`⚔️ Ti sfido a un duello su Western Spritz! 🤠 5 domande, stesso quiz e un vincitore. Accetta qui: ${shareUrl()}`);}
   function shareResult(){if(info?.duel?.status!=='finished')return;
@@ -215,7 +229,10 @@
   $('duelStart').addEventListener('click',start);
   $('duelRefresh').addEventListener('click',()=>refresh());
   $('duelResultRefresh').addEventListener('click',()=>refresh());
-  $('duelCopy').addEventListener('click',copyLink);
+  $('duelCopy').addEventListener('click',()=>copyLink(false));
+  $('duelResultCopy').addEventListener('click',()=>copyLink(true));
+  $('duelResultWhatsApp').addEventListener('click',shareInvite);
+  $('duelLobbyNew').addEventListener('click',enterWelcome);
   $('duelWhatsApp').addEventListener('click',shareInvite);
   $('duelShareResult').addEventListener('click',shareResult);
   $('duelNew').addEventListener('click',enterWelcome);
