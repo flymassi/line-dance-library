@@ -1,4 +1,4 @@
-const VERSION = 'ws-v41';
+const VERSION = 'ws-v42';
 
 self.addEventListener('install', event => {
   self.skipWaiting();
