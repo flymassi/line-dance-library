@@ -1,158 +1,10 @@
-/* Western Spritz — app.js v56 · Halloween 2026 + Catalano access + one-click approval */
-console.log('[WS] app v56 · Halloween 2026 + Catalano access + one-click approval');
+/* Western Spritz — Line Dance Library + Catalano + Challenge */
+console.log('[WS] app · Western Spritz');
 
 /*-- VERSIONE OTTIMIZZATA */
 const S_KEY = 'ws_catalano_token';
 const S_USER_KEY = 'ws_catalano_user';
 
-
-/* ====== HALLOWEEN 2026 · 17 ottobre → 2 novembre ====== */
-function isHalloweenPeriod(date = new Date()){
-  const start = new Date(2026, 9, 17, 0, 0, 0, 0); // 17 ottobre, ora locale
-  const end   = new Date(2026, 10, 3, 0, 0, 0, 0); // 3 novembre escluso
-  return date >= start && date < end;
-}
-
-const WS_HALLOWEEN_ACTIVE = isHalloweenPeriod();
-
-
-/* ====== RIPRISTINO MUSICA HALLOWEEN DOPO LINK ESTERNO ====== */
-let WS_HALLOWEEN_BG_RETURN_PENDING = false;
-let WS_HALLOWEEN_BG_RESUME_NOT_BEFORE = 0;
-let WS_HALLOWEEN_BG_RESUME_TIMER = null;
-
-function pauseHalloweenBackgroundForExternalMedia(){
-  if (!WS_HALLOWEEN_ACTIVE) return false;
-
-  const bgMusic = document.getElementById('halloweenBgMusic');
-  if (!bgMusic || bgMusic.paused || bgMusic.ended) return false;
-
-  try {
-    // Conserva currentTime: al ritorno la musica riprende dal punto interrotto.
-    bgMusic.pause();
-    WS_HALLOWEEN_BG_RETURN_PENDING = true;
-    // Evita che un focus/visibilitychange immediato faccia ripartire l'audio
-    // prima che la nuova scheda abbia avuto il tempo di aprirsi.
-    WS_HALLOWEEN_BG_RESUME_NOT_BEFORE = Date.now() + 1000;
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function resumeHalloweenBackgroundAfterReturn(){
-  WS_HALLOWEEN_BG_RESUME_TIMER = null;
-
-  if (!WS_HALLOWEEN_ACTIVE || !WS_HALLOWEEN_BG_RETURN_PENDING) return;
-  if (document.hidden) return;
-
-  const splash = document.getElementById('splash');
-  if (!document.body.classList.contains('ws-started')) return;
-  if (splash && !splash.classList.contains('hidden')) return;
-
-  // Non sovrapporre il sottofondo all'urlo di apertura se l'utente torna subito.
-  const scream = document.getElementById('fxOpenScream');
-  if (scream && !scream.paused && !scream.ended){
-    scream.addEventListener('ended', resumeHalloweenBackgroundAfterReturn, { once:true });
-    return;
-  }
-
-  const bgMusic = document.getElementById('halloweenBgMusic');
-  if (!bgMusic) {
-    WS_HALLOWEEN_BG_RETURN_PENDING = false;
-    return;
-  }
-
-  try {
-    bgMusic.loop = true;
-    bgMusic.volume = 0.22;
-    bgMusic.muted = false;
-    const p = bgMusic.play();
-
-    if (p?.then) {
-      p.then(()=>{
-        WS_HALLOWEEN_BG_RETURN_PENDING = false;
-      }).catch(()=>{
-        // Mantiene pending=true: un successivo focus/visibilitychange ritenterà.
-      });
-    } else {
-      WS_HALLOWEEN_BG_RETURN_PENDING = false;
-    }
-  } catch {}
-}
-
-function scheduleHalloweenBackgroundResume(delay = 120){
-  if (!WS_HALLOWEEN_BG_RETURN_PENDING) return;
-
-  const waitForArm = Math.max(0, WS_HALLOWEEN_BG_RESUME_NOT_BEFORE - Date.now());
-  const wait = Math.max(delay, waitForArm);
-
-  clearTimeout(WS_HALLOWEEN_BG_RESUME_TIMER);
-  WS_HALLOWEEN_BG_RESUME_TIMER = setTimeout(resumeHalloweenBackgroundAfterReturn, wait);
-}
-
-window.addEventListener('focus', ()=> scheduleHalloweenBackgroundResume());
-document.addEventListener('visibilitychange', ()=>{
-  if (!document.hidden) scheduleHalloweenBackgroundResume();
-});
-window.addEventListener('pageshow', ()=> scheduleHalloweenBackgroundResume());
-
-if (WS_HALLOWEEN_ACTIVE){
-  document.body.classList.add('halloween-mode');
-
-  const intro = document.getElementById('introMusic');
-  const introSource = intro?.querySelector('source');
-  if (intro && introSource){
-    introSource.src = './assets/audio/disturbing-halloween.mp3';
-    introSource.type = 'audio/mpeg';
-    intro.load();
-  }
-
-  const tip = document.querySelector('.splash-tip');
-  if (tip) tip.textContent = '🎃🎃🎃Tocca “Avvia”… se hai coraggio 🎃🎃🎃';
-
-  const startBtn = document.getElementById('startApp');
-  if (startBtn) startBtn.textContent = '🎃 Avvia 🎃';
-
-  // Decorazioni leggere e non interattive: pipistrelli e teschi vaganti.
-  // Vengono create solo durante il periodo Halloween.
-  const scenery = document.querySelector('.ws-scenery');
-  if (scenery && !scenery.dataset.halloweenFloaters){
-    scenery.dataset.halloweenFloaters = '1';
-
-    const specs = [
-      ...Array.from({ length: 9 }, (_, i) => ({ icon:'🦇', kind:'bat', i })),
-      ...Array.from({ length: 5 }, (_, i) => ({ icon:'💀', kind:'skull', i }))
-    ];
-
-    specs.forEach((item, idx)=>{
-      const el = document.createElement('span');
-      el.className = `halloween-floater halloween-${item.kind}`;
-      el.textContent = item.icon;
-      el.setAttribute('aria-hidden', 'true');
-
-      // Valori deterministici: effetto vario senza dipendere da timer o librerie esterne.
-      const top = 8 + ((idx * 17 + (item.kind === 'skull' ? 9 : 0)) % 78);
-      const duration = item.kind === 'bat' ? 14 + (idx % 6) * 2.1 : 19 + (idx % 5) * 2.8;
-      const delay = -((idx * 3.7) % duration);
-      const size = item.kind === 'bat' ? 18 + (idx % 4) * 5 : 20 + (idx % 3) * 6;
-      const wave1 = ((idx % 2 ? -1 : 1) * (18 + (idx % 5) * 7));
-      const wave2 = -wave1 * 0.65;
-      const endY = ((idx % 3) - 1) * 14;
-      const opacity = item.kind === 'bat' ? 0.30 + (idx % 4) * 0.06 : 0.22 + (idx % 3) * 0.06;
-
-      el.style.setProperty('--hf-top', `${top}%`);
-      el.style.setProperty('--hf-duration', `${duration.toFixed(1)}s`);
-      el.style.setProperty('--hf-delay', `${delay.toFixed(1)}s`);
-      el.style.setProperty('--hf-size', `${size}px`);
-      el.style.setProperty('--hf-wave1', `${wave1}px`);
-      el.style.setProperty('--hf-wave2', `${wave2.toFixed(1)}px`);
-      el.style.setProperty('--hf-end-y', `${endY}px`);
-      el.style.setProperty('--hf-opacity', opacity.toFixed(2));
-      scenery.appendChild(el);
-    });
-  }
-}
 
 /* ====== BACKGROUND RANDOM ====== */
 (function(){
@@ -165,108 +17,18 @@ if (WS_HALLOWEEN_ACTIVE){
 
 /* ====== SPLASH + AUDIO ====== */
 (function(){
-  const splash  = document.getElementById('splash');
-  const start   = document.getElementById('startApp');
-  const music   = document.getElementById('introMusic');
-  const bgMusic = document.getElementById('halloweenBgMusic');
-
+  const splash = document.getElementById('splash');
+  const start = document.getElementById('startApp');
+  const music = document.getElementById('introMusic');
   let entering = false;
-  let halloweenBgPrimed = false;
-
-  function primeHalloweenBackground(){
-    if (!WS_HALLOWEEN_ACTIVE || !bgMusic || halloweenBgPrimed) return;
-
-    try {
-      bgMusic.loop = true;
-      bgMusic.muted = true;
-      bgMusic.volume = 0.22;
-      bgMusic.currentTime = 0;
-      const p = bgMusic.play();
-      halloweenBgPrimed = true;
-      if (p?.catch) {
-        p.catch(()=>{
-          halloweenBgPrimed = false;
-        });
-      }
-    } catch {
-      halloweenBgPrimed = false;
-    }
-  }
-
-  function startHalloweenBackground(){
-    if (!WS_HALLOWEEN_ACTIVE || !bgMusic) return;
-
-    try {
-      bgMusic.loop = true;
-      bgMusic.currentTime = 0;
-      bgMusic.volume = 0.22;
-      bgMusic.muted = false;
-      const p = bgMusic.play();
-      if (p?.catch) p.catch(()=>{});
-    } catch {}
-  }
-
   function revealApp(){
     if (!splash || splash.classList.contains('hidden')) return;
     splash.classList.add('hidden');
     document.body.classList.add('ws-started');
-    startHalloweenBackground();
   }
-
-  // Halloween: il click su “Avvia” fa partire il brano disturbante
-  // mantenendo visibile lo splash. Solo alla fine entra nell'app e
-  // parte in loop la musica di sottofondo.
   const hideSplash = ()=>{
     if (!splash || splash.classList.contains('hidden') || entering) return;
     entering = true;
-
-    if (WS_HALLOWEEN_ACTIVE){
-      if (start){
-        start.disabled = true;
-        start.textContent = '😱 ...';
-      }
-
-      // Avvia il background già durante il gesto utente ma silenziato:
-      // al termine dello splash potrà essere reso udibile in modo affidabile
-      // anche sui browser mobili con restrizioni sull'autoplay.
-      primeHalloweenBackground();
-
-      if (music){
-        let finished = false;
-        const finishHalloweenIntro = ()=>{
-          if (finished) return;
-          finished = true;
-          music.removeEventListener('ended', finishHalloweenIntro);
-          music.removeEventListener('error', finishHalloweenIntro);
-          revealApp();
-        };
-
-        try {
-          music.muted = false;
-          music.volume = 1;
-          music.addEventListener('ended', finishHalloweenIntro, { once:true });
-          music.addEventListener('error', finishHalloweenIntro, { once:true });
-
-          // Se il browser ha consentito l'autoplay, il brano sta già suonando
-          // sullo splash: non lo riavviamo da capo al tocco su “Avvia”.
-          if (music.ended){
-            finishHalloweenIntro();
-          } else if (music.paused){
-            music.currentTime = 0;
-            const p = music.play();
-            if (p?.catch) p.catch(finishHalloweenIntro);
-          }
-        } catch {
-          finishHalloweenIntro();
-        }
-        return;
-      }
-
-      revealApp();
-      return;
-    }
-
-    // Fuori dal periodo Halloween: mantiene il comportamento storico.
     try {
       if (music){
         music.muted = false;
@@ -275,50 +37,27 @@ if (WS_HALLOWEEN_ACTIVE){
         if (p?.catch) p.catch(()=>{});
       }
     } catch {}
-
     revealApp();
   };
-
   if (start) {
     start.addEventListener('click', hideSplash, { once:true });
     start.addEventListener('pointerup', hideSplash, { once:true });
     start.addEventListener('touchend', hideSplash, { once:true, passive:true });
     start.onclick = hideSplash;
   }
-
   splash?.addEventListener('dblclick', hideSplash);
-
   window.addEventListener('keydown', (e)=>{
     if (e.key==='Enter' || e.key===' ') hideSplash();
   }, { once:true });
-
-  // Durante Halloween proviamo a far partire subito il brano disturbante
-  // mentre lo splash è visibile. I browser mobili possono bloccare l'audio
-  // automatico: in quel caso partirà dal primo tocco su “Avvia”.
-  if (WS_HALLOWEEN_ACTIVE){
-    try {
-      if (music){
-        music.muted = false;
-        music.volume = 1;
-        music.currentTime = 0;
-        const p = music.play();
-        if (p?.catch) {
-          p.catch(()=>{
-            try { music.pause(); music.currentTime = 0; } catch {}
-          });
-        }
-      }
-    } catch {}
-  } else {
-    // Fuori da Halloween conserva il pre-avvio silenzioso del jingle normale.
-    try {
-      if (music){
-        music.muted = true;
-        music.volume = 1;
-        music.play().catch(()=>{});
-      }
-    } catch {}
-  }
+  // Pre-avvio silenzioso del jingle normale.
+  try {
+    if (music){
+      music.muted = true;
+      music.volume = 1;
+      const p = music.play();
+      if (p?.catch) p.catch(()=>{});
+    }
+  } catch {}
 
   // --- Contatore visite
   function animateCount(el, to) {
@@ -671,7 +410,7 @@ function requestAsiaBoomCheck(){
 window.addEventListener('scroll', requestAsiaBoomCheck, { passive:true });
 window.addEventListener('resize', requestAsiaBoomCheck);
 
-/* ====== OPEN LINKS (urlo Halloween) ====== */
+/* ====== OPEN LINKS ====== */
 (function(){
   document.addEventListener('click', e=>{
     const a = e.target.closest?.('[data-open]');
@@ -684,20 +423,7 @@ window.addEventListener('resize', requestAsiaBoomCheck);
     }
     const url = a.dataset.open==='dance' ? s?.danceVideoUrl : s?.songUrl;
     if (!url) return;
-    // Quando si apre un ballo o una canzone, interrompi il sottofondo.
-    // Se era in riproduzione, verrà ripreso automaticamente quando l'utente
-    // torna alla scheda dell'app.
-    pauseHalloweenBackgroundForExternalMedia();
-
-    const scream = $('#fxOpenScream');
-    if (scream){
-      try {
-        scream.currentTime = 0;
-        const p = scream.play();
-        if (p?.catch) p.catch(()=>{});
-      } catch {}
-    }
-    setTimeout(()=> window.open(url, '_blank'), 120);
+    window.open(url, '_blank', 'noopener,noreferrer');
   });
 })();
 
