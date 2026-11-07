@@ -10,3 +10,27 @@
 .duel-quiz-bar{display:flex;align-items:center;gap:12px;justify-content:space-between;font-size:12px;font-weight:900;color:#f7d89e}.duel-quiz-bar>div{display:flex;align-items:baseline;gap:5px}.duel-quiz-bar strong{font-size:27px;color:#ffe69e}.duel-quiz-bar small{font-size:10px}.duel-clock-track{height:6px;background:rgba(255,255,255,.16);border-radius:20px;overflow:hidden;margin:13px 0 20px}.duel-clock-track div{height:100%;width:100%;background:linear-gradient(90deg,#ffab49,#ffe68a);transition:width .2s linear}.duel-answers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:19px}.duel-answer{padding:13px 11px;min-height:58px;border:1px solid rgba(255,229,170,.34);background:rgba(255,255,255,.09);border-radius:12px;color:#fff8e9;text-align:left;font:inherit;font-size:13px;font-weight:800;cursor:pointer}.duel-answer:hover,.duel-answer:focus-visible{background:rgba(219,147,58,.28);border-color:#ffce7b}.duel-answer:disabled{opacity:.55;cursor:wait}.duel-feedback{margin-top:16px;font-size:14px;font-weight:850;min-height:20px}.duel-result-note{padding:12px;border-radius:12px;background:rgba(255,216,140,.10);border:1px solid rgba(255,216,140,.23)}
 @media(max-width:560px){.duel-card{max-height:94vh;padding:15px}.duel-panel{padding:12px 0}.duel-form-row .btn{flex:1}.duel-buttons .btn{flex:1 1 120px}.duel-answers{grid-template-columns:1fr}.duel-vs{grid-template-columns:minmax(0,1fr) 27px minmax(0,1fr);gap:3px;padding:13px 3px}.duel-vs>b{font-size:16px}.duel-quiz-bar{gap:6px}.duel-quiz-bar strong{font-size:22px}}
 @media(prefers-reduced-motion:reduce){.duel-trigger{transition:none}.duel-clock-track div{transition:none}}
+
+/* Arena dei Cowboy · visibilità e classifica */
+.duel-arena-trigger{color:#fff0c4!important;background:linear-gradient(135deg,#224e4c,#276b63 55%,#896028)!important;border:1px solid rgba(164,231,194,.65)!important;box-shadow:0 0 12px rgba(78,182,157,.30)!important;font-weight:900}
+.duel-arena-trigger:hover{box-shadow:0 0 19px rgba(119,225,197,.55)!important;transform:translateY(-2px)}
+.duel-top-tabs{display:flex;gap:8px;margin:12px 0 2px;border-bottom:1px solid rgba(244,195,122,.25);padding-bottom:10px}
+.duel-top-tab{border:1px solid rgba(245,198,114,.35);border-radius:99px;padding:7px 13px;background:rgba(255,255,255,.06);color:#f5e5c3;font-weight:750;cursor:pointer}
+.duel-top-tab.active{background:linear-gradient(135deg,#9c652c,#4d3b20);border-color:#f6cb80;color:white}
+.duel-privacy-choices{border:0;padding:0;margin:14px 0 5px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.duel-privacy-choices legend{padding:0 0 8px;font-weight:850;font-size:12px;color:#ffe0aa}
+.duel-privacy-option{display:flex;align-items:flex-start;gap:9px;border:1px solid rgba(249,210,139,.32);border-radius:12px;padding:11px;background:rgba(255,255,255,.05);cursor:pointer}
+.duel-privacy-option:has(input:checked){border-color:#f4b55f;background:rgba(185,122,42,.19);box-shadow:inset 0 0 12px rgba(248,170,54,.08)}
+.duel-privacy-option input{margin-top:3px;accent-color:#f7c16e;flex:none}
+.duel-privacy-option span{display:flex;flex-direction:column;gap:6px;min-width:0}
+.duel-privacy-option strong{font-size:13px;color:#ffe3a8}
+.duel-privacy-option small{font-size:11px;line-height:1.45;color:#e1d7c6}
+.duel-privacy-notice{display:block!important;background:rgba(236,186,89,.09);border:1px solid rgba(252,205,130,.28);padding:9px 11px;margin:10px 0!important;border-radius:10px;color:#f8dfb1!important;font-size:11px!important;line-height:1.5}
+.duel-arena-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:12px;margin-top:14px}
+.duel-arena-box{border:1px solid rgba(243,199,120,.30);border-radius:13px;background:rgba(255,255,255,.045);padding:12px;min-width:0}
+.duel-arena-title{font-weight:900;color:#ffe2a0;font-size:14px;margin-bottom:12px}
+.duel-arena-list{max-height:380px;overflow:auto}
+.duel-arena-entry,.duel-arena-match{display:flex;flex-wrap:wrap;gap:5px 12px;align-items:center;justify-content:space-between;padding:10px 3px;border-bottom:1px solid rgba(255,255,255,.10);font-size:12px}
+.duel-arena-entry strong{color:#ffd281;font-size:12px}.duel-arena-match{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.duel-arena-match strong{font-size:12px;line-height:1.5;overflow-wrap:anywhere}.duel-arena-match small{font-size:11px;color:#ffd384}
+@media(max-width:600px){.duel-privacy-choices,.duel-arena-grid{grid-template-columns:1fr}.duel-top-tab{font-size:11px;padding:8px 10px}}
