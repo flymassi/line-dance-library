@@ -80,7 +80,7 @@
     </div>
   </div>`;
 
-  const css = document.createElement('link'); css.rel='stylesheet'; css.href='./duel.css?v=2'; css.dataset.wsDuelCss='1';
+  const css = document.createElement('link'); css.rel='stylesheet'; css.href='./duel.css?v=3'; css.dataset.wsDuelCss='1';
   if (!document.querySelector('link[data-ws-duel-css]')) document.head.appendChild(css);
   const actions=document.querySelector('.actions-top');
   if (actions && !document.getElementById('btnDuel')) {
