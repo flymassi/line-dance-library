@@ -1,4 +1,4 @@
-import {answerDuel,createDuel,joinDuel,rateDuelRequest,readDuel,startDuel} from "../lib/duel-store.js";
+import {answerDuel,createDuel,getDuelArena,joinDuel,rateDuelRequest,readDuel,startDuel} from "../lib/duel-store.js";
 
 function clientIp(req) {
   const forwarded=req.headers?.["x-forwarded-for"];
@@ -19,7 +19,10 @@ export default async function handler(req,res) {
     return res.status(405).json({ok:false,error:"Metodo non consentito"});
   }
   try {
-    if (req.method === "GET") return res.status(200).json(await readDuel({id:req.query?.id,deviceId:req.query?.deviceId}));
+    if (req.method === "GET") {
+      if (req.query?.action === "arena") return res.status(200).json(await getDuelArena());
+      return res.status(200).json(await readDuel({id:req.query?.id,deviceId:req.query?.deviceId}));
+    }
     const body=req.body && typeof req.body==="object" && !Array.isArray(req.body) ? req.body : {};
     const action=String(body.action || "");
     if (["create","join"].includes(action)) {
