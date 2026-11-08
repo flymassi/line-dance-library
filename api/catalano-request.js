@@ -4,6 +4,7 @@ import {
   deletePendingRequest,
   getPendingRequest,
   getStoredUser,
+  hashPassword,
   isLegacyUser,
   normalizeUsername,
   signApprovalId
@@ -76,7 +77,7 @@ export default async function handler(req, res) {
       reason,
       username,
       usernameNorm,
-      password,
+      passwordHash: hashPassword(password),
       requestedAt: requestedAtIso
     });
   } catch (err) {
@@ -109,7 +110,7 @@ export default async function handler(req, res) {
     `Email: ${email}`,
     `Perché devo accettare la richiesta?: ${reason}`,
     `Username scelto: ${username}`,
-    `Password scelta: ${password}`,
+    "Password: non trasmessa per sicurezza",
     `Data richiesta: ${requestedAt}`,
     "",
     "GESTISCI LA RICHIESTA:",
@@ -126,7 +127,7 @@ export default async function handler(req, res) {
       <b>Email:</b> ${escapeHtml(email)}<br>
       <b>Perché devo accettare la richiesta?</b> ${escapeHtml(reason)}<br>
       <b>Username:</b> ${escapeHtml(username)}<br>
-      <b>Password scelta:</b> ${escapeHtml(password)}<br>
+      <b>Password:</b> non trasmessa per sicurezza<br>
       <b>Data richiesta:</b> ${escapeHtml(requestedAt)}</p>
       <p style="margin:26px 0">
         <a href="${escapeHtml(manageUrl)}" style="display:inline-block;background:#111827;color:#fff;text-decoration:none;padding:13px 20px;border-radius:9px;font-weight:700">GESTISCI RICHIESTA</a>
