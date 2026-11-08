@@ -3,7 +3,7 @@
   const DEVICE_KEY = "ws_catalano_device_v1";
   const LEGACY_KEYS = ["ws_catalano_token","ws_catalano_user","ws_catalano_expires_at"];
   let authenticated = false, admin = false, username = "", expiresAt = 0;
-  let requestInFlight = null, expiryTimer = null;
+  let requestInFlight = null, expiryTimer = null, authGeneration = 0;
 
   // Old unverified tokens must never grant access after this upgrade.
   for (const key of LEGACY_KEYS) {
@@ -75,8 +75,9 @@
   }
   async function refresh() {
     if (requestInFlight) return requestInFlight;
+    const generation = authGeneration;
     requestInFlight = (async () => {
-      const previous = authenticated;
+      const previous = authenticated, previousUser = username, previousAdmin = admin;
       try {
         const res = await fetch("/api/catalano-session",{
           method:"POST",credentials:"same-origin",cache:"no-store",
@@ -84,21 +85,24 @@
           body:JSON.stringify({action:"verify",deviceId:getDeviceId()})
         });
         const payload = await res.json().catch(()=>({}));
+        if (generation !== authGeneration) return false;
         if (!res.ok || !payload?.ok || !payload?.authenticated) {
           const replaced = payload?.code === "SESSION_REPLACED";
           clearLocal();
-          updateInterface(previous);
+          if (previous) updateInterface(previous);
           if (replaced) showReplacedNotice();
           return false;
         }
         storeSession(payload);
-        updateInterface(previous);
+        // Keep song cards untouched during the periodic 30-second verification.
+        if (!previous || previousUser !== username || previousAdmin !== admin) updateInterface(previous);
         return true;
       } catch (error) {
+        if (generation !== authGeneration) return false;
         // Fail closed when the server cannot be reached.
         console.error("CATALANO session validation",error);
         clearLocal();
-        updateInterface(previous);
+        if (previous) updateInterface(previous);
         return false;
       }
     })();
@@ -106,6 +110,7 @@
     finally { requestInFlight = null; }
   }
   async function logout() {
+    authGeneration++;
     const previous = authenticated;
     clearLocal();
     updateInterface(previous);
