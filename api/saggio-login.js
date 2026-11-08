@@ -28,7 +28,7 @@ export default async function handler(req, res) {
   const username = normalizeUsername(req.body?.username);
   const password = String(req.body?.password || "");
   const deviceId = String(req.body?.deviceId || "");
-  if (!username || !password || !/^[a-f0-9]{32,64}$/i.test(deviceId)) {
+  if (!username || username.length > 60 || !password || password.length > 120 || !/^[a-f0-9]{32,64}$/i.test(deviceId)) {
     return res.status(400).json({ok:false,error:"Credenziali o dispositivo mancanti. Aggiorna la pagina."});
   }
   try {
