@@ -68,9 +68,9 @@ export default async function handler(req,res) {
     const users=await allUsers();
     const targetUser=users.find(u=>normalizeUsername(u.user)===target);
     if (!targetUser) return res.status(404).json({ok:false,error:"Utente non trovato"});
-    if (action==="resetdevice") {
+    if (action==="revoke" || action==="resetdevice") {
       await revokeCatalanoAccess(target,{releaseDevice:true});
-      return res.status(200).json({ok:true,reset:true,username:target});
+      return res.status(200).json({ok:true,revoked:true,username:target});
     }
     if (action==="delete") {
       if (targetUser.source!=="registered") {
