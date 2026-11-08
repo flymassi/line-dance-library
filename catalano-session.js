@@ -94,8 +94,11 @@
       });
     } catch (error) { console.error("CATALANO logout request",error); }
   }
+  async function whenReady() {
+    if (requestInFlight) await requestInFlight;
+  }
   window.WSCatalanoSession = {
-    getDeviceId, isAuthenticated, isAdmin, getUsername, refresh, logout, clearLocal
+    getDeviceId, isAuthenticated, isAdmin, getUsername, refresh, logout, clearLocal, whenReady
   };
   // Restore access only after server verification; older localStorage tokens are ignored.
   refresh();
