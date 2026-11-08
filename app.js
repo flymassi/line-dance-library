@@ -701,7 +701,7 @@ $('#saggioRequestForm')?.addEventListener('submit', async e=>{
 $('#fDance')?.addEventListener('input', debounce(e=>{ FILTER.dance = e.target.value; render(); }));
 $('#fSong' )?.addEventListener('input', debounce(e=>{ FILTER.song  = e.target.value; render(); }));
 
-$('.course-tab').forEach(btn => {
+document.querySelectorAll('.course-tab').forEach(btn => {
   btn.addEventListener('click', async () => {
     const course = btn.dataset.course;
     if (course !== 'line' && course !== 'catalano') return;
