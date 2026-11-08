@@ -1,176 +1,108 @@
-/* Western Spritz — Catalano session persistence v1 · 6 ore */
+/* Western Spritz — Catalano authentication: server-verified, device-bound 6-hour sessions. */
 (() => {
-  const TOKEN_KEY = 'ws_catalano_token';
-  const USER_KEY = 'ws_catalano_user';
-  const EXPIRES_KEY = 'ws_catalano_expires_at';
-  const SESSION_MS = 6 * 60 * 60 * 1000;
+  const DEVICE_KEY = "ws_catalano_device_v1";
+  const LEGACY_KEYS = ["ws_catalano_token","ws_catalano_user","ws_catalano_expires_at"];
+  let authenticated = false, admin = false, username = "", expiresAt = 0;
+  let requestInFlight = null, expiryTimer = null;
 
-  let expiryTimer = null;
-
-  function clearTimer(){
-    if (expiryTimer) {
-      clearTimeout(expiryTimer);
-      expiryTimer = null;
-    }
+  // Old unverified tokens must never grant access after this upgrade.
+  for (const key of LEGACY_KEYS) {
+    try { localStorage.removeItem(key); } catch {}
+    try { sessionStorage.removeItem(key); } catch {}
   }
-
-  function clearAuthStorage(){
-    clearTimer();
+  function getDeviceId() {
+    let device = "";
+    try { device = String(localStorage.getItem(DEVICE_KEY) || ""); } catch {}
+    if (/^[a-f0-9]{32,64}$/.test(device)) return device;
+    const bytes = new Uint8Array(20);
+    crypto.getRandomValues(bytes);
+    device = Array.from(bytes, v=>v.toString(16).padStart(2,"0")).join("");
+    try { localStorage.setItem(DEVICE_KEY,device); } catch {}
+    return device;
+  }
+  function isAuthenticated() {
+    return authenticated && Date.now() < expiresAt;
+  }
+  function isAdmin() { return isAuthenticated() && admin; }
+  function getUsername() { return isAuthenticated() ? username : ""; }
+  function clearLocal() {
+    authenticated = false; admin = false; username = ""; expiresAt = 0;
+    if (expiryTimer) { clearTimeout(expiryTimer); expiryTimer = null; }
+  }
+  function updateInterface(wasAuthenticated) {
     try {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(USER_KEY);
-      localStorage.removeItem(EXPIRES_KEY);
-    } catch {}
-    try {
-      sessionStorage.removeItem(TOKEN_KEY);
-      sessionStorage.removeItem(USER_KEY);
-    } catch {}
-  }
-
-  function readPersistentSession(){
-    try {
-      return {
-        token: String(localStorage.getItem(TOKEN_KEY) || ''),
-        user: String(localStorage.getItem(USER_KEY) || ''),
-        expiresAt: Number(localStorage.getItem(EXPIRES_KEY) || 0)
-      };
-    } catch {
-      return { token: '', user: '', expiresAt: 0 };
-    }
-  }
-
-  function restoreSessionStorage(token, user){
-    try {
-      sessionStorage.setItem(TOKEN_KEY, token);
-      if (user) sessionStorage.setItem(USER_KEY, user);
-      else sessionStorage.removeItem(USER_KEY);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  const originalLogoutCatalano = typeof window.logoutCatalano === 'function'
-    ? window.logoutCatalano
-    : null;
-
-  function expireSession(){
-    const current = readPersistentSession();
-    if (current.token && Number.isFinite(current.expiresAt) && current.expiresAt > Date.now()) {
-      scheduleExpiry(current.expiresAt);
-      return;
-    }
-
-    clearAuthStorage();
-    if (originalLogoutCatalano) {
-      try { originalLogoutCatalano(); } catch {}
-    } else {
-      try {
-        if (typeof window.syncCourseFilterUI === 'function') window.syncCourseFilterUI();
-        if (typeof window.render === 'function') window.render();
-      } catch {}
-    }
-  }
-
-  function scheduleExpiry(expiresAt){
-    clearTimer();
-    const delay = Number(expiresAt) - Date.now();
-    if (!Number.isFinite(delay) || delay <= 0) {
-      expireSession();
-      return;
-    }
-    expiryTimer = setTimeout(expireSession, delay);
-  }
-
-  function persistSession(token, user){
-    if (!token) return false;
-    const expiresAt = Date.now() + SESSION_MS;
-    try {
-      localStorage.setItem(TOKEN_KEY, token);
-      localStorage.setItem(USER_KEY, user || '');
-      localStorage.setItem(EXPIRES_KEY, String(expiresAt));
-      scheduleExpiry(expiresAt);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  function persistCurrentSession(){
-    try {
-      const token = String(sessionStorage.getItem(TOKEN_KEY) || '');
-      const user = String(sessionStorage.getItem(USER_KEY) || '');
-      return persistSession(token, user);
-    } catch {
-      return false;
-    }
-  }
-
-  function restoreOrMigrateSession(){
-    const saved = readPersistentSession();
-
-    if (saved.token || saved.expiresAt) {
-      if (
-        saved.token &&
-        Number.isFinite(saved.expiresAt) &&
-        saved.expiresAt > Date.now()
-      ) {
-        restoreSessionStorage(saved.token, saved.user);
-        scheduleExpiry(saved.expiresAt);
-        return true;
+      if (!isAuthenticated() && wasAuthenticated && typeof window.logoutCatalano === "function") {
+        window.logoutCatalano();
+      } else {
+        if (typeof window.syncCourseFilterUI === "function") window.syncCourseFilterUI();
+        if (typeof window.render === "function") window.render();
       }
-
-      clearAuthStorage();
-      return false;
-    }
-
-    return persistCurrentSession();
+    } catch (error) { console.error("CATALANO refresh UI",error); }
   }
-
-  function validateSession(){
-    const saved = readPersistentSession();
-
-    if (!saved.token || !Number.isFinite(saved.expiresAt) || saved.expiresAt <= Date.now()) {
-      if (saved.token || saved.expiresAt) expireSession();
-      return false;
-    }
-
-    restoreSessionStorage(saved.token, saved.user);
-    scheduleExpiry(saved.expiresAt);
-    return true;
+  function expire() {
+    const previous = authenticated;
+    clearLocal();
+    updateInterface(previous);
   }
-
-  const originalActivateCatalanoCourse = typeof window.activateCatalanoCourse === 'function'
-    ? window.activateCatalanoCourse
-    : null;
-
-  if (originalActivateCatalanoCourse) {
-    window.activateCatalanoCourse = function(...args){
-      persistCurrentSession();
-      return originalActivateCatalanoCourse.apply(this, args);
-    };
+  function storeSession(value) {
+    authenticated = true;
+    admin = !!value.admin;
+    username = String(value.user || "");
+    expiresAt = Number(value.expiresAt || 0);
+    if (expiryTimer) clearTimeout(expiryTimer);
+    expiryTimer = setTimeout(expire, Math.max(0,expiresAt-Date.now()) + 25);
   }
-
-  if (originalLogoutCatalano) {
-    window.logoutCatalano = function(...args){
-      clearAuthStorage();
-      return originalLogoutCatalano.apply(this, args);
-    };
+  async function refresh() {
+    if (requestInFlight) return requestInFlight;
+    requestInFlight = (async () => {
+      const previous = authenticated;
+      try {
+        const res = await fetch("/api/catalano-session",{
+          method:"POST",credentials:"same-origin",cache:"no-store",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({action:"verify",deviceId:getDeviceId()})
+        });
+        const payload = await res.json().catch(()=>({}));
+        if (!res.ok || !payload?.ok || !payload?.authenticated) {
+          clearLocal();
+          updateInterface(previous);
+          return false;
+        }
+        storeSession(payload);
+        updateInterface(previous);
+        return true;
+      } catch (error) {
+        // Fail closed when the server cannot be reached.
+        console.error("CATALANO session validation",error);
+        clearLocal();
+        updateInterface(previous);
+        return false;
+      }
+    })();
+    try { return await requestInFlight; }
+    finally { requestInFlight = null; }
   }
-
-  const restored = restoreOrMigrateSession();
-  if (restored) {
+  async function logout() {
+    const previous = authenticated;
+    clearLocal();
+    updateInterface(previous);
     try {
-      if (typeof window.syncCourseFilterUI === 'function') window.syncCourseFilterUI();
-      if (typeof window.render === 'function') window.render();
-    } catch {}
+      await fetch("/api/catalano-session",{
+        method:"POST",credentials:"same-origin",cache:"no-store",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({action:"logout",deviceId:getDeviceId()})
+      });
+    } catch (error) { console.error("CATALANO logout request",error); }
   }
-
-  window.addEventListener('focus', validateSession);
-  window.addEventListener('pageshow', validateSession);
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) validateSession();
-  });
+  window.WSCatalanoSession = {
+    getDeviceId, isAuthenticated, isAdmin, getUsername, refresh, logout, clearLocal
+  };
+  // Restore access only after server verification; older localStorage tokens are ignored.
+  refresh();
+  window.addEventListener("focus",()=>{ if (!document.hidden) refresh(); });
+  window.addEventListener("pageshow",()=>{ if (!document.hidden) refresh(); });
+  document.addEventListener("visibilitychange",()=>{ if (!document.hidden) refresh(); });
+  setInterval(()=>{ if (!document.hidden && authenticated) refresh(); },60000);
 })();
 
 /* ====== CARICAMENTO WESTERN SPRITZ CHALLENGE ====== */
