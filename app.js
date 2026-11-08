@@ -215,11 +215,7 @@ function isCatalanoSong(s){
 }
 
 function isCatalanoAuth(){
-  try {
-    return !!sessionStorage.getItem(S_KEY);
-  } catch {
-    return false;
-  }
+  return window.WSCatalanoSession?.isAuthenticated() === true;
 }
 
 function matchesCourseAndYear(s){
@@ -518,10 +514,7 @@ function activateCatalanoCourse(){
 }
 
 function logoutCatalano(){
-  try {
-    sessionStorage.removeItem(S_KEY);
-    sessionStorage.removeItem(S_USER_KEY);
-  } catch {}
+  window.WSCatalanoSession?.clearLocal();
   FILTER.course = 'line';
   FILTER.year = 'all';
   syncCourseFilterUI();
@@ -532,6 +525,7 @@ $('#saggioCloseLogin')?.addEventListener('click', closeCatalanoLogin);
 
 $('#btnCatalanoLogout')?.addEventListener('click', ()=>{
   logoutCatalano();
+  window.WSCatalanoSession?.logout();
 });
 
 $('#saggioLoginForm')?.addEventListener('submit', async e=>{
@@ -549,24 +543,24 @@ $('#saggioLoginForm')?.addEventListener('submit', async e=>{
   }
 
   try {
+    const deviceId = window.WSCatalanoSession?.getDeviceId();
+    if (!deviceId) throw new Error('Impossibile riconoscere il dispositivo. Aggiorna la pagina.');
     const res = await fetch('/api/saggio-login', {
       method: 'POST',
+      credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: u, password: p })
+      body: JSON.stringify({ username: u, password: p, deviceId })
     });
-
     const data = await res.json().catch(()=> ({}));
-
-    if (res.ok && data?.ok && data?.token) {
-      sessionStorage.setItem(S_KEY, data.token);
-      sessionStorage.setItem(S_USER_KEY, u);
+    if (res.ok && data?.ok) {
+      const verified = await window.WSCatalanoSession.refresh();
+      if (!verified) throw new Error('Sessione non verificata dal server. Riprova.');
+      $('#saggioPass').value = '';
       if (err) err.classList.add('hidden');
       activateCatalanoCourse();
-    } else {
-      if (err) {
-        err.textContent = 'Credenziali non valide oppure richiesta non ancora approvata.';
-        err.classList.remove('hidden');
-      }
+    } else if (err) {
+      err.textContent = data?.error || 'Credenziali non valide oppure richiesta non ancora approvata.';
+      err.classList.remove('hidden');
     }
   } catch (e) {
     console.error('Errore login Catalano', e);
@@ -697,16 +691,18 @@ $('#saggioRequestForm')?.addEventListener('submit', async e=>{
 $('#fDance')?.addEventListener('input', debounce(e=>{ FILTER.dance = e.target.value; render(); }));
 $('#fSong' )?.addEventListener('input', debounce(e=>{ FILTER.song  = e.target.value; render(); }));
 
-$$('.course-tab').forEach(btn => {
-  btn.addEventListener('click', () => {
+$('.course-tab').forEach(btn => {
+  btn.addEventListener('click', async () => {
     const course = btn.dataset.course;
     if (course !== 'line' && course !== 'catalano') return;
-
-    if (course === 'catalano' && !isCatalanoAuth()) {
-      openCatalanoLogin();
-      return;
+    if (course === 'catalano') {
+      // Validate against Redis before every entrance, not only local browser state.
+      const verified = await window.WSCatalanoSession?.refresh();
+      if (!verified) {
+        openCatalanoLogin();
+        return;
+      }
     }
-
     FILTER.course = course;
     FILTER.year = 'all';
     syncCourseFilterUI();
