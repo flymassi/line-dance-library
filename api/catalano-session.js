@@ -1,5 +1,5 @@
 import {
-  verifyCatalanoSession, logoutCatalanoSession, clearAuthCookie
+  inspectCatalanoSession, logoutCatalanoSession, clearAuthCookie
 } from "../lib/catalano-access.js";
 
 export default async function handler(req,res) {
@@ -19,12 +19,20 @@ export default async function handler(req,res) {
   }
   if (body.action !== "verify") return res.status(400).json({ok:false,error:"Azione non valida"});
   try {
-    const session = await verifyCatalanoSession(req,body.deviceId);
-    if (!session) {
+    const result = await inspectCatalanoSession(req,body.deviceId);
+    if (!result.session) {
       clearAuthCookie(res);
-      return res.status(401).json({ok:false,authenticated:false,error:"Sessione scaduta o dispositivo non autorizzato."});
+      const replaced = result.reason === "REPLACED";
+      return res.status(401).json({
+        ok:false,
+        authenticated:false,
+        code:replaced ? "SESSION_REPLACED" : "SESSION_INVALID",
+        error:replaced
+          ? "La tua sessione Catalano è stata disconnessa perché è stato effettuato un nuovo accesso con le stesse credenziali."
+          : "Sessione scaduta o non autorizzata."
+      });
     }
-    return res.status(200).json({ok:true,authenticated:true,...session});
+    return res.status(200).json({ok:true,authenticated:true,...result.session});
   } catch(error) {
     console.error("CATALANO session verification failed",error);
     return res.status(503).json({ok:false,authenticated:false,error:"Impossibile verificare la sessione."});
