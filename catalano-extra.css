@@ -105,3 +105,45 @@
     width:100%;
   }
 }
+
+/* User notification shown when a newer Catalano login supersedes this session. */
+.catalano-disconnect-notice{
+  position:fixed;
+  z-index:2147483645;
+  left:50%;
+  top:max(16px, env(safe-area-inset-top));
+  transform:translateX(-50%);
+  width:min(94vw,540px);
+  display:flex;
+  gap:16px;
+  align-items:center;
+  justify-content:space-between;
+  padding:17px 20px;
+  border:2px solid #f1ad55;
+  border-radius:16px;
+  color:#fff5dc;
+  background:linear-gradient(135deg,#3b2423,#171f28);
+  box-shadow:0 14px 46px rgba(0,0,0,.7);
+  font:inherit;
+}
+.catalano-disconnect-notice strong{
+  color:#ffd48a;
+  font-weight:850;
+}
+.catalano-disconnect-notice p{
+  margin:7px 0 0;
+  font-size:12px;
+  line-height:1.5;
+  color:#f4dfc5;
+}
+.catalano-disconnect-notice .btn{
+  flex:0 0 auto;
+  min-width:95px;
+}
+@media(max-width:560px){
+  .catalano-disconnect-notice{
+    align-items:stretch;
+    flex-direction:column;
+  }
+  .catalano-disconnect-notice .btn{width:100%}
+}
