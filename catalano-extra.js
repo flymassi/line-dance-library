@@ -1,21 +1,14 @@
 /* Western Spritz — Catalano extra v2 · richiesta completa + gestione utenti */
 (() => {
   const $ = sel => document.querySelector(sel);
-  const S_KEY = 'ws_catalano_token';
-  const S_USER_KEY = 'ws_catalano_user';
   let adminPassword = '';
 
   function getCatalanoUsername(){
-    try { return String(sessionStorage.getItem(S_USER_KEY) || '').trim(); }
-    catch { return ''; }
+    return window.WSCatalanoSession?.getUsername() || '';
   }
 
   function isCatalanoAdmin(){
-    try {
-      return !!sessionStorage.getItem(S_KEY) && getCatalanoUsername().toLowerCase() === 'max';
-    } catch {
-      return false;
-    }
+    return window.WSCatalanoSession?.isAdmin() === true;
   }
 
   function syncAdminButton(){
@@ -195,6 +188,7 @@
         action,
         adminUser: getCatalanoUsername(),
         adminPassword: password,
+        deviceId: window.WSCatalanoSession?.getDeviceId(),
         username
       })
     });
@@ -208,19 +202,41 @@
     if (!list) return;
     const rows = Array.isArray(users) ? users : [];
     if (!rows.length) {
-      list.innerHTML = '<div class="catalano-admin-empty">Nessun utente approvato tramite registrazione.</div>';
+      list.innerHTML = '<div class="catalano-admin-empty">Nessun utente approvato.';
     } else {
-      list.innerHTML = rows.map(u => {
-        const approved = u.approvedAt ? new Date(u.approvedAt).toLocaleString('it-IT') : '—';
-        return `<div class="catalano-admin-user">
-          <div class="catalano-admin-user-info">
-            <b>${escapeHtml(u.name || u.user || '')}</b>
-            <span>@${escapeHtml(u.user || '')}</span>
-            <small>${escapeHtml(u.email || 'email non disponibile')}</small>
-            <small>Approvato: ${escapeHtml(approved)}</small>
-          </div>
-          <button class="btn ghost catalano-admin-delete" type="button" data-delete-catalano-user="${escapeHtml(u.user || '')}">🗑️ Elimina</button>
-        </div>`;
+      list.innerHTML = '<p class="catalano-security-note">Un solo dispositivo per utente. Sblocca dispositivo quando un utente cambia telefono o computer. L’amministratore è esente.</p>' +
+      rows.map(u => {
+        const approved = u.approvedAt ? new Date(u.approvedAt).toLocaleString('it-IT') : 'utente storico';
+        const access = u.access || {};
+        const isAdmin = access.admin === true;
+        const device = isAdmin ? '♾️ Amministratore: più dispositivi consentiti' :
+          access.deviceRegistered ? '🔒 Dispositivo associato' : '🟢 Nessun dispositivo associato';
+        const lastAccess = access.lastLoginAt ? new Date(access.lastLoginAt).toLocaleString('it-IT') : '—';
+        const history = Array.isArray(access.accessEvents) ? access.accessEvents : [];
+        const entries = history.map(e => {
+          const labels = {
+            login: '✅ Accesso autorizzato',
+            login_failed: '❌ Password errata',
+            device_denied: '⚠️ Nuovo dispositivo bloccato',
+            device_released: '🔓 Dispositivo sbloccato',
+            sessions_revoked: '🔒 Sessioni revocate'
+          };
+          const date = e.at ? new Date(e.at).toLocaleString('it-IT') : '—';
+          return '<div><small>'+escapeHtml(date)+' · '+escapeHtml(labels[e.event] || e.event || 'Evento')+'</small></div>';
+        }).join('');
+        return '<div class="catalano-admin-user">' +
+          '<div class="catalano-admin-user-info">' +
+          '<b>'+escapeHtml(u.name || u.user || '')+'</b>' +
+          '<span>@'+escapeHtml(u.user || '')+'</span>' +
+          '<small>'+escapeHtml(u.email || 'email non disponibile')+'</small>' +
+          '<small>Approvato: '+escapeHtml(approved)+'</small>' +
+          '<small>'+escapeHtml(device)+'</small>' +
+          '<small>Ultimo login: '+escapeHtml(lastAccess)+'</small>' +
+          (history.length ? '<details><summary>Accessi recenti ('+history.length+')</summary>'+entries+'</details>' : '') +
+          '</div><div class="catalano-admin-user-actions">' +
+          (!isAdmin && access.deviceRegistered ? '<button class="btn ghost" type="button" data-reset-catalano-user="'+escapeHtml(u.user||'')+'">🔓 Sblocca dispositivo</button>' : '') +
+          (!isAdmin && u.source!=='legacy' ? '<button class="btn ghost catalano-admin-delete" type="button" data-delete-catalano-user="'+escapeHtml(u.user||'')+'">🗑️ Elimina</button>' : '') +
+          '</div></div>';
       }).join('');
     }
     list.classList.remove('hidden');
@@ -254,27 +270,31 @@
   });
 
   $('#catalanoAdminList')?.addEventListener('click', async e => {
-    const btn = e.target.closest?.('[data-delete-catalano-user]');
+    const resetBtn = e.target.closest?.('[data-reset-catalano-user]');
+    const deleteBtn = e.target.closest?.('[data-delete-catalano-user]');
+    const btn = resetBtn || deleteBtn;
     if (!btn) return;
-    const username = btn.dataset.deleteCatalanoUser || '';
+    const username = resetBtn ? btn.dataset.resetCatalanoUser : btn.dataset.deleteCatalanoUser;
     if (!username) return;
-    if (!confirm(`Cancellare l'utente ${username}? Non potrà più effettuare nuovi accessi. Una sessione già aperta terminerà alla chiusura dell'app.`)) return;
-
+    const reset = !!resetBtn;
+    const message = reset
+      ? 'Sbloccare il dispositivo di '+username+'? Le sessioni attuali saranno revocate. Al prossimo login il primo dispositivo usato diventerà quello autorizzato.'
+      : 'Eliminare definitivamente l’utente '+username+' e revocare subito tutte le sessioni?';
+    if (!confirm(message)) return;
     const err = $('#catalanoAdminError');
     err?.classList.add('hidden');
     try {
       btn.disabled = true;
-      btn.textContent = 'Elimino…';
-      await adminRequest('delete', username);
-      const data = await adminRequest('list');
-      renderUsers(data.users);
+      btn.textContent = reset ? 'Sblocco…' : 'Elimino…';
+      await adminRequest(reset ? 'resetdevice' : 'delete', username);
+      renderUsers((await adminRequest('list')).users);
     } catch (ex) {
       if (err) {
-        err.textContent = ex?.message || 'Non è stato possibile cancellare l’utente.';
+        err.textContent = ex?.message || 'Operazione non riuscita.';
         err.classList.remove('hidden');
       }
       btn.disabled = false;
-      btn.textContent = '🗑️ Elimina';
+      btn.textContent = reset ? '🔓 Sblocca dispositivo' : '🗑️ Elimina';
     }
   });
 
