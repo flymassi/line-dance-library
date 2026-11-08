@@ -528,8 +528,10 @@ $('#btnCatalanoLogout')?.addEventListener('click', ()=>{
   window.WSCatalanoSession?.logout();
 });
 
+let catalanoLoginPending = false;
 $('#saggioLoginForm')?.addEventListener('submit', async e=>{
   e.preventDefault();
+  if (catalanoLoginPending) return;
   const u = $('#saggioUser')?.value.trim() || '';
   const p = $('#saggioPass')?.value || '';
   const err = $('#saggioError');
@@ -542,6 +544,9 @@ $('#saggioLoginForm')?.addEventListener('submit', async e=>{
     return;
   }
 
+  catalanoLoginPending = true;
+  const submit = e.currentTarget.querySelector('[type="submit"]');
+  if (submit) { submit.disabled = true; submit.textContent = 'Accesso…'; }
   try {
     // Complete any initial cookie check before starting a fresh login.
     await window.WSCatalanoSession?.whenReady();
@@ -567,9 +572,12 @@ $('#saggioLoginForm')?.addEventListener('submit', async e=>{
   } catch (e) {
     console.error('Errore login Catalano', e);
     if (err) {
-      err.textContent = 'Impossibile verificare le credenziali. Riprova tra poco.';
+      err.textContent = e?.message || 'Impossibile verificare le credenziali. Riprova tra poco.';
       err.classList.remove('hidden');
     }
+  } finally {
+    catalanoLoginPending = false;
+    if (submit) { submit.disabled = false; submit.textContent = 'Entra'; }
   }
 });
 
