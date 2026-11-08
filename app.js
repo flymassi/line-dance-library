@@ -543,6 +543,8 @@ $('#saggioLoginForm')?.addEventListener('submit', async e=>{
   }
 
   try {
+    // Complete any initial cookie check before starting a fresh login.
+    await window.WSCatalanoSession?.whenReady();
     const deviceId = window.WSCatalanoSession?.getDeviceId();
     if (!deviceId) throw new Error('Impossibile riconoscere il dispositivo. Aggiorna la pagina.');
     const res = await fetch('/api/saggio-login', {
