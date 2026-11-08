@@ -1,4 +1,4 @@
-/* Western Spritz — Catalano authentication: server-verified, device-bound 6-hour sessions. */
+/* Western Spritz — Catalano authentication: one active session per user, admin exempt. */
 (() => {
   const DEVICE_KEY = "ws_catalano_device_v1";
   const LEGACY_KEYS = ["ws_catalano_token","ws_catalano_user","ws_catalano_expires_at"];
@@ -28,6 +28,27 @@
   function clearLocal() {
     authenticated = false; admin = false; username = ""; expiresAt = 0;
     if (expiryTimer) { clearTimeout(expiryTimer); expiryTimer = null; }
+  }
+  function showReplacedNotice() {
+    // A visible notice, even if the old tab is restored after being in background.
+    if (document.getElementById("wsCatalanoReplaced")) return;
+    const notice = document.createElement("div");
+    notice.id = "wsCatalanoReplaced";
+    notice.className = "catalano-disconnect-notice";
+    notice.setAttribute("role","alert");
+    const body = document.createElement("div");
+    const title = document.createElement("strong");
+    title.textContent = "🔒 Sessione Catalano terminata";
+    const message = document.createElement("p");
+    message.textContent = "Un altro dispositivo ha effettuato l'accesso con lo stesso username e password. Per sicurezza questa sessione è stata disconnessa.";
+    body.append(title, message);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "btn btn-primary";
+    button.textContent = "Ho capito";
+    button.addEventListener("click",()=>notice.remove());
+    notice.append(body,button);
+    document.body.appendChild(notice);
   }
   function updateInterface(wasAuthenticated) {
     try {
@@ -64,8 +85,10 @@
         });
         const payload = await res.json().catch(()=>({}));
         if (!res.ok || !payload?.ok || !payload?.authenticated) {
+          const replaced = payload?.code === "SESSION_REPLACED";
           clearLocal();
           updateInterface(previous);
+          if (replaced) showReplacedNotice();
           return false;
         }
         storeSession(payload);
@@ -105,7 +128,9 @@
   window.addEventListener("focus",()=>{ if (!document.hidden) refresh(); });
   window.addEventListener("pageshow",()=>{ if (!document.hidden) refresh(); });
   document.addEventListener("visibilitychange",()=>{ if (!document.hidden) refresh(); });
-  setInterval(()=>{ if (!document.hidden && authenticated) refresh(); },60000);
+  // Periodic checks evict replaced accounts while their page is still open.
+  // A hidden/background tab is checked as soon as the user returns.
+  setInterval(()=>{ if (!document.hidden && authenticated) refresh(); },30000);
 })();
 
 /* ====== CARICAMENTO WESTERN SPRITZ CHALLENGE ====== */
