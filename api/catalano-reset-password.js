@@ -2,6 +2,7 @@ import {
   applyPasswordReset,
   getPasswordResetToken
 } from "../lib/catalano-store.js";
+import { revokeCatalanoAccess } from "../lib/catalano-access.js";
 
 function clean(value, max = 200) {
   return String(value ?? "").trim().slice(0, max);
@@ -89,6 +90,7 @@ export default async function handler(req, res) {
 
   try {
     await applyPasswordReset(token, password);
+    await revokeCatalanoAccess(tokenRecord.usernameNorm || tokenRecord.user);
     return sendPage(res, page("Password aggiornata", `
       <h1>✅ Password aggiornata</h1>
       <div class="okbox">La nuova password è stata salvata correttamente.</div>
