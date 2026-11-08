@@ -52,10 +52,14 @@ export default async function handler(req,res) {
     }
     if (action==="list") {
       const users=await allUsers();
-      const results=await Promise.all(users.map(async user=>({
-        ...user,
-        access:await getCatalanoAccessOverview(user.user)
-      })));
+      const results=[];
+      // Cap concurrent Redis requests to keep the admin screen responsive.
+      for (let i=0;i<users.length;i+=10) {
+        const batch=await Promise.all(users.slice(i,i+10).map(async user=>({
+          ...user, access:await getCatalanoAccessOverview(user.user)
+        })));
+        results.push(...batch);
+      }
       return res.status(200).json({ok:true,users:results});
     }
     const target=normalizeUsername(body.username);
