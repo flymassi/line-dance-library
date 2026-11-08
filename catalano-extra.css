@@ -70,3 +70,38 @@
     width:100%;
   }
 }
+
+/* Controlli dispositivo e storico accessi Catalano. */
+.catalano-admin-user-actions{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:8px;
+  flex:0 0 auto;
+  max-width:185px;
+}
+.catalano-admin-user-actions .btn{
+  min-height:37px;
+  font-size:11px;
+  white-space:normal;
+}
+.catalano-admin-user-info details{
+  margin-top:7px;
+  padding:8px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:8px;
+}
+.catalano-admin-user-info details summary{
+  cursor:pointer;
+  font-size:12px;
+  font-weight:750;
+}
+.catalano-admin-user-info details div{
+  padding:5px 0;
+}
+@media (max-width:560px){
+  .catalano-admin-user-actions{
+    max-width:none;
+    width:100%;
+  }
+}
