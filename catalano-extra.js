@@ -204,22 +204,24 @@
     if (!rows.length) {
       list.innerHTML = '<div class="catalano-admin-empty">Nessun utente approvato.';
     } else {
-      list.innerHTML = '<p class="catalano-security-note">Un solo dispositivo per utente. Sblocca dispositivo quando un utente cambia telefono o computer. L’amministratore è esente.</p>' +
+      list.innerHTML = '<p class="catalano-security-note">Una sessione per account: il nuovo login disconnette automaticamente quello precedente. L’amministratore può usare più dispositivi.</p>' +
       rows.map(u => {
         const approved = u.approvedAt ? new Date(u.approvedAt).toLocaleString('it-IT') : 'utente storico';
         const access = u.access || {};
         const isAdmin = access.admin === true;
-        const device = isAdmin ? '♾️ Amministratore: più dispositivi consentiti' :
-          access.deviceRegistered ? '🔒 Dispositivo associato' : '🟢 Nessun dispositivo associato';
+        const device = isAdmin ? '♾️ Amministratore: accessi multipli' :
+          access.sessionActive ? '🟢 Sessione attiva' : '⚪ Nessuna sessione attiva';
         const lastAccess = access.lastLoginAt ? new Date(access.lastLoginAt).toLocaleString('it-IT') : '—';
         const history = Array.isArray(access.accessEvents) ? access.accessEvents : [];
         const entries = history.map(e => {
           const labels = {
             login: '✅ Accesso autorizzato',
+            login_replaced: '🔁 Nuovo login: sessione precedente disconnessa',
             login_failed: '❌ Password errata',
-            device_denied: '⚠️ Nuovo dispositivo bloccato',
-            device_released: '🔓 Dispositivo sbloccato',
-            sessions_revoked: '🔒 Sessioni revocate'
+            device_denied: '⚠️ Tentativo bloccato (vecchia regola)',
+            device_released: '🔓 Dispositivo sbloccato (vecchia regola)',
+            session_revoked: '⛔ Sessione revocata',
+            sessions_revoked: '⛔ Sessioni revocate'
           };
           const date = e.at ? new Date(e.at).toLocaleString('it-IT') : '—';
           return '<div><small>'+escapeHtml(date)+' · '+escapeHtml(labels[e.event] || e.event || 'Evento')+'</small></div>';
@@ -234,7 +236,7 @@
           '<small>Ultimo login: '+escapeHtml(lastAccess)+'</small>' +
           (history.length ? '<details><summary>Accessi recenti ('+history.length+')</summary>'+entries+'</details>' : '') +
           '</div><div class="catalano-admin-user-actions">' +
-          (!isAdmin && access.deviceRegistered ? '<button class="btn ghost" type="button" data-reset-catalano-user="'+escapeHtml(u.user||'')+'">🔓 Sblocca dispositivo</button>' : '') +
+          (!isAdmin && access.sessionActive ? '<button class="btn ghost" type="button" data-revoke-catalano-user="'+escapeHtml(u.user||'')+'">⛔ Disconnetti</button>' : '') +
           (!isAdmin && u.source!=='legacy' ? '<button class="btn ghost catalano-admin-delete" type="button" data-delete-catalano-user="'+escapeHtml(u.user||'')+'">🗑️ Elimina</button>' : '') +
           '</div></div>';
       }).join('');
@@ -270,23 +272,23 @@
   });
 
   $('#catalanoAdminList')?.addEventListener('click', async e => {
-    const resetBtn = e.target.closest?.('[data-reset-catalano-user]');
+    const revokeBtn = e.target.closest?.('[data-revoke-catalano-user]');
     const deleteBtn = e.target.closest?.('[data-delete-catalano-user]');
-    const btn = resetBtn || deleteBtn;
+    const btn = revokeBtn || deleteBtn;
     if (!btn) return;
-    const username = resetBtn ? btn.dataset.resetCatalanoUser : btn.dataset.deleteCatalanoUser;
+    const username = revokeBtn ? btn.dataset.revokeCatalanoUser : btn.dataset.deleteCatalanoUser;
     if (!username) return;
-    const reset = !!resetBtn;
-    const message = reset
-      ? 'Sbloccare il dispositivo di '+username+'? Le sessioni attuali saranno revocate. Al prossimo login il primo dispositivo usato diventerà quello autorizzato.'
-      : 'Eliminare definitivamente l’utente '+username+' e revocare subito tutte le sessioni?';
+    const revoke = !!revokeBtn;
+    const message = revoke
+      ? 'Disconnettere adesso '+username+'? Potrà accedere nuovamente in autonomia da qualsiasi dispositivo, utilizzando le sue credenziali.'
+      : 'Eliminare definitivamente l’utente '+username+' e revocare tutte le sessioni?';
     if (!confirm(message)) return;
     const err = $('#catalanoAdminError');
     err?.classList.add('hidden');
     try {
       btn.disabled = true;
-      btn.textContent = reset ? 'Sblocco…' : 'Elimino…';
-      await adminRequest(reset ? 'resetdevice' : 'delete', username);
+      btn.textContent = revoke ? 'Disconnessione…' : 'Elimino…';
+      await adminRequest(revoke ? 'revoke' : 'delete', username);
       renderUsers((await adminRequest('list')).users);
     } catch (ex) {
       if (err) {
@@ -294,7 +296,7 @@
         err.classList.remove('hidden');
       }
       btn.disabled = false;
-      btn.textContent = reset ? '🔓 Sblocca dispositivo' : '🗑️ Elimina';
+      btn.textContent = revoke ? '⛔ Disconnetti' : '🗑️ Elimina';
     }
   });
 
