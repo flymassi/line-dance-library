@@ -137,12 +137,3 @@
   // A hidden/background tab is checked as soon as the user returns.
   setInterval(()=>{ if (!document.hidden && authenticated) refresh(); },30000);
 })();
-
-/* ====== CARICAMENTO WESTERN SPRITZ CHALLENGE ====== */
-(() => {
-  if (document.querySelector('script[data-ws-challenge-loader]')) return;
-  const script = document.createElement('script');
-  script.src = './challenge.js?v=2';
-  script.dataset.wsChallengeLoader = '1';
-  document.head.appendChild(script);
-})();
