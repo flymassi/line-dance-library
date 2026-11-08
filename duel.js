@@ -69,7 +69,7 @@
       <section id="duelArena" class="duel-panel hidden" aria-label="Arena dei Cowboy">
         <div class="duel-kicker">🏆 WESTERN SPRITZ ARENA</div>
         <h4>La gloria del West!</h4>
-        <p>Qui compaiono <strong>solo i duelli pubblici conclusi</strong>. I duelli privati e le statistiche della Challenge giornaliera rimangono separati.</p>
+        <p>Qui compaiono <strong>solo i duelli pubblici conclusi</strong>. I duelli privati restano riservati; la classifica di Sfida Aperta è separata.</p>
         <div class="duel-arena-grid">
           <div class="duel-arena-box"><div class="duel-arena-title">🥇 Classifica delle vittorie</div><div id="duelArenaLeaders" class="duel-arena-list"><p class="duel-muted">Caricamento…</p></div></div>
           <div class="duel-arena-box"><div class="duel-arena-title">⚔️ Ultimi duelli pubblici</div><div id="duelArenaRecent" class="duel-arena-list"><p class="duel-muted">Caricamento…</p></div></div>
