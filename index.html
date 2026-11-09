@@ -15,6 +15,7 @@
 
   <link rel="stylesheet" href="./style.css?v=81" />
   <link rel="stylesheet" href="./catalano-extra.css?v=4" />
+  <link rel="stylesheet" href="./line-access.css?v=1" />
 </head>
 <body>
 
@@ -142,6 +143,16 @@
         <span class="btn-label">Utenti Catalano</span>
       </button>
 
+      <button id="btnLineLogout" class="btn btn-glass btn-amber btn-slim hidden" type="button">
+        <span class="btn-icon">🚪</span>
+        <span class="btn-label">Esci Line Dance</span>
+      </button>
+
+      <button id="btnLineAdmin" class="btn btn-glass btn-amber btn-slim hidden" type="button">
+        <span class="btn-icon">📊</span>
+        <span class="btn-label">Accessi Line Dance</span>
+      </button>
+
       <button id="btnPlaylist" class="btn btn-glass btn-amber btn-slim">
         <span class="btn-icon">▶︎</span>
         <span class="btn-label">Playlist</span>
@@ -155,6 +166,59 @@
   <footer class="footer">
     Western Spritz • Aggiungi l’app alla Home per un’esperienza migliore
   </footer>
+
+
+  <!-- LINE DANCE — accesso leggero, separato da Catalano -->
+  <div id="lineLoginModal" class="overlay hidden" aria-hidden="true">
+    <div class="pl-card catalano-auth-card line-access-card" role="dialog" aria-modal="true" aria-labelledby="lineLoginTitle">
+      <div class="pl-top">
+        <h3 id="lineLoginTitle">🤠 Benvenuto in Line Dance!</h3>
+        <button id="lineCloseLogin" class="btn ghost" type="button">Chiudi</button>
+      </div>
+      <p class="line-access-explainer">Basta uno username: nessuna password e nessuna registrazione. Rimarrai collegato per <b>8 ore</b>. Un nuovo accesso con lo stesso username disconnette il precedente.</p>
+      <form id="lineLoginForm" class="saggio-form">
+        <label>
+          Il tuo username
+          <input id="lineUsername" type="text" class="input" placeholder="Es. CowboyMario" autocomplete="nickname" maxlength="30" minlength="2" required />
+        </label>
+        <p id="lineLoginError" class="hidden" role="alert"></p>
+        <div class="line-access-button-row">
+          <button id="lineLoginSubmit" type="submit" class="btn btn-primary">🤠 Entra nella libreria</button>
+          <button id="lineGoCatalano" type="button" class="btn ghost">🇪🇸 Vai a Catalano</button>
+        </div>
+      </form>
+      <p class="line-access-footnote">Per le statistiche di utilizzo registriamo lo username dichiarato e gli orari degli accessi. Gli eventi dettagliati sono conservati fino a 45 giorni. Non verifichiamo la tua identità.</p>
+    </div>
+  </div>
+
+  <!-- STATISTICHE LINE DANCE — solo amministratore Catalano verificato -->
+  <div id="lineAdminModal" class="overlay hidden" aria-hidden="true">
+    <div class="pl-card catalano-auth-card line-admin-card" role="dialog" aria-modal="true" aria-labelledby="lineAdminTitle">
+      <div class="pl-top">
+        <h3 id="lineAdminTitle">📊 Accessi Line Dance</h3>
+        <button id="lineAdminClose" class="btn ghost" type="button">Chiudi</button>
+      </div>
+      <p class="saggio-note">Statistiche degli accessi effettuati con username. Gli utenti possono scegliere liberamente il nome; i dati non certificano l'identità.</p>
+      <form id="lineAdminAuthForm" class="saggio-form">
+        <label>
+          Conferma la password amministratore
+          <input id="lineAdminPass" class="input" type="password" autocomplete="current-password" required />
+        </label>
+        <p id="lineAdminError" class="hidden" role="alert"></p>
+        <button id="lineAdminLoad" class="btn btn-primary" type="submit">Carica statistiche</button>
+      </form>
+      <div id="lineAdminContent" class="hidden">
+        <div id="lineAdminStats" class="line-admin-stats"></div>
+        <div class="line-admin-toolbar">
+          <b>Accessi negli ultimi 30 giorni</b>
+          <button id="lineAdminRefresh" type="button" class="btn ghost btn-slim">↻ Aggiorna</button>
+        </div>
+        <div id="lineAdminTrend" class="line-admin-trend" aria-label="Grafico degli accessi giornalieri"></div>
+        <b>Utenti e sessioni</b>
+        <div id="lineAdminUsers"></div>
+      </div>
+    </div>
+  </div>
 
   <!-- PLAYLIST -->
   <div id="plModal" class="overlay hidden" aria-hidden="true">
@@ -300,10 +364,11 @@
   </div>
 
 
-  <script src="./app.js?v=87" defer></script>
+  <script src="./app.js?v=88" defer></script>
   <script src="./catalano-session.js?v=6" defer></script>
-  <script src="./catalano-extra.js?v=4" defer></script>
+  <script src="./catalano-extra.js?v=5" defer></script>
   <script src="./catalano-reset.js?v=1" defer></script>
+  <script src="./line-access.js?v=1" defer></script>
   <script src="./whip-sound.js?v=1" defer></script>
   <script src="./duel.js?v=5" defer></script>
   <script src="./open-challenge.js?v=1" defer></script>
