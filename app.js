@@ -217,9 +217,13 @@ function isCatalanoSong(s){
 function isCatalanoAuth(){
   return window.WSCatalanoSession?.isAuthenticated() === true;
 }
+function isLineAuth(){
+  return window.WSLineAccess?.isAuthenticated() === true;
+}
 
 function matchesCourseAndYear(s){
   if (FILTER.course === 'catalano') return isCatalanoAuth() && isCatalanoSong(s);
+  if (!isLineAuth()) return false;
   if (isCatalanoSong(s)) return false;
   if (FILTER.year === 'all') return true;
   return Number(s?.year) === Number(FILTER.year);
@@ -248,6 +252,8 @@ function syncCourseFilterUI(){
 
   const logoutBtn = $('#btnCatalanoLogout');
   if (logoutBtn) logoutBtn.classList.toggle('hidden', !authed);
+  const lineLogout = $('#btnLineLogout');
+  if (lineLogout) lineLogout.classList.toggle('hidden', !isLineAuth());
 
   const yearFilters = $('#yearFilters');
   if (yearFilters) yearFilters.classList.toggle('hidden', FILTER.course === 'catalano');
@@ -260,6 +266,13 @@ function syncCourseFilterUI(){
 /* ====== RENDER CARDS ====== */
 function render(){
   if (!elCards) return;
+  if (FILTER.course === 'line' && !isLineAuth()) {
+    elCards.innerHTML = '<div class="card" style="text-align:center;padding:22px">' +
+      '<h3 style="margin-top:0">🤠 Benvenuto in Line Dance</h3>' +
+      '<p>Per visualizzare i balli e le canzoni basta scegliere uno username. Nessuna password!</p>' +
+      '<button type="button" class="btn btn-primary" id="lineOpenAccess">Entra nella libreria</button></div>';
+    return;
+  }
 
   const qd = FILTER.dance.toLowerCase().trim();
   const qs = FILTER.song.toLowerCase().trim();
@@ -417,6 +430,10 @@ window.addEventListener('resize', requestAsiaBoomCheck);
       openCatalanoLogin();
       return;
     }
+    if (s && !isCatalanoSong(s) && !isLineAuth()) {
+      window.WSLineAccess?.requireAccess();
+      return;
+    }
     const url = a.dataset.open==='dance' ? s?.danceVideoUrl : s?.songUrl;
     if (!url) return;
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -439,6 +456,10 @@ document.addEventListener('click', e=>{
     openCatalanoLogin();
     return;
   }
+  if (!isCatalanoSong(s) && !isLineAuth()) {
+    window.WSLineAccess?.requireAccess();
+    return;
+  }
 
   const idx = PLAYLIST.findIndex(p=>p.year==y && p.songNumber==n);
   if (idx>=0) PLAYLIST.splice(idx,1); else PLAYLIST.push(s);
@@ -447,6 +468,10 @@ document.addEventListener('click', e=>{
 });
 
 $('#btnPlaylist')?.addEventListener('click', ()=>{
+  if (FILTER.course === 'line' && !isLineAuth()) {
+    window.WSLineAccess?.requireAccess();
+    return;
+  }
   const modal = $('#plModal');
   const list  = $('#plList');
   if(!modal || !list) return;
@@ -705,6 +730,14 @@ document.querySelectorAll('.course-tab').forEach(btn => {
   btn.addEventListener('click', async () => {
     const course = btn.dataset.course;
     if (course !== 'line' && course !== 'catalano') return;
+    if (course === 'line' && !isLineAuth()) {
+      FILTER.course = 'line';
+      FILTER.year = 'all';
+      syncCourseFilterUI();
+      render();
+      window.WSLineAccess?.requireAccess();
+      return;
+    }
     if (course === 'catalano') {
       // Validate against Redis before every entrance, not only local browser state.
       const verified = await window.WSCatalanoSession?.refresh();
