@@ -1,7 +1,25 @@
 import {
   loginLine,inspectLineSession,logoutLine,limitLineLogin,
-  normalizeLineUsername,validLineUsername
+  normalizeLineUsername,validLineUsername,lineAdminOverview,revokeLineUser
 } from "../lib/line-access.js";
+import crypto from "node:crypto";
+import {normalizeUsername} from "../lib/catalano-store.js";
+import {verifyCatalanoSession} from "../lib/catalano-access.js";
+
+function equal(a,b) {
+  const aa=Buffer.from(String(a)),bb=Buffer.from(String(b));
+  return aa.length===bb.length && crypto.timingSafeEqual(aa,bb);
+}
+function validAdmin(username,password) {
+  const required=normalizeUsername(process.env.CATALANO_ADMIN_USER||"max");
+  if(normalizeUsername(username)!==required||!password)return false;
+  try{
+    const configured=JSON.parse(process.env.CATALANO_USERS||process.env.SAGGIO_USERS||"[]");
+    return Array.isArray(configured)&&configured.some(item=>
+      normalizeUsername(item?.user)===required&&equal(item?.pass,password)
+    );
+  }catch{return false;}
+}
 
 export default async function handler(req,res) {
   res.setHeader("Cache-Control","no-store, no-cache, must-revalidate");
@@ -12,6 +30,20 @@ export default async function handler(req,res) {
   const body=req.body && typeof req.body==="object" && !Array.isArray(req.body) ? req.body : {};
   const action=String(body.action||"");
   try {
+    if (action==="admin-list" || action==="admin-revoke") {
+      const adminSession=await verifyCatalanoSession(req,body.deviceId);
+      if(!adminSession?.admin||
+         normalizeUsername(adminSession.user)!==normalizeUsername(body.adminUser)||
+         !validAdmin(body.adminUser,String(body.adminPassword||""))) {
+        return res.status(401).json({ok:false,error:"Autorizzazione amministratore non valida."});
+      }
+      if(action==="admin-list") {
+        return res.status(200).json({ok:true,...await lineAdminOverview()});
+      }
+      const target=normalizeLineUsername(body.username);
+      if(!validLineUsername(target))return res.status(400).json({ok:false,error:"Username non valido"});
+      return res.status(200).json({ok:true,revoked:await revokeLineUser(target),username:target});
+    }
     if (action==="login") {
       const username=normalizeLineUsername(body.username);
       if (!validLineUsername(username)) {
