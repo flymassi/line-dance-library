@@ -1,0 +1,29 @@
+/* Western Spritz — Line Dance access and admin console */
+.line-access-card {width:min(94vw,480px);max-height:92vh;overflow:auto}
+.line-access-card h3 {margin:0}
+.line-access-explainer {font-size:12px;line-height:1.65;opacity:.84}
+.line-access-footnote {font-size:11px;line-height:1.5;opacity:.7;margin:10px 0 0}
+#lineLoginError,#lineAdminError {color:#ffb4a9;font-size:12px;line-height:1.45}
+.line-access-button-row {display:flex;flex-wrap:wrap;gap:8px}
+.line-access-button-row .btn {flex:1;min-width:130px}
+.line-admin-card {width:min(95vw,850px);max-height:92vh;overflow:auto}
+.line-admin-stats {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:13px 0}
+.line-admin-stat {text-align:center;border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:11px 7px;background:rgba(255,255,255,.07)}
+.line-admin-stat strong {display:block;font-size:22px;color:#ffe3a5}
+.line-admin-stat span {font-size:10px;opacity:.72}
+.line-admin-toolbar {display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}
+.line-admin-trend {display:flex;align-items:flex-end;gap:3px;height:65px;margin:10px 0 19px}
+.line-admin-day {flex:1;min-width:0;border-radius:4px 4px 0 0;background:linear-gradient(#ffe6ab,#e59437);opacity:.86;min-height:2px}
+.line-admin-user {display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 4px;border-bottom:1px solid rgba(255,255,255,.12)}
+.line-admin-user-info {display:grid;gap:3px;min-width:0}
+.line-admin-user-info b {overflow-wrap:anywhere}
+.line-admin-user-info small {opacity:.72;font-size:11px;line-height:1.5}
+.line-admin-user-info details {font-size:11px;line-height:1.7;margin-top:3px}
+.line-admin-user-info summary {cursor:pointer;color:#ffda9e}
+.line-admin-user button {flex-shrink:0}
+.line-admin-empty {padding:15px;text-align:center;opacity:.74}
+@media(max-width:600px){
+ .line-admin-stats {grid-template-columns:repeat(2,minmax(0,1fr))}
+ .line-admin-user {flex-direction:column}
+ .line-admin-user button {width:100%}
+}
