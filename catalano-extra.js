@@ -12,8 +12,11 @@
   }
 
   function syncAdminButton(){
+    const admin = isCatalanoAdmin();
     const btn = $('#btnCatalanoAdmin');
-    if (btn) btn.classList.toggle('hidden', !isCatalanoAdmin());
+    if (btn) btn.classList.toggle('hidden', !admin);
+    const lineBtn = $('#btnLineAdmin');
+    if (lineBtn) lineBtn.classList.toggle('hidden', !admin);
   }
 
   function escapeHtml(value){
