@@ -180,7 +180,7 @@
     const stats=data.stats||{};
     const items=[
       [stats.activeSessions,"Sessioni attive"],
-      [stats.usersTracked,"Username registrati"],
+      [stats.usersTracked,"Username utilizzati"],
       [stats.loginsToday,"Login oggi"],
       [stats.logins30days,"Login ultimi 30 gg"]
     ];
