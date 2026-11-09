@@ -212,11 +212,11 @@
   async function adminRequest(action,name="") {
     const session=window.WSCatalanoSession;
     if(!session?.isAdmin())throw new Error("Accedi come amministratore Catalano per consultare questo pannello.");
-    const response=await fetch("/api/line-admin",{
+    const response=await fetch("/api/line-session",{
       method:"POST",cache:"no-store",credentials:"same-origin",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
-        action,username:name,adminUser:session.getUsername(),
+        action:"admin-"+action,username:name,adminUser:session.getUsername(),
         deviceId:session.getDeviceId(),adminPassword
       })
     });
