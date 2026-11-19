@@ -75,7 +75,7 @@ export default async function handler(req,res) {
       return res.status(200).json({ok:true,authenticated:true,automatic:true,...session});
     }
     if (action==="verify") {
-      const result=await inspectLineSession(req,body.deviceId);
+      const result=await inspectLineSession(req,body.deviceId,body.rememberDevice===true);
       if (!result.session) {
         const code=result.reason==="REPLACED" ? "SESSION_REPLACED" :
           result.reason==="REVOKED" ? "SESSION_REVOKED" : "SESSION_EXPIRED";
