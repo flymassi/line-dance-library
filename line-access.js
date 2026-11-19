@@ -2,6 +2,7 @@
 (() => {
   const DEVICE_KEY="ws_line_device_v1";
   const NAME_KEY="ws_line_last_username_v1";
+  const CONFIRMED_KEY="ws_line_device_confirmed_v1";
   const $=id=>document.getElementById(id);
   let authenticated=false, username="", expiresAt=0, timer=null;
   let inFlight=null, generation=0, loginPending=false, logoutPending=null;
@@ -16,6 +17,24 @@
     id=Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("");
     try {localStorage.setItem(DEVICE_KEY,id);} catch {}
     return id;
+  }
+  function rememberedUsername() {
+    try {
+      const name=String(localStorage.getItem(NAME_KEY)||"").trim().replace(/\s+/g," ");
+      return name.length>=2&&name.length<=30&&/^[\p{L}\p{N}][\p{L}\p{N}._ -]*$/u.test(name)?name:"";
+    }catch{return "";}
+  }
+  function remember(value) {
+    try{
+      localStorage.setItem(NAME_KEY,String(value||""));
+      localStorage.setItem(CONFIRMED_KEY,"1");
+    }catch{}
+  }
+  function forget() {
+    try{
+      localStorage.removeItem(NAME_KEY);
+      localStorage.removeItem(CONFIRMED_KEY);
+    }catch{}
   }
   function isAuthenticated(){return authenticated&&Date.now()<expiresAt;}
   function getUsername(){return isAuthenticated()?username:"";}
@@ -56,51 +75,81 @@
     if(timer)clearTimeout(timer);
     timer=setTimeout(()=>{
       if(!authenticated)return;
-      clearLocal();
-      syncUI();
-      if(document.querySelector(".course-tab.active")?.dataset.course==="line") {
-        openLogin("Sono trascorse 8 ore. Inserisci di nuovo lo username per continuare.");
+      // Eight-hour sessions still expire; renewal is automatic only on the
+      // authorized device. Do not count idle background tabs as new visits.
+      if(!document.hidden) {
+        refresh();
+      } else {
+        clearLocal();
       }
     },Math.max(0,expiresAt-Date.now())+30);
+  }
+  async function requestSession(action,extras={}) {
+    const response=await fetch("/api/line-session",{
+      method:"POST",credentials:"same-origin",cache:"no-store",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action,deviceId:getDeviceId(),...extras})
+    });
+    const data=await response.json().catch(()=>({}));
+    return {response,data};
+  }
+  function onLineCourse() {
+    return document.querySelector(".course-tab.active")?.dataset.course==="line";
   }
   async function refresh() {
     if(inFlight)return inFlight;
     const currentGeneration=generation;
     inFlight=(async()=>{
       const previous=authenticated, oldUsername=username;
-      try{
-        const response=await fetch("/api/line-session",{
-          method:"POST",credentials:"same-origin",cache:"no-store",
-          headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({action:"verify",deviceId:getDeviceId()})
+      let reason="", message="";
+      try {
+        // Existing valid sessions require no new login and no new statistics event.
+        const {response,data}=await requestSession("verify",{
+          rememberDevice:rememberedUsername() && !localStorage.getItem(CONFIRMED_KEY)
         });
-        const data=await response.json().catch(()=>({}));
         if(currentGeneration!==generation)return false;
-        if(!response.ok||!data.ok||!data.authenticated){
-          clearLocal();
-          if(previous){
-            syncUI();
-            if(document.querySelector(".course-tab.active")?.dataset.course==="line"){
-              const replaced=data.code==="SESSION_REPLACED";
-              openLogin(replaced
-                ? "🔒 "+oldUsername+": un altro dispositivo ha effettuato l'accesso con questo username. Questa sessione è stata disconnessa."
-                : "La sessione è terminata. Inserisci il tuo username per accedere nuovamente.");
-            }
-          }
-          return false;
+        if(response.ok&&data.ok&&data.authenticated){
+          store(data);
+          remember(data.user);
+          closeLogin();
+          if(!previous||oldUsername!==username)syncUI();
+          return true;
         }
-        store(data);
-        if(!previous||oldUsername!==username)syncUI();
-        return true;
+        reason=String(data.code||"");
+        if(reason==="SESSION_EXPIRED"&&rememberedUsername()) {
+          // Renew only if Redis still associates this exact browser device
+          // with the username. It cannot reclaim a newer device's session.
+          const resumed=await requestSession("resume",{username:rememberedUsername()});
+          if(currentGeneration!==generation)return false;
+          if(resumed.response.ok&&resumed.data.ok&&resumed.data.authenticated){
+            store(resumed.data);
+            remember(resumed.data.user);
+            closeLogin();
+            if(!previous||oldUsername!==username)syncUI();
+            return true;
+          }
+          reason=String(resumed.data.code||"");
+          message=String(resumed.data.error||"");
+        } else {
+          message=String(data.error||"");
+        }
+        const replaced=["SESSION_REPLACED","SESSION_REVOKED","DEVICE_CHANGED"].includes(reason);
+        if(replaced)forget();
+        clearLocal();
+        if(previous)syncUI();
+        if(onLineCourse()&&(previous||replaced||!!rememberedUsername())){
+          openLogin(replaced
+            ? "🔒 Un altro dispositivo ha utilizzato questo username oppure la sessione è stata terminata dall'amministratore. Inserisci lo username per accedere nuovamente."
+            : (message||"Accesso temporaneamente non disponibile. Riprova."));
+        }
+        return false;
       }catch(err){
         if(currentGeneration!==generation)return false;
         console.error("[WS Line Dance] Verifica sessione non disponibile",err);
         clearLocal();
-        if(previous) {
-          syncUI();
-          if(document.querySelector(".course-tab.active")?.dataset.course==="line") {
-            openLogin("Impossibile verificare la sessione. Controlla la connessione e riprova.");
-          }
+        if(previous)syncUI();
+        if(onLineCourse()&&(previous||!!rememberedUsername())){
+          openLogin("Impossibile verificare la sessione. Controlla la connessione e riprova.");
         }
         return false;
       }
@@ -131,7 +180,7 @@
       if(!response.ok||!data.ok)throw new Error(data.error||"Accesso non riuscito.");
       if(epoch!==generation)return;
       store(data);
-      try{localStorage.setItem(NAME_KEY,name);}catch{}
+      remember(data.user);
       closeLogin();
       syncUI();
     }catch(err){
@@ -143,11 +192,14 @@
   }
   async function logout() {
     if(logoutPending)return logoutPending;
+    const earlierVerification=inFlight;
     generation++;
+    forget(); // Explicit logout also forgets the name on this device.
     clearLocal();
     syncUI();
     logoutPending=(async()=>{
       try{
+        if(earlierVerification)await earlierVerification;
         await fetch("/api/line-session",{
           method:"POST",credentials:"same-origin",cache:"no-store",
           headers:{"Content-Type":"application/json"},
@@ -160,6 +212,14 @@
   }
   function requireAccess() {
     if(isAuthenticated())return true;
+    if(inFlight||rememberedUsername()) {
+      refresh().then(ok=>{
+        if(!ok&&!isAuthenticated()&&$("lineLoginModal")?.classList.contains("hidden")){
+          openLogin();
+        }
+      });
+      return false;
+    }
     openLogin();
     return false;
   }
@@ -174,6 +234,7 @@
   }
   const eventTitles={
     login:"✅ Accesso",login_replaced:"🔁 Accesso da nuovo dispositivo",
+    auto_resume:"🔄 Accesso automatico dopo 8 ore",
     logout:"🚪 Uscita",admin_revoked:"⛔ Disconnessione amministratore"
   };
   function renderAdmin(data) {
@@ -181,8 +242,8 @@
     const items=[
       [stats.activeSessions,"Sessioni attive"],
       [stats.usersTracked,"Username utilizzati"],
-      [stats.loginsToday,"Login oggi"],
-      [stats.logins30days,"Login ultimi 30 gg"]
+      [stats.loginsToday,"Accessi oggi"],
+      [stats.logins30days,"Accessi ultimi 30 gg"]
     ];
     $("lineAdminStats").innerHTML=items.map(([n,title])=>
       '<div class="line-admin-stat"><strong>'+Number(n||0).toLocaleString("it-IT")+
@@ -199,7 +260,7 @@
         '<div>'+escapeHtml(dateText(item.at))+' · '+escapeHtml(eventTitles[item.event]||item.event)+'</div>').join("");
       return '<div class="line-admin-user"><div class="line-admin-user-info">'+
         '<b>'+escapeHtml(u.user)+'</b>'+
-        '<small>'+state+' · '+Number(u.totalLogins||0)+' login totali · '+Number(u.todayLogins||0)+' oggi</small>'+
+        '<small>'+state+' · '+Number(u.totalLogins||0)+' accessi totali · '+Number(u.todayLogins||0)+' oggi</small>'+
         '<small>Ultimo accesso: '+escapeHtml(dateText(u.lastLoginAt))+'</small>'+
         (history?'<details><summary>Ultimi eventi</summary>'+history+'</details>':'')+
         '</div>'+
@@ -291,8 +352,8 @@
   });
   // Revalidate sessions when returning to the app; otherwise every 30 seconds.
   refresh();
-  window.addEventListener("focus",()=>{if(!document.hidden&&authenticated)refresh();});
-  window.addEventListener("pageshow",()=>{if(!document.hidden&&authenticated)refresh();});
-  document.addEventListener("visibilitychange",()=>{if(!document.hidden&&authenticated)refresh();});
-  setInterval(()=>{if(!document.hidden&&authenticated)refresh();},30000);
+  window.addEventListener("focus",()=>{if(!document.hidden&&(authenticated||rememberedUsername()))refresh();});
+  window.addEventListener("pageshow",()=>{if(!document.hidden&&(authenticated||rememberedUsername()))refresh();});
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden&&(authenticated||rememberedUsername()))refresh();});
+  setInterval(()=>{if(!document.hidden&&(authenticated||rememberedUsername()))refresh();},30000);
 })();
