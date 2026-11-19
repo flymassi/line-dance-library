@@ -36,6 +36,9 @@
       localStorage.removeItem(CONFIRMED_KEY);
     }catch{}
   }
+  function deviceConfirmed() {
+    try{return localStorage.getItem(CONFIRMED_KEY)==="1";}catch{return false;}
+  }
   function isAuthenticated(){return authenticated&&Date.now()<expiresAt;}
   function getUsername(){return isAuthenticated()?username:"";}
   function showError(id,message) {
@@ -81,6 +84,7 @@
         refresh();
       } else {
         clearLocal();
+        syncUI();
       }
     },Math.max(0,expiresAt-Date.now())+30);
   }
@@ -105,7 +109,7 @@
       try {
         // Existing valid sessions require no new login and no new statistics event.
         const {response,data}=await requestSession("verify",{
-          rememberDevice:rememberedUsername() && !localStorage.getItem(CONFIRMED_KEY)
+          rememberDevice:!deviceConfirmed()
         });
         if(currentGeneration!==generation)return false;
         if(response.ok&&data.ok&&data.authenticated){
