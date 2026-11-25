@@ -1,5 +1,5 @@
 import {
-  loginLine,inspectLineSession,logoutLine,limitLineLogin,
+  loginLine,resumeLine,inspectLineSession,logoutLine,limitLineLogin,
   normalizeLineUsername,validLineUsername,lineAdminOverview,revokeLineUser
 } from "../lib/line-access.js";
 import crypto from "node:crypto";
@@ -56,8 +56,26 @@ export default async function handler(req,res) {
       const session=await loginLine(res,username,body.deviceId);
       return res.status(200).json({ok:true,authenticated:true,...session});
     }
+    if (action==="resume") {
+      const username=normalizeLineUsername(body.username);
+      if (!validLineUsername(username)) {
+        return res.status(400).json({ok:false,code:"BAD_USER",error:"Username memorizzato non valido."});
+      }
+      const ip=String(req.headers?.["x-forwarded-for"]||req.headers?.["x-real-ip"]||"unknown").split(",")[0].trim();
+      if (!await limitLineLogin(ip,username)) {
+        return res.status(429).json({ok:false,code:"RATE_LIMIT",error:"Troppi tentativi. Riprova tra 15 minuti."});
+      }
+      const session=await resumeLine(res,username,body.deviceId);
+      if (!session) {
+        return res.status(409).json({
+          ok:false,authenticated:false,code:"DEVICE_CHANGED",
+          error:"Questo username è stato usato da un altro dispositivo o disconnesso dall'amministratore. Inseriscilo di nuovo per accedere."
+        });
+      }
+      return res.status(200).json({ok:true,authenticated:true,automatic:true,...session});
+    }
     if (action==="verify") {
-      const result=await inspectLineSession(req,body.deviceId);
+      const result=await inspectLineSession(req,body.deviceId,body.rememberDevice===true);
       if (!result.session) {
         const code=result.reason==="REPLACED" ? "SESSION_REPLACED" :
           result.reason==="REVOKED" ? "SESSION_REVOKED" : "SESSION_EXPIRED";
